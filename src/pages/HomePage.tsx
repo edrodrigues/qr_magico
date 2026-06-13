@@ -332,9 +332,7 @@ export function HomePage() {
               <div className="mt-6 flex items-center justify-center gap-2 text-xs text-on-surface-variant">
                 <span className="material-symbols-outlined text-sm">lock</span>
                 <span>Compra 100% segura</span>
-                <span className="w-1 h-1 rounded-full bg-outline-variant" />
                 <span className="material-symbols-outlined text-sm">verified</span>
-                <span>7 dias de garantia</span>
               </div>
             </div>
           </div>
