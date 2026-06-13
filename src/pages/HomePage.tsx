@@ -120,6 +120,7 @@ export function HomePage() {
   const heroReveal = useReveal<HTMLDivElement>();
   const stepsReveal = useReveal<HTMLDivElement>();
   const bentoReveal = useReveal<HTMLDivElement>();
+  const pricingReveal = useReveal<HTMLDivElement>(0.15);
   const trustReveal = useReveal<HTMLDivElement>(0.2);
   const phoneRef = useParallax<HTMLDivElement>(0.05);
 
@@ -141,7 +142,7 @@ export function HomePage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                 <Link
-                  to="/wizard/ocasiao-nome"
+                  to="/auth"
                   className="bg-primary text-on-primary px-8 py-4 rounded-full font-label-md text-label-md hover:bg-coral-deep transition-all hover:scale-105 shadow-lg flex items-center justify-center gap-2"
                   aria-label="Criar um presente personalizado"
                 >
@@ -285,6 +286,56 @@ export function HomePage() {
               <span className="material-symbols-outlined text-primary text-4xl mb-3">lock</span>
               <h3 className="font-label-md">100% Privado</h3>
               <p className="text-xs text-on-surface-variant mt-2">Seus dados e fotos estão seguros conosco.</p>
+            </div>
+          </div>
+        </section>
+
+        <section ref={pricingReveal.ref} id="preco" className={`scroll-mt-24 py-24 px-margin-mobile md:px-margin-desktop bg-gradient-to-b from-surface-container-low to-background ${pricingReveal.visible ? "animate-reveal" : ""}`}>
+          <div className="max-w-lg mx-auto">
+            <div className="glass-card rounded-[2.5rem] p-8 md:p-10 text-center pricing-glow border border-gold-glimmer/50 relative overflow-hidden">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-primary/0 via-secondary to-primary/0 animate-gradient" />
+              <div className="inline-block bg-primary text-on-primary px-4 py-1 rounded-full font-label-sm text-label-sm mb-6 tracking-wider">
+                LANÇAMENTO
+              </div>
+              <h2 className="font-headline-md text-headline-md text-on-surface mb-2">Preço Especial</h2>
+              <p className="font-body-md text-on-surface-variant mb-8">Pagamento único, acesso vitalício</p>
+
+              <div className="flex items-baseline justify-center gap-3 mb-8">
+                <span className="price-original font-title-lg text-on-surface-variant line-through opacity-60 text-2xl">R$ 49,90</span>
+                <span className="font-display-lg text-display-lg-mobile md:text-display-lg text-primary font-bold">R$ 19,90</span>
+              </div>
+
+              <ul className="space-y-4 mb-10 text-left max-w-sm mx-auto">
+                {[
+                  { icon: "auto_stories", text: "Retrospectiva animada com IA" },
+                  { icon: "music_note", text: "Trilha sonora original gerada por IA" },
+                  { icon: "qr_code", text: "QR Code personalizado" },
+                  { icon: "picture_as_pdf", text: "Cartão digital para imprimir" },
+                  { icon: "link", text: "Link único para compartilhar" },
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-secondary text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                    <span className="font-body-md text-on-surface">{item.text}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Link
+                to="/auth"
+                className="bg-primary text-on-primary w-full py-4 rounded-full font-label-md text-label-md text-lg hover:bg-coral-deep transition-all hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+                aria-label="Criar presente agora por R$ 19,90"
+              >
+                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+                Criar Presente Agora
+              </Link>
+
+              <div className="mt-6 flex items-center justify-center gap-2 text-xs text-on-surface-variant">
+                <span className="material-symbols-outlined text-sm">lock</span>
+                <span>Compra 100% segura</span>
+                <span className="w-1 h-1 rounded-full bg-outline-variant" />
+                <span className="material-symbols-outlined text-sm">verified</span>
+                <span>7 dias de garantia</span>
+              </div>
             </div>
           </div>
         </section>

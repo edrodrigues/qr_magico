@@ -10,6 +10,7 @@ import { WizardPagamento } from "./pages/WizardPagamento";
 import { Dashboard } from "./pages/Dashboard";
 import { RetrospectivaDesktop } from "./pages/RetrospectivaDesktop";
 import { RetrospectivaMobile } from "./pages/RetrospectivaMobile";
+import { AuthPage } from "./pages/AuthPage";
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/splash" element={<SplashScreen />} />
+        <Route path="/auth" element={<AuthPage />} />
         <Route path="/wizard/ocasiao-nome" element={<WizardOcasiaoNome />} />
         <Route path="/wizard/relacao-sentimento" element={<WizardRelacaoSentimento />} />
         <Route path="/wizard/estilo-musical" element={<WizardEstiloMusical />} />

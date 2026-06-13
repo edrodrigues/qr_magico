@@ -40,7 +40,7 @@ export function Header({ showNav, showCreateBtn, showClose, rightContent }: Head
         {rightContent}
         {showCreateBtn && (
           <Link
-            to="/wizard/ocasiao-nome"
+            to="/auth"
             className="bg-primary text-on-primary px-6 py-2 rounded-full font-label-md text-label-md scale-95 active:scale-90 transition-transform hover:brightness-110"
             aria-label="Criar um presente personalizado"
           >
@@ -61,7 +61,7 @@ export function Footer() {
       <div className="flex flex-col md:flex-row justify-between items-center gap-8 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
         <div className="flex flex-col items-center md:items-start gap-2">
           <span className="font-headline-md-mobile text-headline-md-mobile text-primary">QR Mágico</span>
-          <p className="font-body-md text-body-md text-on-surface-variant opacity-80">© 2024 QR Mágico. Tecnologia com Alma.</p>
+          <p className="font-body-md text-body-md text-on-surface-variant opacity-80">© 2026 QR Mágico. Tecnologia com Alma.</p>
         </div>
         <div className="flex flex-wrap justify-center gap-6">
           <a className="font-label-sm text-label-sm text-on-surface-variant hover:text-secondary transition-colors" href="#" aria-label="Termos de Uso">Termos de Uso</a>

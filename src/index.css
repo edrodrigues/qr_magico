@@ -226,6 +226,15 @@
   flex-shrink: 0;
 }
 
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@utility pricing-glow {
+  box-shadow: 0 0 30px rgba(169, 53, 57, 0.15), 0 0 60px rgba(249, 235, 200, 0.1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .reveal {
     opacity: 1;
