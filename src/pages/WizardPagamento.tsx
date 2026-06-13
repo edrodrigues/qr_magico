@@ -1,13 +1,30 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header, Footer } from "../components/Header";
+import { useWizard } from "../contexts/WizardContext";
+import { supabase } from "../lib/supabase";
 import { cn } from "../lib/utils";
 
 type PaymentMethod = "pix" | "card";
 
 export function WizardPagamento() {
   const navigate = useNavigate();
+  const { saveDraft, isSaving, resetWizard } = useWizard();
   const [method, setMethod] = useState<PaymentMethod>("pix");
+
+  const handlePagar = async () => {
+    const result = await saveDraft({ status: "pending_payment" });
+    if (!result.error) {
+      const slug = result.slug;
+      if (slug) {
+        const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+        const link = `${appUrl}/p/${slug}`;
+        await supabase.from("presentes").update({ link }).eq("slug", slug);
+      }
+      resetWizard();
+      navigate("/dashboard");
+    }
+  };
 
   return (
     <div className="bg-soft-cream text-on-surface font-body-md min-h-screen">
@@ -228,10 +245,11 @@ export function WizardPagamento() {
                 </div>
               </div>
               <button
-                onClick={() => navigate("/dashboard")}
-                className="w-full bg-primary text-on-primary py-5 rounded-full font-headline-md-mobile text-headline-md-mobile shadow-lg shadow-primary/20 hover:bg-coral-deep transition-all transform active:scale-95 mb-4"
+                onClick={handlePagar}
+                disabled={isSaving}
+                className="w-full bg-primary text-on-primary py-5 rounded-full font-headline-md-mobile text-headline-md-mobile shadow-lg shadow-primary/20 hover:bg-coral-deep transition-all transform active:scale-95 mb-4 disabled:opacity-50"
               >
-                Pagar Agora
+                {isSaving ? "Processando..." : "Pagar Agora"}
               </button>
               <p className="text-center text-xs text-on-surface-variant leading-relaxed">
                 Ao clicar em &quot;Pagar Agora&quot;, voc&ecirc; concorda com

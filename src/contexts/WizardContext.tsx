@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { supabase } from "../lib/supabase";
+import { useAuth } from "./AuthContext";
 
 interface PhotoFile {
   file: File;
@@ -21,9 +23,13 @@ interface WizardContextType {
   setStartDate: (date: string) => void;
   setStory: (story: string) => void;
   setMusicStyle: (style: string) => void;
-  setPhotos: (photos: PhotoFile[]) => void;
+  setPhotos: (photosOrSetter: PhotoFile[] | ((prev: PhotoFile[]) => PhotoFile[])) => void;
   currentStep: number;
   totalSteps: number;
+  draftId: string | null;
+  saveDraft: (fields: Record<string, string>) => Promise<{ error: string | null; slug?: string }>;
+  isSaving: boolean;
+  resetWizard: () => void;
 }
 
 const WizardContext = createContext<WizardContextType | undefined>(undefined);
@@ -37,8 +43,22 @@ const EMPTY_DATA: WizardData = {
   photos: [],
 };
 
+function generateSlug(name: string): string {
+  const base = name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "") || "presente";
+  const suffix = Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+  return `${base}-${suffix}`;
+}
+
 export function WizardProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
   const [data, setData] = useState<WizardData>(EMPTY_DATA);
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const setName = useCallback((name: string) => {
     setData((prev) => ({ ...prev, name }));
@@ -60,8 +80,53 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     setData((prev) => ({ ...prev, musicStyle }));
   }, []);
 
-  const setPhotos = useCallback((photos: PhotoFile[]) => {
-    setData((prev) => ({ ...prev, photos }));
+  const setPhotos = useCallback(
+    (photosOrSetter: PhotoFile[] | ((prev: PhotoFile[]) => PhotoFile[])) => {
+      setData((prev) => {
+        const photos =
+          typeof photosOrSetter === "function"
+            ? photosOrSetter(prev.photos)
+            : photosOrSetter;
+        return { ...prev, photos };
+      });
+    },
+    []
+  );
+
+  const saveDraft = useCallback(async (fields: Record<string, string>) => {
+    if (!user) return { error: "Usuário não autenticado" };
+    setIsSaving(true);
+    try {
+      if (draftId) {
+        const { error } = await supabase
+          .from("presentes")
+          .update({ ...fields, updated_at: new Date().toISOString() })
+          .eq("id", draftId);
+        if (error) return { error: error.message };
+        return { error: null };
+      }
+      const slug = generateSlug(fields.nome_homenageado || "presente");
+      const { data: inserted, error } = await supabase
+        .from("presentes")
+        .insert({
+          usuario_id: user.id,
+          slug,
+          status: "draft",
+          ...fields,
+        })
+        .select("id")
+        .single();
+      if (error) return { error: error.message };
+      if (inserted) setDraftId(inserted.id);
+      return { error: null, slug };
+    } finally {
+      setIsSaving(false);
+    }
+  }, [user, draftId]);
+
+  const resetWizard = useCallback(() => {
+    setData(EMPTY_DATA);
+    setDraftId(null);
   }, []);
 
   return (
@@ -76,6 +141,10 @@ export function WizardProvider({ children }: { children: ReactNode }) {
         setPhotos,
         currentStep: 1,
         totalSteps: 7,
+        draftId,
+        saveDraft,
+        isSaving,
+        resetWizard,
       }}
     >
       {children}

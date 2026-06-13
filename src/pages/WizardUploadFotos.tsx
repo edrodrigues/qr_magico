@@ -13,6 +13,21 @@ export function WizardUploadFotos() {
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const processFiles = useCallback(
+    (files: File[]) => {
+      setPhotos((current) => {
+        const slotsLeft = 6 - current.length;
+        const incoming = Array.from(files).slice(0, slotsLeft);
+        const newPhotos = incoming.map((file) => ({
+          file,
+          preview: URL.createObjectURL(file),
+        }));
+        return [...current, ...newPhotos];
+      });
+    },
+    [setPhotos]
+  );
+
   const simulateUpload = useCallback((files: File[]) => {
     setUploading(true);
     setProgress(0);
@@ -31,20 +46,7 @@ export function WizardUploadFotos() {
         return next;
       });
     }, 150);
-  }, []);
-
-  const processFiles = useCallback(
-    (files: File[]) => {
-      const slotsLeft = 6 - photos.length;
-      const incoming = Array.from(files).slice(0, slotsLeft);
-      const newPhotos = incoming.map((file) => ({
-        file,
-        preview: URL.createObjectURL(file),
-      }));
-      setPhotos([...photos, ...newPhotos]);
-    },
-    [photos.length, setPhotos, photos]
-  );
+  }, [processFiles]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -68,6 +70,41 @@ export function WizardUploadFotos() {
     },
     [simulateUpload]
   );
+
+  const dragIndexRef = useRef<number | null>(null);
+
+  const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
+    dragIndexRef.current = index;
+    e.dataTransfer.effectAllowed = "move";
+    (e.currentTarget as HTMLElement).classList.add("opacity-50");
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const handleReorderDrop = useCallback(
+    (e: React.DragEvent, targetIndex: number) => {
+      e.preventDefault();
+      const sourceIndex = dragIndexRef.current;
+      if (sourceIndex === null || sourceIndex === targetIndex) return;
+
+      setPhotos((current) => {
+        const updated = [...current];
+        const [moved] = updated.splice(sourceIndex, 1);
+        updated.splice(targetIndex, 0, moved);
+        return updated;
+      });
+      dragIndexRef.current = null;
+    },
+    [setPhotos]
+  );
+
+  const handleDragEnd = useCallback((e: React.DragEvent) => {
+    (e.currentTarget as HTMLElement).classList.remove("opacity-50");
+    dragIndexRef.current = null;
+  }, []);
 
   const removePhoto = useCallback((index: number) => {
     const updated = [...photos];
@@ -184,15 +221,23 @@ export function WizardUploadFotos() {
                 return (
                   <div
                     key={i}
-                    className="relative group aspect-square rounded-2xl overflow-hidden shadow-md bg-white border border-outline-variant/30 transition-all hover:scale-[1.02]"
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, i)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleReorderDrop(e, i)}
+                    onDragEnd={handleDragEnd}
+                    className="relative group aspect-square rounded-2xl overflow-hidden shadow-md bg-white border border-outline-variant/30 transition-all hover:scale-[1.02] cursor-grab active:cursor-grabbing"
                   >
                     <img
                       src={photo.preview}
                       alt=""
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover pointer-events-none"
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
-                      <div className="flex justify-end items-start">
+                      <div className="flex justify-between items-start">
+                        <span className="material-symbols-outlined text-white text-[18px] drop-shadow-md">
+                          drag_indicator
+                        </span>
                         <button
                           onClick={() => removePhoto(i)}
                           className="p-1.5 bg-error/80 backdrop-blur rounded-lg text-white hover:bg-error transition-colors"

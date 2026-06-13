@@ -13,8 +13,16 @@ const occasions = [
 
 export function WizardOcasiaoNome() {
   const navigate = useNavigate();
-  const { data, setName, setOccasion } = useWizard();
+  const { data, setName, setOccasion, saveDraft, isSaving } = useWizard();
   const { name, occasion } = data;
+
+  const handleNext = async () => {
+    if (!name.trim() || !occasion || isSaving) return;
+    const result = await saveDraft({ nome_homenageado: name.trim(), ocasiao: occasion });
+    if (!result.error) {
+      navigate("/wizard/data-relacao");
+    }
+  };
 
   return (
     <div className="bg-soft-cream font-body-md text-on-surface min-h-screen flex flex-col">
@@ -86,22 +94,24 @@ export function WizardOcasiaoNome() {
               <div className="pt-8 flex justify-center">
                 <button
                   type="button"
-                  disabled={!name.trim() || !occasion}
-                  onClick={() => navigate("/wizard/data-relacao")}
+                  disabled={!name.trim() || !occasion || isSaving}
+                  onClick={handleNext}
                   className={cn(
                     "group relative px-12 py-4 rounded-full font-label-md text-label-md transition-all duration-300 overflow-hidden",
-                    name.trim() && occasion
+                    name.trim() && occasion && !isSaving
                       ? "bg-primary text-on-primary hover:scale-105 active:scale-95 shadow-lg hover:shadow-primary/20"
                       : "bg-surface-container-highest text-on-surface-variant cursor-not-allowed opacity-50"
                   )}
                 >
                   <span className="relative z-10 flex items-center gap-2">
-                    Próximo
-                    <span className="material-symbols-outlined text-sm">
-                      arrow_forward
-                    </span>
+                    {isSaving ? "Salvando..." : "Próximo"}
+                    {!isSaving && (
+                      <span className="material-symbols-outlined text-sm">
+                        arrow_forward
+                      </span>
+                    )}
                   </span>
-                  {name.trim() && occasion && (
+                  {name.trim() && occasion && !isSaving && (
                     <div className="absolute inset-0 bg-gradient-to-r from-primary via-coral-deep to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   )}
                 </button>

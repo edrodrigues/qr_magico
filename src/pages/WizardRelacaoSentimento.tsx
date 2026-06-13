@@ -5,8 +5,14 @@ import { cn } from "../lib/utils";
 
 export function WizardRelacaoSentimento() {
   const navigate = useNavigate();
-  const { data, setStory } = useWizard();
+  const { data, setStory, saveDraft, isSaving } = useWizard();
   const { story } = data;
+
+  const handleNext = async () => {
+    if (isSaving) return;
+    await saveDraft({ descricao_relacao: story });
+    navigate("/wizard/estilo-musical");
+  };
 
   return (
     <div className="bg-soft-cream font-body-md text-on-surface min-h-screen flex flex-col">
@@ -74,8 +80,9 @@ export function WizardRelacaoSentimento() {
               Voltar
             </button>
             <button
-              onClick={() => navigate("/wizard/estilo-musical")}
-              className="w-full md:w-2/3 py-4 text-on-primary rounded-full font-label-md text-label-md flex items-center justify-center gap-2 group"
+              onClick={handleNext}
+              disabled={isSaving}
+              className="w-full md:w-2/3 py-4 text-on-primary rounded-full font-label-md text-label-md flex items-center justify-center gap-2 group disabled:opacity-60"
               style={{
                 background:
                   "linear-gradient(135deg, #a93539 0%, #D95353 50%, #e9c349 100%)",
@@ -93,10 +100,12 @@ export function WizardRelacaoSentimento() {
                   "0 4px 15px rgba(169, 53, 57, 0.2)";
               }}
             >
-              Continuar a Mágica
-              <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
-                arrow_forward
-              </span>
+              {isSaving ? "Salvando..." : "Continuar a Mágica"}
+              {!isSaving && (
+                <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
+                  arrow_forward
+                </span>
+              )}
             </button>
           </div>
         </div>

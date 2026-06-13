@@ -13,8 +13,14 @@ const musicStyles = [
 
 export function WizardEstiloMusical() {
   const navigate = useNavigate();
-  const { data, setMusicStyle } = useWizard();
+  const { data, setMusicStyle, saveDraft, isSaving } = useWizard();
   const { musicStyle } = data;
+
+  const handleNext = async () => {
+    if (!musicStyle || isSaving) return;
+    await saveDraft({ estilo_musical: musicStyle });
+    navigate("/wizard/upload-fotos");
+  };
 
   return (
     <div className="bg-soft-cream min-h-screen flex flex-col font-body-md text-on-surface">
@@ -96,19 +102,21 @@ export function WizardEstiloMusical() {
             Voltar
           </button>
           <button
-            disabled={!musicStyle}
-            onClick={() => navigate("/wizard/upload-fotos")}
+            disabled={!musicStyle || isSaving}
+            onClick={handleNext}
             className={cn(
               "w-full md:w-auto px-10 py-3 rounded-full font-label-md text-label-md shadow-lg transition-all duration-300 flex items-center justify-center gap-2 group",
-              musicStyle
+              musicStyle && !isSaving
                 ? "bg-primary text-on-primary hover:shadow-xl active:scale-[0.98]"
                 : "bg-surface-container-highest text-on-surface-variant cursor-not-allowed opacity-50"
             )}
           >
-            Próximo
-            <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
-              arrow_forward
-            </span>
+            {isSaving ? "Salvando..." : "Próximo"}
+            {!isSaving && (
+              <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
+                arrow_forward
+              </span>
+            )}
           </button>
         </div>
       </main>

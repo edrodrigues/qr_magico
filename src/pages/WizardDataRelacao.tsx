@@ -5,8 +5,14 @@ import { cn } from "../lib/utils";
 
 export function WizardDataRelacao() {
   const navigate = useNavigate();
-  const { data, setStartDate } = useWizard();
+  const { data, setStartDate, saveDraft, isSaving } = useWizard();
   const { startDate } = data;
+
+  const handleNext = async () => {
+    if (!startDate || isSaving) return;
+    await saveDraft({ data_inicio: startDate });
+    navigate("/wizard/relacao-sentimento");
+  };
 
   return (
     <div className="bg-soft-cream min-h-screen flex flex-col font-body-md text-on-surface">
@@ -53,16 +59,16 @@ export function WizardDataRelacao() {
                 Voltar
               </button>
               <button
-                onClick={() => navigate("/wizard/relacao-sentimento")}
+                onClick={handleNext}
                 className={cn(
                   "w-full md:w-auto px-12 py-3 rounded-full font-label-md text-label-md transition-all",
-                  startDate
+                  startDate && !isSaving
                     ? "bg-primary text-on-primary hover:scale-105 active:scale-95 shadow-lg"
                     : "bg-surface-container-highest text-on-surface-variant cursor-not-allowed opacity-50"
                 )}
-                disabled={!startDate}
+                disabled={!startDate || isSaving}
               >
-                Pr&oacute;ximo
+                {isSaving ? "Salvando..." : "Pr&oacute;ximo"}
               </button>
             </div>
           </div>
