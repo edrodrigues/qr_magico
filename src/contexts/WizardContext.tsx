@@ -8,6 +8,7 @@ interface PhotoFile {
 interface WizardData {
   name: string;
   occasion: string;
+  startDate: string;
   story: string;
   musicStyle: string;
   photos: PhotoFile[];
@@ -17,6 +18,7 @@ interface WizardContextType {
   data: WizardData;
   setName: (name: string) => void;
   setOccasion: (occasion: string) => void;
+  setStartDate: (date: string) => void;
   setStory: (story: string) => void;
   setMusicStyle: (style: string) => void;
   setPhotos: (photos: PhotoFile[]) => void;
@@ -29,6 +31,7 @@ const WizardContext = createContext<WizardContextType | undefined>(undefined);
 const EMPTY_DATA: WizardData = {
   name: "",
   occasion: "",
+  startDate: "",
   story: "",
   musicStyle: "",
   photos: [],
@@ -43,6 +46,10 @@ export function WizardProvider({ children }: { children: ReactNode }) {
 
   const setOccasion = useCallback((occasion: string) => {
     setData((prev) => ({ ...prev, occasion }));
+  }, []);
+
+  const setStartDate = useCallback((startDate: string) => {
+    setData((prev) => ({ ...prev, startDate }));
   }, []);
 
   const setStory = useCallback((story: string) => {
@@ -63,11 +70,12 @@ export function WizardProvider({ children }: { children: ReactNode }) {
         data,
         setName,
         setOccasion,
+        setStartDate,
         setStory,
         setMusicStyle,
         setPhotos,
         currentStep: 1,
-        totalSteps: 6,
+        totalSteps: 7,
       }}
     >
       {children}

@@ -100,6 +100,16 @@ export function WizardRevisaoFinal() {
                       {OCCASION_LABELS[data.occasion] || data.occasion || "—"}
                     </span>
                   </div>
+                  {data.startDate && (
+                    <div className="flex flex-col border-b border-outline-variant/30 pb-4">
+                      <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">
+                        In&iacute;cio da Hist&oacute;ria
+                      </span>
+                      <span className="font-body-lg text-body-lg font-semibold text-on-surface">
+                        {new Date(data.startDate + "T12:00:00").toLocaleDateString("pt-BR", { timeZone: "UTC", day: "numeric", month: "long", year: "numeric" })}
+                      </span>
+                    </div>
+                  )}
                   {data.story && (
                     <div className="flex flex-col border-b border-outline-variant/30 pb-4">
                       <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">
@@ -174,21 +184,29 @@ export function WizardRevisaoFinal() {
                   <div className="space-y-4 mb-8">
                     <div className="flex justify-between font-body-md text-body-md">
                       <span className="text-on-surface-variant">
-                        V&iacute;deo Retrospectiva IA
+                        QR M&aacute;gico
                       </span>
-                      <span className="text-on-surface">R$ 49,90</span>
-                    </div>
-                    <div className="flex justify-between font-body-md text-body-md">
-                      <span className="text-on-surface-variant">
-                        Impress&atilde;o QR Card (Opcional)
-                      </span>
-                      <span className="text-on-surface">R$ 15,00</span>
+                      <span className="text-on-surface">R$ 19,90</span>
                     </div>
                     <div className="flex justify-between font-body-md text-body-md">
                       <span className="text-on-surface-variant">
                         Taxa de Magia
                       </span>
                       <span className="text-secondary">Gr&aacute;tis</span>
+                    </div>
+                    <div className="border-t border-outline-variant pt-4 space-y-3">
+                      <div className="flex items-start gap-2 text-on-surface-variant">
+                        <span className="material-symbols-outlined text-[16px] text-secondary mt-0.5">picture_as_pdf</span>
+                        <span className="font-label-sm text-label-sm">PDF com Cart&atilde;o Imprim&iacute;vel em qualquer impressora</span>
+                      </div>
+                      <div className="flex items-start gap-2 text-on-surface-variant">
+                        <span className="material-symbols-outlined text-[16px] text-secondary mt-0.5">music_note</span>
+                        <span className="font-label-sm text-label-sm">M&uacute;sica especial feita por IA</span>
+                      </div>
+                      <div className="flex items-start gap-2 text-on-surface-variant">
+                        <span className="material-symbols-outlined text-[16px] text-secondary mt-0.5">qr_code</span>
+                        <span className="font-label-sm text-label-sm">QR Code com URL de acesso vital&iacute;cia para aplica&ccedil;&atilde;o em brindes</span>
+                      </div>
                     </div>
                     <div className="pt-4 border-t border-outline-variant">
                       <div className="flex justify-between items-end">
@@ -197,10 +215,7 @@ export function WizardRevisaoFinal() {
                         </span>
                         <div className="text-right">
                           <span className="font-display-lg-mobile text-display-lg-mobile text-primary leading-none block">
-                            R$ 64,90
-                          </span>
-                          <span className="font-label-sm text-label-sm text-on-surface-variant">
-                            at&eacute; 3x no cart&atilde;o
+                            R$ 19,90
                           </span>
                         </div>
                       </div>

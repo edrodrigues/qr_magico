@@ -22,10 +22,10 @@ export function WizardEstiloMusical() {
         rightContent={
           <div className="flex items-center gap-2">
             <span className="font-label-md text-label-md text-on-surface-variant">
-              Passo 3 de 6
+              Passo 4 de 7
             </span>
             <div className="w-24 h-2 bg-surface-container rounded-full overflow-hidden">
-              <div className="h-full bg-primary w-[50%] transition-all duration-500" />
+              <div className="h-full bg-primary w-[57%] transition-all duration-500" />
             </div>
           </div>
         }

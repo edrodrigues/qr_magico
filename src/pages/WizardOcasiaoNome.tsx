@@ -23,10 +23,10 @@ export function WizardOcasiaoNome() {
         <div className="max-w-4xl w-full">
           <div className="mb-12 flex flex-col items-center">
             <div className="w-full max-w-xs h-1.5 bg-surface-container rounded-full overflow-hidden mb-4">
-              <div className="h-full w-[16.66%] bg-primary transition-all duration-500 ease-out"></div>
+              <div className="h-full w-[14.28%] bg-primary transition-all duration-500 ease-out"></div>
             </div>
             <span className="font-label-sm text-label-sm text-outline tracking-widest uppercase">
-              Passo 1 de 6
+              Passo 1 de 7
             </span>
           </div>
           <div className="glass-card p-8 md:p-12 rounded-[2rem] text-center">
@@ -87,7 +87,7 @@ export function WizardOcasiaoNome() {
                 <button
                   type="button"
                   disabled={!name.trim() || !occasion}
-                  onClick={() => navigate("/wizard/relacao-sentimento")}
+                  onClick={() => navigate("/wizard/data-relacao")}
                   className={cn(
                     "group relative px-12 py-4 rounded-full font-label-md text-label-md transition-all duration-300 overflow-hidden",
                     name.trim() && occasion

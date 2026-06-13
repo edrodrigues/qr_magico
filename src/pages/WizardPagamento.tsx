@@ -43,7 +43,7 @@ export function WizardPagamento() {
                     PIX
                   </p>
                   <p className="text-xs text-secondary font-semibold">
-                    10% DE DESCONTO
+                    R&aacute;pido e seguro
                   </p>
                 </div>
               </button>
@@ -64,7 +64,7 @@ export function WizardPagamento() {
                     Cart&atilde;o
                   </p>
                   <p className="text-xs text-on-surface-variant">
-                    At&eacute; 3x sem juros
+                    D&eacute;bito ou cr&eacute;dito &agrave; vista
                   </p>
                 </div>
               </button>
@@ -199,29 +199,21 @@ export function WizardPagamento() {
                     </div>
                     <div>
                       <p className="font-label-md text-label-md text-on-surface">
-                        QR M&aacute;gico - Premium
+                        QR M&aacute;gico
                       </p>
                       <p className="text-xs text-on-surface-variant">
-                        Impress&atilde;o em Papel Algod&atilde;o
+                        Presente personalizado com IA
                       </p>
                     </div>
                   </div>
-                  <p className="font-label-md text-label-md">R$ 89,90</p>
+                  <p className="font-label-md text-label-md">R$ 19,90</p>
                 </div>
                 <div className="border-t border-outline-variant/20 pt-4 flex justify-between">
                   <span className="font-body-md text-body-md text-on-surface-variant">
                     Subtotal
                   </span>
                   <span className="font-body-md text-body-md text-on-surface">
-                    R$ 89,90
-                  </span>
-                </div>
-                <div className="flex justify-between text-secondary">
-                  <span className="font-body-md text-body-md">
-                    Desconto PIX (10%)
-                  </span>
-                  <span className="font-body-md text-body-md">
-                    - R$ 8,99
+                    R$ 19,90
                   </span>
                 </div>
               </div>
@@ -231,7 +223,7 @@ export function WizardPagamento() {
                     Total a pagar
                   </p>
                   <p className="font-headline-md-mobile text-headline-md-mobile text-primary font-bold">
-                    R$ 80,91
+                    R$ 19,90
                   </p>
                 </div>
               </div>

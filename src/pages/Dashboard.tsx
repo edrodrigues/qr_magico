@@ -1,181 +1,542 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { cn } from "../lib/utils";
+import { useAuth } from "../contexts/AuthContext";
+import { useGifts, type Gift, type GiftStatus } from "../hooks/useGifts";
+import { useToast } from "../components/Toast";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { Header, Footer } from "../components/Header";
+import { supabase } from "../lib/supabase";
+
+type TabId = "all" | "ready" | "drafts" | "payment";
+
+const TABS: { id: TabId; label: string }[] = [
+  { id: "all", label: "Todos" },
+  { id: "ready", label: "Prontos" },
+  { id: "drafts", label: "Rascunhos" },
+  { id: "payment", label: "Pagamento" },
+];
+
+const STATUS_TAB_MAP: Record<TabId, GiftStatus | null> = {
+  all: null,
+  ready: "ready",
+  drafts: "draft",
+  payment: "pending_payment",
+};
+
+function getStatusTabCount(gifts: Gift[], tabId: TabId): number {
+  if (tabId === "all") return gifts.length;
+  const status = STATUS_TAB_MAP[tabId];
+  return gifts.filter((g) => g.status === status).length;
+}
+
+const OCCASION_SUGGESTIONS = [
+  "Aniversário",
+  "Dia das Mães",
+  "Dia dos Namorados",
+  "Formatura",
+  "Natal",
+  "Amizade",
+];
+
+function SkeletonCard() {
+  return (
+    <div className="glass-card p-6 rounded-xl flex flex-col md:flex-row gap-6">
+      <div className="skeleton w-full md:w-32 h-32 flex-shrink-0" />
+      <div className="flex-1 space-y-3">
+        <div className="skeleton h-5 w-48" />
+        <div className="skeleton h-3 w-32" />
+        <div className="skeleton h-8 w-full mt-4" />
+      </div>
+    </div>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  icon,
+  color,
+}: {
+  label: string;
+  value: number;
+  icon: string;
+  color: string;
+}) {
+  return (
+    <div className="glass-card rounded-xl p-4 flex items-center gap-4 flex-1 min-w-[120px]">
+      <div
+        className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+        style={{ backgroundColor: `${color}18` }}
+      >
+        <span className="material-symbols-outlined text-[22px]" style={{ color }}>
+          {icon}
+        </span>
+      </div>
+      <div>
+        <p className="font-label-sm text-label-sm text-on-surface-variant">{label}</p>
+        <p className="font-title-lg text-title-lg text-on-surface">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function GiftCard({
+  gift,
+  onCopy,
+  copiedId,
+  onDelete,
+  style,
+}: {
+  gift: Gift;
+  onCopy: (id: string, link: string) => void;
+  copiedId: string | null;
+  onDelete: (gift: Gift) => void;
+  style: { animationDelay: string };
+}) {
+  return (
+    <div
+      className={cn(
+        "glass-card p-6 rounded-xl flex flex-col md:flex-row gap-6 hover:shadow-lg transition-all duration-300 animate-reveal gradient-border-card",
+        gift.status === "ready" && "border-l-4 border-l-primary",
+        gift.status === "pending_payment" && "grayscale"
+      )}
+      style={style}
+    >
+      {gift.status === "ready" && (
+        <div className="relative w-full md:w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-warm-gray">
+          <img
+            className="w-full h-full object-cover"
+            src={gift.thumbnailUrl}
+            alt=""
+            loading="lazy"
+          />
+          <div className="absolute top-2 left-2 bg-white/80 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-bold text-primary tracking-wider uppercase">
+            Premium
+          </div>
+        </div>
+      )}
+
+      {gift.status === "generating" && (
+        <div className="w-full md:w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-warm-gray flex items-center justify-center relative">
+          <span className="material-symbols-outlined text-[48px] text-outline-variant">
+            auto_awesome
+          </span>
+          <div className="absolute inset-0 shimmer-overlay" />
+        </div>
+      )}
+
+      {gift.status === "pending_payment" && (
+        <div className="w-full md:w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-surface-container-highest flex items-center justify-center">
+          <span className="material-symbols-outlined text-[40px] text-outline">
+            shopping_bag
+          </span>
+        </div>
+      )}
+
+      {gift.status === "draft" && (
+        <div className="w-full md:w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-warm-gray/50 flex items-center justify-center border-2 border-dashed border-outline-variant/50">
+          <span className="material-symbols-outlined text-[40px] text-outline-variant">
+            edit_note
+          </span>
+        </div>
+      )}
+
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-wrap justify-between items-start gap-4 mb-2">
+          <div>
+            <h3 className="font-title-lg text-title-lg text-on-surface truncate max-w-[260px] md:max-w-sm">
+              {gift.name}
+            </h3>
+            <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">
+              {gift.occasion}
+            </p>
+          </div>
+          <span
+            className={cn(
+              "inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-sm text-label-sm flex-shrink-0",
+              gift.status === "ready" && "bg-secondary-container text-on-secondary-container",
+              gift.status === "generating" && "bg-gold-glimmer text-secondary",
+              gift.status === "pending_payment" && "bg-surface-variant text-on-surface-variant",
+              gift.status === "draft" && "bg-warm-gray text-on-surface-variant"
+            )}
+          >
+            <span
+              className={cn(
+                "material-symbols-outlined text-[16px]",
+                gift.status === "generating" && "animate-spin"
+              )}
+            >
+              {gift.statusIcon}
+            </span>
+            {gift.statusLabel}
+          </span>
+        </div>
+
+        {gift.status === "ready" && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+            <div className="p-3 bg-warm-gray/30 rounded-lg border border-outline-variant/30">
+              <span className="font-label-sm text-label-sm text-on-surface-variant block mb-1">
+                Link do Presente
+              </span>
+              <div className="flex items-center justify-between gap-2">
+                <code className="text-sm font-mono text-primary truncate">{gift.link}</code>
+                <button
+                  className="p-1 hover:bg-white rounded transition-colors flex-shrink-0"
+                  title="Copiar Link"
+                  onClick={() => onCopy(gift.id, gift.link!)}
+                >
+                  <span
+                    className={cn(
+                      "material-symbols-outlined text-primary text-[18px]",
+                      copiedId === gift.id && "text-green-600"
+                    )}
+                  >
+                    {copiedId === gift.id ? "check" : "content_copy"}
+                  </span>
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button className="flex-1 bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-coral-deep transition-all flex items-center justify-center gap-2">
+                <span className="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+                Baixar PDF
+              </button>
+              <button className="w-10 h-10 border border-outline flex items-center justify-center rounded-lg hover:bg-white transition-all text-on-surface-variant">
+                <span className="material-symbols-outlined text-[20px]">edit</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {gift.status === "generating" && (
+          <>
+            <p className="font-body-md text-body-md text-on-surface-variant mt-2 italic">
+              {gift.description}
+            </p>
+            <div className="mt-4 space-y-2">
+              <div className="progress-bar">
+                <div className="progress-bar-fill w-2/3" />
+              </div>
+              <p className="font-label-sm text-label-sm text-on-surface-variant">
+                Gerando música com IA...
+              </p>
+            </div>
+            <div className="flex gap-4 mt-4">
+              <button className="font-label-md text-label-md text-primary border border-primary/20 px-4 py-2 rounded-lg hover:bg-primary/5 transition-all">
+                Ver Visualização
+              </button>
+              <button
+                onClick={() => onDelete(gift)}
+                className="font-label-md text-label-md text-on-surface-variant px-4 py-2 rounded-lg hover:bg-warm-gray transition-all"
+              >
+                Cancelar
+              </button>
+            </div>
+          </>
+        )}
+
+        {gift.status === "pending_payment" && (
+          <div className="flex items-center gap-3 mt-4">
+            <span className="w-2 h-2 rounded-full bg-secondary animate-pulse-dot" />
+            <p className="font-body-md text-body-md text-on-surface-variant flex-1">
+              Finalize o pagamento para liberar o presente
+            </p>
+            <button className="bg-primary text-on-primary px-6 py-2 rounded-full font-label-md text-label-md hover:bg-coral-deep transition-all flex-shrink-0">
+              Finalizar Pagamento
+            </button>
+            <button
+              onClick={() => onDelete(gift)}
+              className="material-symbols-outlined text-on-surface-variant hover:text-error transition-colors"
+            >
+              delete
+            </button>
+          </div>
+        )}
+
+        {gift.status === "draft" && (
+          <div className="flex items-center justify-between mt-4">
+            <p className="font-body-md text-body-md text-on-surface-variant italic">
+              {gift.description}
+            </p>
+            <div className="flex gap-3">
+              <Link
+                to="/wizard/ocasiao-nome"
+                className="bg-primary text-on-primary px-5 py-2 rounded-lg font-label-md text-label-md hover:brightness-110 transition-all flex items-center gap-2"
+              >
+                <span className="material-symbols-outlined text-[18px]">edit</span>
+                Continuar
+              </Link>
+              <button
+                onClick={() => onDelete(gift)}
+                className="w-10 h-10 border border-outline flex items-center justify-center rounded-lg hover:bg-warm-gray transition-all text-on-surface-variant"
+              >
+                <span className="material-symbols-outlined text-[20px]">delete</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function EmptyState({ onSelectOccasion }: { onSelectOccasion: (o: string) => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center animate-reveal">
+      <div className="w-20 h-20 rounded-full bg-primary-fixed flex items-center justify-center mb-6">
+        <span className="material-symbols-outlined text-[40px] text-primary">
+          auto_awesome
+        </span>
+      </div>
+      <h3 className="font-headline-md-mobile text-headline-md-mobile md:text-title-lg text-on-surface mb-2">
+        Nenhum presente aqui ainda
+      </h3>
+      <p className="font-body-md text-body-md text-on-surface-variant max-w-sm mb-8">
+        Comece a criar um QR Mágico personalizado para alguém especial.
+      </p>
+      <Link
+        to="/wizard/ocasiao-nome"
+        className="bg-primary text-on-primary px-8 py-3 rounded-full font-label-md text-label-md hover:brightness-110 transition-all shadow-lg mb-8"
+      >
+        Criar Primeiro Presente
+      </Link>
+      <div className="w-px h-6 bg-outline-variant/50 mb-6" />
+      <p className="font-label-sm text-label-sm text-on-surface-variant mb-4">
+        Sugestões de ocasião:
+      </p>
+      <div className="flex flex-wrap gap-2 justify-center max-w-sm">
+        {OCCASION_SUGGESTIONS.map((o) => (
+          <button
+            key={o}
+            onClick={() => onSelectOccasion(o)}
+            className="px-4 py-2 rounded-full border border-outline-variant/50 text-sm text-on-surface-variant hover:bg-primary-fixed hover:text-primary hover:border-primary/30 transition-all"
+          >
+            {o}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ErrorBanner({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div className="bg-error-container rounded-xl p-6 flex items-start gap-4 animate-slide-up">
+      <span className="material-symbols-outlined text-error text-[24px] flex-shrink-0">
+        cloud_off
+      </span>
+      <div className="flex-1">
+        <p className="font-label-md text-label-md text-error font-bold mb-1">
+          Erro ao carregar presentes
+        </p>
+        <p className="font-body-md text-body-md text-on-error-container text-sm">{message}</p>
+      </div>
+      <button
+        onClick={onRetry}
+        className="px-4 py-2 rounded-lg bg-error text-on-error font-label-md text-label-md hover:brightness-110 transition-all flex-shrink-0"
+      >
+        Tentar novamente
+      </button>
+    </div>
+  );
+}
 
 export function Dashboard() {
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-  const [faqOpen, setFaqOpen] = useState<number | null>(null);
+  const { user } = useAuth();
+  const { gifts, loading, error, stats, refetch } = useGifts();
+  const { addToast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<TabId>(() => {
+    const tab = searchParams.get("tab");
+    if (tab && TABS.some((t) => t.id === tab)) return tab as TabId;
+    return "all";
+  });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "name">("newest");
+  const [deleteTarget, setDeleteTarget] = useState<Gift | null>(null);
 
-  const gifts = [
-    {
-      id: 1,
-      name: "Para Maria Luiza",
-      occasion: "Aniversário de 15 Anos",
-      status: "ready" as const,
-      statusLabel: "Pronto para entrega",
-      statusIcon: "celebration",
-      link: "qrmagico.com/p/maria-15",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDuO1XpSgXjHB-POXG3mOBsLrVOFceLBmhuDZWxfheIKosrpavu9DqojUB-h1LEqQurefFAcII9kmcbly_R9bon8uwagjBvqwsYndPXKG6I2LfFwev2EvHrOPcPmU_dj_MwevFGTzlmIx9GfwOVGBBUMPIVQw_LvEUzg3olaby7KOw1hjQ-Ogw3iKroiBNP7836o55W-xNO6_FOD63qTJ61o-RNvAqzZFwzWlJGSdRduLnvW7LiR34TqgtBPhtmO4lF10pcSrZUUQQ",
-    },
-    {
-      id: 2,
-      name: "Para Papai",
-      occasion: "Dia dos Pais",
-      status: "generating" as const,
-      statusLabel: "Gerando trilha sonora",
-      statusIcon: "sync",
-      description: "Estamos selecionando as melhores melodias para combinar com suas fotos...",
-    },
-    {
-      id: 3,
-      name: "Surpresa de Casamento",
-      occasion: "Casamento Amanda & Caio",
-      status: "payment" as const,
-      statusLabel: "Aguardando pagamento",
-      statusIcon: "hourglass_empty",
-    },
-  ];
-
-  const faqs = [
-    "Posso alterar as fotos depois?",
-    "Quanto tempo o link dura?",
-    "O QR Code para de funcionar?",
-  ];
-
-  const handleCopy = (id: number, link: string) => {
-    navigator.clipboard?.writeText(link);
-    setCopiedIndex(id);
-    setTimeout(() => setCopiedIndex(null), 2000);
+  const handleTabChange = (tabId: TabId) => {
+    setActiveTab(tabId);
+    setSearchParams(tabId === "all" ? {} : { tab: tabId });
   };
+
+  const handleCopy = (id: string, link: string) => {
+    navigator.clipboard?.writeText(link);
+    setCopiedId(id);
+    addToast("Link copiado!", "success");
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    const { error: err } = await supabase
+      .from("presentes")
+      .update({ status: "cancelled" })
+      .eq("id", deleteTarget.id);
+    if (err) {
+      addToast("Erro ao excluir presente", "error");
+    } else {
+      addToast("Presente excluído", "success");
+      refetch();
+    }
+    setDeleteTarget(null);
+  };
+
+  const handleSelectOccasion = (occasion: string) => {
+    addToast(`Vamos criar um presente para "${occasion}"!`, "info");
+  };
+
+  const filteredGifts = useMemo(() => {
+    let result = gifts;
+
+    const statusFilter = STATUS_TAB_MAP[activeTab];
+    if (statusFilter) {
+      result = result.filter((g) => g.status === statusFilter);
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (g) =>
+          g.name.toLowerCase().includes(q) || g.occasion.toLowerCase().includes(q)
+      );
+    }
+
+    result = [...result].sort((a, b) => {
+      if (sortBy === "name") return a.name.localeCompare(b.name);
+      if (sortBy === "oldest")
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+    return result;
+  }, [gifts, activeTab, searchQuery, sortBy]);
+
+  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Visitante";
+  const userInitial = userName.charAt(0).toUpperCase();
 
   return (
     <div className="bg-background min-h-screen">
-      <Header
-        showNav
-        rightContent={
-          <div className="flex items-center gap-4">
-            <button className="hidden md:flex bg-primary text-on-primary px-6 py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-all scale-95 active:scale-90 shadow-md">
-              Create Gift
-            </button>
-            <div className="w-10 h-10 rounded-full bg-primary-fixed border-2 border-white shadow-sm flex items-center justify-center text-primary font-bold">
-              RL
-            </div>
-          </div>
-        }
-      />
+      <Header />
 
       <main className="pt-24 pb-12 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
-        <header className="mb-12">
-          <h1 className="font-headline-md text-headline-md-mobile md:text-headline-md text-on-surface mb-2">Meus Presentes Mágicos</h1>
-          <p className="font-body-md text-body-md text-on-surface-variant">Gerencie suas memórias e acompanhe a mágica acontecendo.</p>
+        <header className="mb-8 animate-reveal">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-sm">
+              {userInitial}
+            </div>
+            <div>
+              <p className="font-label-sm text-label-sm text-on-surface-variant">
+                Olá, <span className="text-primary font-bold">{userName}</span>
+              </p>
+              <h1 className="font-headline-md-mobile md:text-headline-md text-headline-md text-on-surface">
+                Meus QR Mágicos
+              </h1>
+            </div>
+          </div>
         </header>
+
+        <div className="flex flex-wrap gap-3 mb-8 animate-reveal" style={{ animationDelay: "0.1s" }}>
+          <StatCard label="Prontos" value={stats.ready} icon="check_circle" color="#2e7d32" />
+          <StatCard label="Rascunhos" value={stats.draft} icon="edit_note" color="#735c00" />
+          <StatCard
+            label="Pagamento"
+            value={stats.pendingPayment}
+            icon="hourglass_empty"
+            color="#a93539"
+          />
+          <StatCard label="Total" value={stats.total} icon="redeem" color="#615e5b" />
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 mb-6 animate-reveal" style={{ animationDelay: "0.15s" }}>
+          <div className="relative flex-1">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[20px] text-outline pointer-events-none">
+              search
+            </span>
+            <input
+              type="text"
+              placeholder="Buscar por nome ou ocasião..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-surface border border-outline-variant/40 font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
+            />
+          </div>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+            className="px-4 py-2.5 rounded-lg bg-surface border border-outline-variant/40 font-label-md text-label-md text-on-surface focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all cursor-pointer"
+          >
+            <option value="newest">Mais recentes</option>
+            <option value="oldest">Mais antigos</option>
+            <option value="name">Nome A-Z</option>
+          </select>
+        </div>
+
+        <div className="flex gap-2 mb-8 overflow-x-auto pb-2 animate-reveal" style={{ animationDelay: "0.2s" }}>
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={cn(
+                "px-5 py-2 rounded-full font-label-md text-label-md whitespace-nowrap transition-all flex-shrink-0",
+                activeTab === tab.id
+                  ? "bg-primary text-on-primary shadow-md"
+                  : "bg-surface-variant text-on-surface-variant hover:bg-surface-container-higher"
+              )}
+            >
+              {tab.label}
+              <span
+                className={cn(
+                  "ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-bold px-1",
+                  activeTab === tab.id
+                    ? "bg-white/20 text-white"
+                    : "bg-outline-variant/50 text-on-surface-variant"
+                )}
+              >
+                {getStatusTabCount(gifts, tab.id)}
+              </span>
+            </button>
+          ))}
+        </div>
 
         <div className="flex flex-col lg:flex-row gap-gutter-desktop">
           <div className="flex-1 space-y-6">
-            {gifts.map((gift) => (
-              <div
-                key={gift.id}
-                className={cn(
-                  "glass-card p-6 rounded-xl flex flex-col md:flex-row gap-6 hover:shadow-lg transition-all duration-300",
-                  gift.status === "ready" && "border-l-4 border-l-primary",
-                  gift.status === "payment" && "grayscale"
-                )}
-              >
-                {gift.status === "ready" && (
-                  <div className="relative w-full md:w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-warm-gray">
-                    <img className="w-full h-full object-cover" src={gift.image} alt="" />
-                    <div className="absolute top-2 left-2 bg-white/80 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-bold text-primary tracking-wider uppercase">Premium</div>
-                  </div>
-                )}
+            {loading && (
+              <>
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+              </>
+            )}
 
-                {gift.status === "generating" && (
-                  <div className="w-full md:w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-warm-gray flex items-center justify-center relative">
-                    <span className="material-symbols-outlined text-[48px] text-outline-variant">auto_awesome</span>
-                    <div className="absolute inset-0 shimmer-overlay" />
-                  </div>
-                )}
+            {!loading && error && <ErrorBanner message={error} onRetry={refetch} />}
 
-                {gift.status === "payment" && (
-                  <div className="w-full md:w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-surface-container-highest flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[40px] text-outline">shopping_bag</span>
-                  </div>
-                )}
+            {!loading && !error && filteredGifts.length === 0 && (
+              <EmptyState onSelectOccasion={handleSelectOccasion} />
+            )}
 
-                <div className="flex-1">
-                  <div className="flex flex-wrap justify-between items-start gap-4 mb-2">
-                    <div>
-                      <h3 className="font-title-lg text-title-lg text-on-surface">{gift.name}</h3>
-                      <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">{gift.occasion}</p>
-                    </div>
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-sm text-label-sm",
-                        gift.status === "ready" && "bg-secondary-container text-on-secondary-container",
-                        gift.status === "generating" && "bg-gold-glimmer text-secondary",
-                        gift.status === "payment" && "bg-surface-variant text-on-surface-variant"
-                      )}
-                    >
-                      <span className={cn("material-symbols-outlined text-[16px]", gift.status === "generating" && "animate-spin")}>
-                        {gift.statusIcon}
-                      </span>
-                      {gift.statusLabel}
-                    </span>
-                  </div>
-
-                  {gift.status === "ready" && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                      <div className="p-3 bg-warm-gray/30 rounded-lg border border-outline-variant/30">
-                        <span className="font-label-sm text-label-sm text-on-surface-variant block mb-1">Link do Presente</span>
-                        <div className="flex items-center justify-between gap-2">
-                          <code className="text-sm font-mono text-primary truncate">{gift.link}</code>
-                          <button
-                            className="p-1 hover:bg-white rounded transition-colors"
-                            title="Copiar Link"
-                            onClick={() => handleCopy(gift.id, gift.link!)}
-                          >
-                            <span className={cn("material-symbols-outlined text-primary text-[18px]", copiedIndex === gift.id && "text-green-600")}>
-                              {copiedIndex === gift.id ? "check" : "content_copy"}
-                            </span>
-                          </button>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <button className="flex-1 bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-coral-deep transition-all flex items-center justify-center gap-2">
-                          <span className="material-symbols-outlined text-[18px]">picture_as_pdf</span>
-                          Baixar PDF
-                        </button>
-                        <button className="w-10 h-10 border border-outline flex items-center justify-center rounded-lg hover:bg-white transition-all text-on-surface-variant">
-                          <span className="material-symbols-outlined text-[20px]">edit</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {gift.status === "generating" && (
-                    <>
-                      <p className="font-body-md text-body-md text-on-surface-variant mt-2 italic">{gift.description}</p>
-                      <div className="flex gap-4 mt-6">
-                        <button className="font-label-md text-label-md text-primary border border-primary/20 px-4 py-2 rounded-lg hover:bg-primary/5 transition-all">Ver Visualização</button>
-                        <button className="font-label-md text-label-md text-on-surface-variant px-4 py-2 rounded-lg hover:bg-warm-gray transition-all">Cancelar</button>
-                      </div>
-                    </>
-                  )}
-
-                  {gift.status === "payment" && (
-                    <div className="flex gap-4 mt-6">
-                      <button className="bg-primary text-on-primary px-6 py-2 rounded-full font-label-md text-label-md hover:bg-coral-deep transition-all">Finalizar Pagamento</button>
-                      <button className="material-symbols-outlined text-on-surface-variant hover:text-error transition-colors">delete</button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+            {!loading &&
+              !error &&
+              filteredGifts.map((gift, i) => (
+                <GiftCard
+                  key={gift.id}
+                  gift={gift}
+                  onCopy={handleCopy}
+                  copiedId={copiedId}
+                  onDelete={setDeleteTarget}
+                  style={{ animationDelay: `${0.3 + i * 0.08}s` }}
+                />
+              ))}
           </div>
 
           <aside className="w-full lg:w-80 space-y-6">
             <div className="bg-primary-fixed p-6 rounded-xl relative overflow-hidden shadow-sm">
               <div className="relative z-10">
-                <h4 className="font-title-lg text-title-lg text-on-primary-fixed mb-4">Como funciona a entrega?</h4>
+                <h4 className="font-title-lg text-title-lg text-on-primary-fixed mb-4">
+                  Como funciona a entrega?
+                </h4>
                 <div className="space-y-4">
                   {[
                     "Baixe o PDF com o design exclusivo.",
@@ -183,43 +544,75 @@ export function Dashboard() {
                     "Ela escaneia e a mágica acontece!",
                   ].map((step, i) => (
                     <div key={i} className="flex gap-3">
-                      <span className="w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center text-[12px] font-bold flex-shrink-0">{i + 1}</span>
+                      <span className="w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center text-[12px] font-bold flex-shrink-0">
+                        {i + 1}
+                      </span>
                       <p className="text-sm text-on-primary-fixed-variant">{step}</p>
                     </div>
                   ))}
                 </div>
+                {stats.total === 0 && (
+                  <Link
+                    to="/wizard/ocasiao-nome"
+                    className="mt-6 block w-full text-center bg-primary text-on-primary px-4 py-3 rounded-lg font-label-md text-label-md hover:brightness-110 transition-all"
+                  >
+                    Criar Primeiro Presente
+                  </Link>
+                )}
               </div>
-              <span className="material-symbols-outlined absolute -bottom-4 -right-4 text-[120px] text-primary/10 rotate-12 pointer-events-none">redeem</span>
+              <span className="material-symbols-outlined absolute -bottom-4 -right-4 text-[120px] text-primary/10 rotate-12 pointer-events-none">
+                redeem
+              </span>
             </div>
 
-            <div className="glass-card p-6 rounded-xl">
-              <h4 className="font-label-md text-label-md text-on-surface uppercase tracking-widest border-b border-outline-variant/30 pb-3 mb-4">Dúvidas Frequentes</h4>
-              <ul className="space-y-4">
-                {faqs.map((faq, i) => (
-                  <li key={i}>
-                    <button
-                      className="w-full text-left flex justify-between items-center group"
-                      onClick={() => setFaqOpen(faqOpen === i ? null : i)}
+            {stats.draft > 0 && (
+              <div className="glass-card p-5 rounded-xl border-l-4 border-l-secondary">
+                <div className="flex items-start gap-3">
+                  <span className="material-symbols-outlined text-secondary text-[24px]">
+                    lightbulb
+                  </span>
+                  <div>
+                    <p className="font-label-md text-label-md text-on-surface font-bold mb-1">
+                      Você tem {stats.draft} rascunho{stats.draft > 1 ? "s" : ""}
+                    </p>
+                    <p className="font-body-md text-body-md text-on-surface-variant text-sm">
+                      Que tal finalizar agora e surpreender alguém especial?
+                    </p>
+                    <Link
+                      to="/wizard/ocasiao-nome"
+                      className="inline-block mt-3 text-sm font-bold text-secondary hover:underline decoration-2 underline-offset-4"
                     >
-                      <span className="text-sm font-medium text-on-surface-variant group-hover:text-primary transition-colors">{faq}</span>
-                      <span className={cn("material-symbols-outlined text-[18px] text-outline group-hover:text-primary transition-transform", faqOpen === i && "rotate-90")}>
-                        chevron_right
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              <a className="inline-block mt-6 text-sm font-bold text-primary hover:underline decoration-2 underline-offset-4" href="#">Ver Central de Suporte</a>
-            </div>
+                      Continuar editando →
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
           </aside>
         </div>
       </main>
 
-      <button className="fixed bottom-8 right-8 md:bottom-12 md:right-12 bg-primary text-on-primary px-6 py-4 rounded-full shadow-2xl flex items-center gap-3 scale-100 hover:scale-105 active:scale-95 transition-all z-40 group">
-        <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
-        <span className="font-label-md text-label-md">Criar Novo Presente</span>
+      <Link
+        to="/wizard/ocasiao-nome"
+        className="fixed bottom-8 right-8 md:bottom-12 md:right-12 bg-primary text-on-primary px-6 py-4 rounded-full shadow-2xl flex items-center gap-3 scale-100 hover:scale-105 active:scale-95 transition-all z-40 group"
+      >
+        <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
+          auto_awesome
+        </span>
+        <span className="font-label-md text-label-md hidden sm:inline">Criar Novo QR Mágico</span>
         <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity shimmer-overlay" />
-      </button>
+      </Link>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Excluir presente"
+        message={`Tem certeza que deseja excluir "${deleteTarget?.name}"? Esta ação não pode ser desfeita.`}
+        confirmLabel="Sim, excluir"
+        cancelLabel="Cancelar"
+        variant="danger"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
 
       <style>{`
         .shimmer-overlay {

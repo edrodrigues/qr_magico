@@ -15,10 +15,10 @@ export function WizardRelacaoSentimento() {
         <div className="absolute top-1/4 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[100px] -z-10 animate-pulse" />
         <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-secondary/10 rounded-full blur-[120px] -z-10" />
         <div className="w-full max-w-xs h-1.5 bg-surface-container rounded-full overflow-hidden mb-4">
-          <div className="h-full w-[33.33%] bg-primary transition-all duration-500 ease-out"></div>
+          <div className="h-full w-[42.85%] bg-primary transition-all duration-500 ease-out"></div>
         </div>
         <span className="font-label-sm text-label-sm text-outline tracking-widest uppercase mb-8 -mt-2">
-          Passo 2 de 6
+          Passo 3 de 7
         </span>
         <div className="w-full max-w-[640px] glass-panel p-8 md:p-12 rounded-[2rem] shadow-2xl relative">
           <div className="text-center mb-10">
@@ -67,7 +67,7 @@ export function WizardRelacaoSentimento() {
           </div>
           <div className="flex flex-col md:flex-row gap-4 mt-12">
             <button
-              onClick={() => navigate("/wizard/ocasiao-nome")}
+              onClick={() => navigate("/wizard/data-relacao")}
               className="w-full md:w-1/3 py-4 border-2 border-primary text-primary rounded-full font-label-md text-label-md hover:bg-primary/5 transition-colors flex items-center justify-center gap-2 active:scale-95"
             >
               <span className="material-symbols-outlined">arrow_back</span>

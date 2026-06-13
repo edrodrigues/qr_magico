@@ -91,7 +91,7 @@ export function WizardUploadFotos() {
       <main className="flex-grow pt-24 pb-12 px-margin-mobile md:px-margin-desktop max-w-4xl mx-auto w-full">
         <div className="mb-12 flex items-center justify-center gap-4">
           <div className="flex items-center gap-2">
-            {[1, 2, 3].map((n) => (
+            {[1, 2, 3, 4].map((n) => (
               <div key={n} className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center text-label-sm font-bold">
                   {n}
@@ -100,11 +100,11 @@ export function WizardUploadFotos() {
               </div>
             ))}
             <div className="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center text-label-md font-bold ring-4 ring-primary-fixed shadow-[0_0_15px_rgba(217,83,83,0.3)]">
-              4
+              5
             </div>
             <div className="h-1 w-8 bg-surface-container-highest rounded-full" />
             <div className="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center text-label-sm font-bold">
-              5
+              6
             </div>
           </div>
         </div>
