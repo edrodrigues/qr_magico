@@ -15,8 +15,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<SplashScreen />} />
-        <Route path="/home" element={<HomePage />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/splash" element={<SplashScreen />} />
         <Route path="/wizard/ocasiao-nome" element={<WizardOcasiaoNome />} />
         <Route path="/wizard/relacao-sentimento" element={<WizardRelacaoSentimento />} />
         <Route path="/wizard/estilo-musical" element={<WizardEstiloMusical />} />
