@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QR Mágico - Finalizar Presente</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Literata:wght@400;500;600;700&amp;family=Hanken+Grotesk:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary": "#ffffff",
+                      "coral-deep": "#D95353",
+                      "tertiary-fixed": "#e7e1de",
+                      "primary": "#a93539",
+                      "surface-variant": "#e9e1dc",
+                      "inverse-on-surface": "#f8efea",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-dim": "#e1d8d4",
+                      "tertiary": "#615e5b",
+                      "outline": "#8b7170",
+                      "error": "#ba1a1a",
+                      "surface-container-low": "#fbf2ed",
+                      "tertiary-container": "#999592",
+                      "on-secondary-fixed-variant": "#574500",
+                      "primary-fixed": "#ffdad8",
+                      "on-primary-fixed-variant": "#881c24",
+                      "surface-container": "#f5ece7",
+                      "warm-gray": "#F2EDE9",
+                      "surface-container-high": "#efe6e2",
+                      "on-secondary-fixed": "#241a00",
+                      "soft-cream": "#FFFCFA",
+                      "on-tertiary": "#ffffff",
+                      "surface": "#fff8f5",
+                      "surface-bright": "#fff8f5",
+                      "primary-container": "#f26b6b",
+                      "secondary-fixed-dim": "#e9c349",
+                      "on-surface": "#1e1b18",
+                      "on-error": "#ffffff",
+                      "surface-tint": "#a93539",
+                      "tertiary-fixed-dim": "#cbc5c2",
+                      "gold-glimmer": "#F9EBC8",
+                      "secondary-fixed": "#ffe088",
+                      "secondary": "#735c00",
+                      "background": "#fff8f5",
+                      "surface-container-highest": "#e9e1dc",
+                      "on-tertiary-container": "#302e2c",
+                      "on-background": "#1e1b18",
+                      "secondary-container": "#fed65b",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-fixed": "#1d1b19",
+                      "on-primary-container": "#65000f",
+                      "outline-variant": "#debfbe",
+                      "on-surface-variant": "#574140",
+                      "on-primary-fixed": "#410006",
+                      "on-secondary-container": "#745c00",
+                      "coral-light": "#FF8E8E",
+                      "on-tertiary-fixed-variant": "#494644",
+                      "primary-fixed-dim": "#ffb3b0",
+                      "inverse-primary": "#ffb3b0",
+                      "on-error-container": "#93000a",
+                      "inverse-surface": "#34302c",
+                      "error-container": "#ffdad6"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-mobile": "20px",
+                      "container-max": "1200px",
+                      "margin-desktop": "40px",
+                      "gutter-desktop": "24px",
+                      "base": "8px",
+                      "gutter-mobile": "16px"
+              },
+              "fontFamily": {
+                      "display-lg-mobile": ["Literata"],
+                      "body-md": ["Hanken Grotesk"],
+                      "title-lg": ["Literata"],
+                      "headline-md": ["Literata"],
+                      "label-md": ["Hanken Grotesk"],
+                      "headline-md-mobile": ["Literata"],
+                      "display-lg": ["Literata"],
+                      "label-sm": ["Hanken Grotesk"],
+                      "body-lg": ["Hanken Grotesk"]
+              },
+              "fontSize": {
+                      "display-lg-mobile": ["36px", {"lineHeight": "44px", "fontWeight": "700"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "500"}],
+                      "headline-md": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-md-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 252, 250, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        .payment-card-active {
+            border-color: theme('colors.primary');
+            background-color: theme('colors.surface-container-low');
+        }
+        input:focus {
+            outline: none !important;
+            border-color: theme('colors.secondary-container') !important;
+            box-shadow: 0 0 0 2px theme('colors.secondary-fixed') !important;
+        }
+        .step-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-soft-cream text-on-surface font-body-md min-h-screen">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-md border-b border-outline-variant/30 shadow-sm">
+<div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto">
+<div class="font-headline-md text-headline-md font-bold text-primary">QR Mágico</div>
+<div class="hidden md:flex gap-8">
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#">Meus Presentes</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#">Galeria</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#">Como Funciona</a>
+</div>
+<button class="bg-primary text-on-primary px-6 py-2 rounded-full font-label-md text-label-md scale-95 active:scale-90 transition-transform shadow-md hover:bg-primary-container">
+                Create Gift
+            </button>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="pt-28 pb-20 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<!-- Header Section -->
+<header class="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+<h1 class="font-headline-md-mobile md:font-headline-md text-headline-md-mobile md:text-headline-md text-primary mb-2">Finalizar presente</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Escolha a melhor forma de pagamento para você.</p>
+</header>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter-desktop">
+<!-- Payment Selection & Forms -->
+<div class="lg:col-span-7 flex flex-col gap-8">
+<!-- Payment Tabs -->
+<div class="grid grid-cols-2 gap-4">
+<button class="step-transition flex items-center justify-center gap-3 p-6 rounded-xl border-2 border-outline-variant glass-panel group payment-card-active" id="btn-pix" onclick="switchPayment('pix')">
+<span class="material-symbols-outlined text-primary">qr_code_2</span>
+<div class="text-left">
+<p class="font-label-md text-label-md text-on-surface">PIX</p>
+<p class="text-xs text-secondary font-semibold">10% DE DESCONTO</p>
+</div>
+</button>
+<button class="step-transition flex items-center justify-center gap-3 p-6 rounded-xl border-2 border-outline-variant glass-panel group" id="btn-card" onclick="switchPayment('card')">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">credit_card</span>
+<div class="text-left">
+<p class="font-label-md text-label-md text-on-surface">Cartão</p>
+<p class="text-xs text-on-surface-variant">Até 3x sem juros</p>
+</div>
+</button>
+</div>
+<!-- PIX Section -->
+<div class="glass-panel p-8 rounded-2xl border border-outline-variant/30 flex flex-col items-center text-center" id="pix-content">
+<div class="bg-white p-4 rounded-xl shadow-inner mb-6 relative">
+<img alt="QR Code PIX" class="w-48 h-48 opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuADlRrD1BjMp04tGDLv2wzGQQVV_X5RyUcz_D6rWkE9r_PhhXzuulp8nWXTblztro8gHTg1LqCCn7qwmCET350gOe1nqurCPth9cHatFddpBcdy9ztWp8WQ8gAIWizN860fYRtB20m-Il3Q_UyH6qyqKjClg5mRO1Ou_ZZFBZ_0B3oC1VOsrR-QWiTk6Fh7UJD0cWUmFnLOMnMftNDGxVe99Dps0Gw1_I8VdDOhcJf_9neyqeAhXZKgqlFb_l5Ui0OvBCMcvjSSjJc"/>
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<span class="material-symbols-outlined text-primary text-4xl opacity-20">magic_button</span>
+</div>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-surface mb-2">Escaneie para pagar</h3>
+<p class="text-on-surface-variant font-body-md mb-6 max-w-sm">Acesse o app do seu banco e escolha a opção pagar via PIX Escanear QR Code.</p>
+<button class="flex items-center gap-2 text-primary font-label-md text-label-md hover:underline">
+<span class="material-symbols-outlined text-sm">content_copy</span>
+                        Copiar código PIX
+                    </button>
+</div>
+<!-- Card Form Section (Hidden by default) -->
+<div class="hidden glass-panel p-8 rounded-2xl border border-outline-variant/30" id="card-content">
+<form class="grid grid-cols-2 gap-4">
+<div class="col-span-2">
+<label class="block font-label-md text-label-md text-on-surface-variant mb-2">Número do Cartão</label>
+<input class="w-full bg-warm-gray border-none rounded-lg p-4 text-on-surface placeholder:text-outline-variant" placeholder="0000 0000 0000 0000" type="text"/>
+</div>
+<div class="col-span-2">
+<label class="block font-label-md text-label-md text-on-surface-variant mb-2">Nome Impresso</label>
+<input class="w-full bg-warm-gray border-none rounded-lg p-4 text-on-surface placeholder:text-outline-variant" placeholder="Como no cartão" type="text"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-2">Validade</label>
+<input class="w-full bg-warm-gray border-none rounded-lg p-4 text-on-surface placeholder:text-outline-variant" placeholder="MM/AA" type="text"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-2">CVV</label>
+<input class="w-full bg-warm-gray border-none rounded-lg p-4 text-on-surface placeholder:text-outline-variant" placeholder="123" type="text"/>
+</div>
+</form>
+<div class="mt-8 pt-8 border-t border-outline-variant/20 flex gap-4">
+<div class="flex-1 p-3 border border-outline-variant rounded-lg flex items-center justify-center gap-2">
+<img alt="Visa" class="h-4 grayscale hover:grayscale-0 transition-all" data-alt="A clean, minimalist logo of Visa credit card network, rendered in high contrast against a neutral background. The professional logo represents global financial connectivity and secure digital transactions. Minimalist corporate branding photography with soft studio lighting and a clean, luxury finish." src="https://lh3.googleusercontent.com/aida-public/AB6AXuATF-jHoxSBqMh7jKNIez5wLxOuFUKv70YC5Y7zLny9mkuYZLQtN1WYD-gNtoUggXnXQMPC3NQq8LpP6AHT3yZnyq-uHvB3OpetG_J0eKWAJKHLx9rSz72zQwj9Xz4070xP-6mNF0qprmQoUWprPQHJFRVtgPteMqxh5rZFKad_PdUmC5dT5sUf__0q9lKCAhLfGOlX8M8V4jdiChSKH9ANdj_FrXiIQyx0whorXzZn9eD9WWhf_KpWo9bzU58iNe45G0dPmidKISY"/>
+</div>
+<div class="flex-1 p-3 border border-outline-variant rounded-lg flex items-center justify-center gap-2">
+<img alt="Mastercard" class="h-6 grayscale hover:grayscale-0 transition-all" data-alt="A sophisticated Mastercard logo displayed on a sleek, matte surface with subtle depth. The two overlapping circles in vibrant orange and red represent secure financial exchange and global commerce. The image has a premium, modern feel with soft ambient occlusion and high-end graphic design aesthetics." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6dLAQabCAz5RQkqXh1O-tezHTTfL7jSAOk8Emq0WNLQ1tlOekzAal60qAgUf28fOdtjx4qRshBT3zTGE12bX1f2tux2pPpuaNmXJoFSo2rIDGAii-UL4mCHYjDCmb3zSibETvuDvwlX8RLmuSt-GuqBbIeeIM_ehHGEG2wD1KLrIgYxLkTJ1RKKoaCSLH9AdhMDqK5_myD8vNBlQePMHaUJFUv4kEe9qXgvosTAS5Y2eohRzbn6S0uFKchuEf3_T1VYb01ETovQw"/>
+</div>
+<div class="flex-1 p-3 border border-outline-variant rounded-lg flex items-center justify-center gap-2">
+<img alt="PayPal" class="h-5 grayscale hover:grayscale-0 transition-all" data-alt="A minimalist and sharp PayPal logo rendered with a focus on its distinctive double-P emblem. The cool blue tones of the logo suggest trust and digital security. The setting is clean and high-key, emphasizing the logo's modern typography and digital-first identity in the fintech space." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDG897uzoy41zuItcvekcZkW2y5lmw8zNBcLqdskABt_uGjTdzNgPCXcxh628vVfUinVueqN4O4yImED9o1f_foplwBE7OGQK2ba9OEarJBqO3Z3JJJFB3I9xiK51WVzS8wER1Vs9vruKYP88N5FeYcpoLJ1s0ia3Jy6rx5QktNypA5rMdRLyoGr_XtMFFEpFWBZ1C2OrG-9L3rorIrcSMH_kJppo2fD8SesP0AEeQrP1l-YwDTfq-6Ov2WeRilTJyw1F47DCo0_MA"/>
+</div>
+</div>
+</div>
+<!-- Security Badges -->
+<div class="flex justify-center items-center gap-8 py-4 opacity-60">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">verified_user</span>
+<span class="text-xs font-semibold uppercase tracking-wider">Pagamento Seguro</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">lock</span>
+<span class="text-xs font-semibold uppercase tracking-wider">SSL Encriptado</span>
+</div>
+</div>
+</div>
+<!-- Order Summary Sidebar -->
+<aside class="lg:col-span-5">
+<div class="glass-panel p-8 rounded-2xl border border-outline-variant/30 sticky top-32">
+<h2 class="font-title-lg text-title-lg text-on-surface mb-6">Resumo do pedido</h2>
+<div class="space-y-4 mb-8">
+<div class="flex justify-between items-start">
+<div class="flex gap-4">
+<div class="w-16 h-16 rounded-lg bg-warm-gray overflow-hidden">
+<img alt="Gift Preview" class="w-full h-full object-cover" data-alt="A high-end, premium gift box wrapped in textured cream paper with a delicate coral-colored silk ribbon. The gift is placed on a minimalist wooden surface under soft, warm ambient light, creating a nostalgic and affectionate atmosphere. The lighting is low-key and dramatic, highlighting the fine textures of the wrapping paper and the elegant bow." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3IzkRg05R2p6Kk5H_wwdzWNS7qPCFGm4c2DDIAiRPgrczVY6CMHP3cKMBOD1TJRGrGNcO64X4H_la8oX5h7_IsgOJSdYc7inh3UAnR3Y8jhlIwjuztaXYD49npg2m0GK6VyOu66iKLfI2ysoOYbOcEy56XaiAgCPGLmY3UorAz8FgxZFS2Z7bN8jhwPXL5wScunsEFcaBWzm1A5vpb6XByfbDNS0roTOtHs5tXf5X0ypAzLpRpQuvQxIzdmnPIbqKBYTDnxyZnOs"/>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">QR Mágico - Premium</p>
+<p class="text-xs text-on-surface-variant">Impressão em Papel Algodão</p>
+</div>
+</div>
+<p class="font-label-md text-label-md">R$ 89,90</p>
+</div>
+<div class="border-t border-outline-variant/20 pt-4 flex justify-between">
+<span class="font-body-md text-body-md text-on-surface-variant">Subtotal</span>
+<span class="font-body-md text-body-md text-on-surface">R$ 89,90</span>
+</div>
+<div class="flex justify-between text-secondary">
+<span class="font-body-md text-body-md">Desconto PIX (10%)</span>
+<span class="font-body-md text-body-md">- R$ 8,99</span>
+</div>
+</div>
+<div class="flex justify-between items-end mb-8">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Total a pagar</p>
+<p class="font-headline-md-mobile text-headline-md-mobile text-primary font-bold">R$ 80,91</p>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary py-5 rounded-full font-headline-md-mobile text-headline-md-mobile shadow-lg shadow-primary/20 hover:bg-coral-deep transition-all transform active:scale-95 mb-4">
+                        Pagar Agora
+                    </button>
+<p class="text-center text-xs text-on-surface-variant leading-relaxed">
+                        Ao clicar em "Pagar Agora", você concorda com nossos <a class="underline" href="#">Termos de Uso</a> e <a class="underline" href="#">Políticas de Privacidade</a>.
+                    </p>
+</div>
+</aside>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low dark:bg-surface-dim w-full py-12">
+<div class="flex flex-col md:flex-row justify-between items-center gap-8 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="font-headline-md-mobile text-headline-md-mobile text-primary">QR Mágico</div>
+<div class="flex gap-6">
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-label-sm text-label-sm" href="#">Termos de Uso</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-label-sm text-label-sm" href="#">Privacidade</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-label-sm text-label-sm" href="#">Suporte</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-label-sm text-label-sm" href="#">Instagram</a>
+</div>
+<p class="text-on-surface-variant font-body-md text-body-md opacity-80">© 2024 QR Mágico. Tecnologia com Alma.</p>
+</div>
+</footer>
+<script>
+        function switchPayment(method) {
+            const pixContent = document.getElementById('pix-content');
+            const cardContent = document.getElementById('card-content');
+            const btnPix = document.getElementById('btn-pix');
+            const btnCard = document.getElementById('btn-card');
+
+            if (method === 'pix') {
+                pixContent.classList.remove('hidden');
+                cardContent.classList.add('hidden');
+                btnPix.classList.add('payment-card-active');
+                btnCard.classList.remove('payment-card-active');
+            } else {
+                pixContent.classList.add('hidden');
+                cardContent.classList.remove('hidden');
+                btnPix.classList.remove('payment-card-active');
+                btnCard.classList.add('payment-card-active');
+            }
+        }
+    </script>
+</body></html>
