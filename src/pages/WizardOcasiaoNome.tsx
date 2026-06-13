@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header, Footer } from "../components/Header";
+import { useWizard } from "../contexts/WizardContext";
 import { cn } from "../lib/utils";
 
 const occasions = [
@@ -11,8 +12,9 @@ const occasions = [
 ];
 
 export function WizardOcasiaoNome() {
-  const [name, setName] = useState("");
-  const [selectedOccasion, setSelectedOccasion] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { data, setName, setOccasion } = useWizard();
+  const { name, occasion } = data;
 
   return (
     <div className="bg-soft-cream font-body-md text-on-surface min-h-screen flex flex-col">
@@ -21,10 +23,10 @@ export function WizardOcasiaoNome() {
         <div className="max-w-4xl w-full">
           <div className="mb-12 flex flex-col items-center">
             <div className="w-full max-w-xs h-1.5 bg-surface-container rounded-full overflow-hidden mb-4">
-              <div className="h-full w-1/4 bg-primary transition-all duration-500 ease-out"></div>
+              <div className="h-full w-[16.66%] bg-primary transition-all duration-500 ease-out"></div>
             </div>
             <span className="font-label-sm text-label-sm text-outline tracking-widest uppercase">
-              Passo 1 de 4
+              Passo 1 de 6
             </span>
           </div>
           <div className="glass-card p-8 md:p-12 rounded-[2rem] text-center">
@@ -61,10 +63,10 @@ export function WizardOcasiaoNome() {
                   {occasions.map((occ) => (
                     <div
                       key={occ.key}
-                      onClick={() => setSelectedOccasion(occ.key)}
+                      onClick={() => setOccasion(occ.key)}
                       className={cn(
                         "group cursor-pointer p-6 rounded-2xl bg-surface border flex flex-col items-center gap-3 transition-all duration-300 hover:border-primary/50",
-                        selectedOccasion === occ.key
+                        occasion === occ.key
                           ? "border-primary bg-surface-container-low shadow-[0_10px_20px_-5px_rgba(169,53,57,0.1)]"
                           : "border-outline-variant/30"
                       )}
@@ -84,7 +86,14 @@ export function WizardOcasiaoNome() {
               <div className="pt-8 flex justify-center">
                 <button
                   type="button"
-                  className="group relative px-12 py-4 bg-primary text-on-primary rounded-full font-label-md text-label-md transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg hover:shadow-primary/20 overflow-hidden"
+                  disabled={!name.trim() || !occasion}
+                  onClick={() => navigate("/wizard/relacao-sentimento")}
+                  className={cn(
+                    "group relative px-12 py-4 rounded-full font-label-md text-label-md transition-all duration-300 overflow-hidden",
+                    name.trim() && occasion
+                      ? "bg-primary text-on-primary hover:scale-105 active:scale-95 shadow-lg hover:shadow-primary/20"
+                      : "bg-surface-container-highest text-on-surface-variant cursor-not-allowed opacity-50"
+                  )}
                 >
                   <span className="relative z-10 flex items-center gap-2">
                     Próximo
@@ -92,7 +101,9 @@ export function WizardOcasiaoNome() {
                       arrow_forward
                     </span>
                   </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary via-coral-deep to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  {name.trim() && occasion && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary via-coral-deep to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  )}
                 </button>
               </div>
             </form>

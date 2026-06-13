@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header, Footer } from "../components/Header";
+import { useWizard } from "../contexts/WizardContext";
 import { cn } from "../lib/utils";
 
 export function WizardRelacaoSentimento() {
-  const [story, setStory] = useState("");
+  const navigate = useNavigate();
+  const { data, setStory } = useWizard();
+  const { story } = data;
 
   return (
     <div className="bg-soft-cream font-body-md text-on-surface min-h-screen flex flex-col">
@@ -11,17 +14,12 @@ export function WizardRelacaoSentimento() {
       <main className="flex-grow flex flex-col items-center justify-center pt-24 pb-12 px-margin-mobile md:px-margin-desktop relative overflow-hidden">
         <div className="absolute top-1/4 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[100px] -z-10 animate-pulse" />
         <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-secondary/10 rounded-full blur-[120px] -z-10" />
-        <div className="flex gap-2 mb-12">
-          {[0, 1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className={cn(
-                "h-2 rounded-full transition-all duration-300",
-                i === 1 ? "w-6 bg-primary" : "w-2 bg-outline-variant"
-              )}
-            />
-          ))}
+        <div className="w-full max-w-xs h-1.5 bg-surface-container rounded-full overflow-hidden mb-4">
+          <div className="h-full w-[33.33%] bg-primary transition-all duration-500 ease-out"></div>
         </div>
+        <span className="font-label-sm text-label-sm text-outline tracking-widest uppercase mb-8 -mt-2">
+          Passo 2 de 6
+        </span>
         <div className="w-full max-w-[640px] glass-panel p-8 md:p-12 rounded-[2rem] shadow-2xl relative">
           <div className="text-center mb-10">
             <h1 className="font-headline-md-mobile md:font-headline-md text-headline-md-mobile md:text-headline-md text-primary mb-4">
@@ -68,11 +66,15 @@ export function WizardRelacaoSentimento() {
             </div>
           </div>
           <div className="flex flex-col md:flex-row gap-4 mt-12">
-            <button className="w-full md:w-1/3 py-4 border-2 border-primary text-primary rounded-full font-label-md text-label-md hover:bg-primary/5 transition-colors flex items-center justify-center gap-2 active:scale-95">
+            <button
+              onClick={() => navigate("/wizard/ocasiao-nome")}
+              className="w-full md:w-1/3 py-4 border-2 border-primary text-primary rounded-full font-label-md text-label-md hover:bg-primary/5 transition-colors flex items-center justify-center gap-2 active:scale-95"
+            >
               <span className="material-symbols-outlined">arrow_back</span>
               Voltar
             </button>
             <button
+              onClick={() => navigate("/wizard/estilo-musical")}
               className="w-full md:w-2/3 py-4 text-on-primary rounded-full font-label-md text-label-md flex items-center justify-center gap-2 group"
               style={{
                 background:

@@ -1,9 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header, Footer } from "../components/Header";
+import { cn } from "../lib/utils";
 
 type PaymentMethod = "pix" | "card";
 
 export function WizardPagamento() {
+  const navigate = useNavigate();
   const [method, setMethod] = useState<PaymentMethod>("pix");
 
   return (
@@ -232,7 +235,10 @@ export function WizardPagamento() {
                   </p>
                 </div>
               </div>
-              <button className="w-full bg-primary text-on-primary py-5 rounded-full font-headline-md-mobile text-headline-md-mobile shadow-lg shadow-primary/20 hover:bg-coral-deep transition-all transform active:scale-95 mb-4">
+              <button
+                onClick={() => navigate("/dashboard")}
+                className="w-full bg-primary text-on-primary py-5 rounded-full font-headline-md-mobile text-headline-md-mobile shadow-lg shadow-primary/20 hover:bg-coral-deep transition-all transform active:scale-95 mb-4"
+              >
                 Pagar Agora
               </button>
               <p className="text-center text-xs text-on-surface-variant leading-relaxed">
@@ -257,6 +263,4 @@ export function WizardPagamento() {
   );
 }
 
-function cn(...classes: (string | false | undefined | null)[]) {
-  return classes.filter(Boolean).join(" ");
-}
+

@@ -1,16 +1,30 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header, Footer } from "../components/Header";
-
-const SAMPLE_PHOTOS = [
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuCxxBK1NulKGLFajxO1kNa6viXYL8GjLVKNjksY64nJlVKskGMnnfplu0lgh_LwaLzXx5hxtqi0yhcIAq6xy_URDSaaAFiWlyNu_1U7dbNzrd4LQe2lBFsODe7tIkYjB6SZQZ1YUNcXRbXeYkxUMEAVEuA9l89BTcs3e-WdvdCLRVmfnlN8EacmUgBwgb9azqjTC5_ybZ9CT0ytttF5OZF3ivQdS90g0ocH9C79cUBhoDaIXEg0_DNjozmaNXVmIpJIyzlqjCNveyI",
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuDEu2TXIiLMqCVoj80Tqzcae8fhB8LYmvnWOIwmwGTw15EMp7L0Dxfp8NY1925FoZdU-i9VVM_pltySFRFHVjh2JgWTSBZ273wZki2FFEdPnQk46O2BfDKwbpcp25ut3B2DBTh2X9wh5s7G0tZxLlQ6fHedy9U69_C8ZIrZXZjMXjeZerOYFKpqlb1_BVPYo8XDZ8KyxI6ZiOARvKSBMOknVp9kWm3peXgOfu8GzoF4y0znTQTJPB82f8MZVa44euw4y8UUfXSG7sU",
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuAHruLa-81PHi7wPorRuBxXm7RZQGbemQjGCBRgshPjxfgTC5W471XXqAnLMHHaWFlY8yPrDd65s85fA3MoGB-mMS_9m9QcF7Ismo4Lyhhjd43fq9tgtViQcsx21TFXwFoZZB-LwGPxM-kyft6dDoyZeqXajHQH4PMhK_zol9IoXcMGUZBwuvDg5-I28X0m9rJ6CfVDpfjSPyrqM2gDJegDZVwSw4Bew1SnHsI8N5aTF9b6okmDQjWbOEL8Cj9RmKLcFYVG5PHYMY0",
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuDiDtiwGu-E0MJ6Q9ZFb5i1PNF5nvvC3_0keVXVH1Ia_0-Q28228MVOBhruTqoULRnGnp3fRJUMy61ccOFDVSDY252ROiAjdkW7QhCs95LpyhPFxjZ8ln5M24kzLMdvt1yz1_pH-9Bao2lLT7D8AWnNx2DtPnTp7BRChnbcqmE2AhglH8dAjJAgTwBxS7IU3Ehk9sbMnpCSyTb1E1Ae6vL7lWlkcI0JboMlDnZ0bMSPvcMzg7t9Ublkj79zVbZyZQVlGh_N0356udQ",
-];
+import { useWizard } from "../contexts/WizardContext";
+import { cn } from "../lib/utils";
 
 const ROTATIONS = ["-2deg", "3deg", "-1deg", "2deg", "-3deg"];
 
+const OCCASION_LABELS: Record<string, string> = {
+  aniversario: "Aniversário",
+  amor: "Amor",
+  amizade: "Amizade",
+  gratidao: "Gratidão",
+  outro: "Outro",
+};
+
+const STYLE_LABELS: Record<string, string> = {
+  mpb: "MPB",
+  pop: "Pop",
+  piano: "Piano Solo",
+  lofi: "Lo-fi",
+  sertanejo: "Sertanejo",
+};
+
 export function WizardRevisaoFinal() {
+  const navigate = useNavigate();
+  const { data } = useWizard();
   const [termsChecked, setTermsChecked] = useState(false);
 
   return (
@@ -75,7 +89,7 @@ export function WizardRevisaoFinal() {
                       Para quem &eacute;?
                     </span>
                     <span className="font-body-lg text-body-lg font-semibold text-on-surface">
-                      Maria Luiza Cavalcanti
+                      {data.name || "—"}
                     </span>
                   </div>
                   <div className="flex flex-col border-b border-outline-variant/30 pb-4">
@@ -83,9 +97,19 @@ export function WizardRevisaoFinal() {
                       Ocasiao Especial
                     </span>
                     <span className="font-body-lg text-body-lg font-semibold text-on-surface">
-                      Anivers&aacute;rio de 30 Anos
+                      {OCCASION_LABELS[data.occasion] || data.occasion || "—"}
                     </span>
                   </div>
+                  {data.story && (
+                    <div className="flex flex-col border-b border-outline-variant/30 pb-4">
+                      <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">
+                        Hist&oacute;ria
+                      </span>
+                      <span className="font-body-md text-body-md text-on-surface leading-relaxed">
+                        {data.story}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex flex-col">
                     <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">
                       Trilha Sonora
@@ -98,7 +122,7 @@ export function WizardRevisaoFinal() {
                         music_note
                       </span>
                       <span className="font-body-md text-body-md font-medium">
-                        Bossa Nova Instrumental - Premium
+                        {STYLE_LABELS[data.musicStyle] || data.musicStyle || "—"}
                       </span>
                     </div>
                   </div>
@@ -111,29 +135,32 @@ export function WizardRevisaoFinal() {
                     Momentos Selecionados
                   </h2>
                   <span className="font-label-md text-label-md text-on-surface-variant">
-                    {SAMPLE_PHOTOS.length} fotos
+                    {data.photos.length} fotos
                   </span>
                 </div>
-                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-none">
-                  {SAMPLE_PHOTOS.map((src, i) => (
-                    <div
-                      key={i}
-                      className="min-w-[120px] h-[120px] rounded-lg overflow-hidden flex-shrink-0 border-2 border-white shadow-sm transition-transform duration-300 hover:scale-110 hover:rotate-0"
-                      style={{ transform: `rotate(${ROTATIONS[i]})` }}
-                    >
-                      <img
-                        src={src}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
-                  <div className="min-w-[120px] h-[120px] rounded-lg overflow-hidden flex-shrink-0 border-2 border-white shadow-sm flex items-center justify-center bg-surface-container-high transition-transform duration-300 hover:scale-110 hover:rotate-0">
-                    <span className="font-label-md text-label-md text-primary">
-                      +8
+                {data.photos.length > 0 ? (
+                  <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-none">
+                    {data.photos.map((photo, i) => (
+                      <div
+                        key={i}
+                        className="min-w-[120px] h-[120px] rounded-lg overflow-hidden flex-shrink-0 border-2 border-white shadow-sm transition-transform duration-300 hover:scale-110 hover:rotate-0"
+                        style={{ transform: `rotate(${ROTATIONS[i % ROTATIONS.length]})` }}
+                      >
+                        <img
+                          src={photo.preview}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-[120px] bg-warm-gray rounded-lg">
+                    <span className="font-body-md text-body-md text-on-surface-variant">
+                      Nenhuma foto enviada
                     </span>
                   </div>
-                </div>
+                )}
               </section>
             </div>
 
@@ -220,6 +247,7 @@ export function WizardRevisaoFinal() {
 
                   <button
                     disabled={!termsChecked}
+                    onClick={() => navigate("/wizard/pagamento")}
                     className={cn(
                       "w-full py-4 rounded-full font-label-md text-label-md font-bold shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 group",
                       termsChecked
@@ -240,7 +268,10 @@ export function WizardRevisaoFinal() {
                   </p>
                 </section>
 
-                <button className="w-full border-2 border-outline-variant text-on-surface-variant py-4 rounded-full font-label-md text-label-md font-semibold hover:bg-warm-gray transition-colors flex items-center justify-center gap-2">
+                <button
+                  onClick={() => navigate("/wizard/upload-fotos")}
+                  className="w-full border-2 border-outline-variant text-on-surface-variant py-4 rounded-full font-label-md text-label-md font-semibold hover:bg-warm-gray transition-colors flex items-center justify-center gap-2"
+                >
                   <span className="material-symbols-outlined text-[20px]">
                     chevron_left
                   </span>
@@ -257,6 +288,4 @@ export function WizardRevisaoFinal() {
   );
 }
 
-function cn(...classes: (string | false | undefined | null)[]) {
-  return classes.filter(Boolean).join(" ");
-}
+

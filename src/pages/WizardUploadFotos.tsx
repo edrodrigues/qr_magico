@@ -1,14 +1,13 @@
 import { useState, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header, Footer } from "../components/Header";
+import { useWizard } from "../contexts/WizardContext";
 import { cn } from "../lib/utils";
 
-interface PhotoFile {
-  file: File;
-  preview: string;
-}
-
 export function WizardUploadFotos() {
-  const [photos, setPhotos] = useState<PhotoFile[]>([]);
+  const navigate = useNavigate();
+  const { data, setPhotos } = useWizard();
+  const { photos } = data;
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [dragOver, setDragOver] = useState(false);
@@ -42,9 +41,9 @@ export function WizardUploadFotos() {
         file,
         preview: URL.createObjectURL(file),
       }));
-      setPhotos((prev) => [...prev, ...newPhotos]);
+      setPhotos([...photos, ...newPhotos]);
     },
-    [photos.length]
+    [photos.length, setPhotos, photos]
   );
 
   const handleDrop = useCallback(
@@ -71,13 +70,11 @@ export function WizardUploadFotos() {
   );
 
   const removePhoto = useCallback((index: number) => {
-    setPhotos((prev) => {
-      const updated = [...prev];
-      URL.revokeObjectURL(updated[index].preview);
-      updated.splice(index, 1);
-      return updated;
-    });
-  }, []);
+    const updated = [...photos];
+    URL.revokeObjectURL(updated[index].preview);
+    updated.splice(index, 1);
+    setPhotos(updated);
+  }, [photos, setPhotos]);
 
   const handleClickUpload = useCallback(() => {
     if (!uploading && photos.length < 6) {
@@ -238,13 +235,14 @@ export function WizardUploadFotos() {
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <button
-              onClick={() => window.history.back()}
+              onClick={() => navigate("/wizard/estilo-musical")}
               className="w-full sm:w-auto px-8 py-3 rounded-full border-[1.5px] border-primary text-primary font-label-md text-label-md hover:bg-primary-fixed/30 transition-all"
             >
               Voltar
             </button>
             <button
               disabled={!enabled}
+              onClick={() => navigate("/wizard/revisao-final")}
               className={cn(
                 "w-full sm:w-auto px-12 py-3 rounded-full font-label-md text-label-md transition-all",
                 enabled

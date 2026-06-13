@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header, Footer } from "../components/Header";
+import { useWizard } from "../contexts/WizardContext";
 import { cn } from "../lib/utils";
 
 const musicStyles = [
@@ -11,7 +12,9 @@ const musicStyles = [
 ];
 
 export function WizardEstiloMusical() {
-  const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { data, setMusicStyle } = useWizard();
+  const { musicStyle } = data;
 
   return (
     <div className="bg-soft-cream min-h-screen flex flex-col font-body-md text-on-surface">
@@ -19,10 +22,10 @@ export function WizardEstiloMusical() {
         rightContent={
           <div className="flex items-center gap-2">
             <span className="font-label-md text-label-md text-on-surface-variant">
-              Passo 3 de 5
+              Passo 3 de 6
             </span>
             <div className="w-24 h-2 bg-surface-container rounded-full overflow-hidden">
-              <div className="h-full bg-primary w-[60%] transition-all duration-500" />
+              <div className="h-full bg-primary w-[50%] transition-all duration-500" />
             </div>
           </div>
         }
@@ -40,10 +43,10 @@ export function WizardEstiloMusical() {
           {musicStyles.map((style) => (
             <button
               key={style.key}
-              onClick={() => setSelectedStyle(style.key)}
+              onClick={() => setMusicStyle(style.key)}
               className={cn(
                 "group flex flex-col items-start p-6 rounded-xl text-left transition-all duration-300 hover:scale-[1.02] border-2 active:scale-95",
-                selectedStyle === style.key
+                musicStyle === style.key
                   ? "border-secondary bg-gold-glimmer shadow-[0_10px_25px_-5px_rgba(115,92,0,0.1)]"
                   : "glass-card border-transparent"
               )}
@@ -51,7 +54,7 @@ export function WizardEstiloMusical() {
               <div
                 className={cn(
                   "w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors",
-                  selectedStyle === style.key
+                  musicStyle === style.key
                     ? "bg-gold-glimmer"
                     : "bg-surface-container-high group-hover:bg-gold-glimmer"
                 )}
@@ -66,7 +69,7 @@ export function WizardEstiloMusical() {
               <p className="font-label-md text-label-md text-on-surface-variant mb-4">
                 {style.mood}
               </p>
-              {selectedStyle === style.key && (
+              {musicStyle === style.key && (
                 <div className="flex gap-1 items-end h-4">
                   <div
                     className="w-1 bg-secondary rounded-full waveform-bar"
@@ -86,10 +89,22 @@ export function WizardEstiloMusical() {
           ))}
         </div>
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <button className="w-full md:w-auto px-8 py-3 rounded-full border-[1.5px] border-primary text-primary font-label-md text-label-md transition-all duration-200 hover:bg-primary/5 active:scale-95">
+          <button
+            onClick={() => navigate("/wizard/relacao-sentimento")}
+            className="w-full md:w-auto px-8 py-3 rounded-full border-[1.5px] border-primary text-primary font-label-md text-label-md transition-all duration-200 hover:bg-primary/5 active:scale-95"
+          >
             Voltar
           </button>
-          <button className="w-full md:w-auto px-10 py-3 rounded-full bg-primary text-on-primary font-label-md text-label-md shadow-lg shadow-primary/20 transition-all duration-300 hover:shadow-xl active:scale-[0.98] flex items-center justify-center gap-2 group">
+          <button
+            disabled={!musicStyle}
+            onClick={() => navigate("/wizard/upload-fotos")}
+            className={cn(
+              "w-full md:w-auto px-10 py-3 rounded-full font-label-md text-label-md shadow-lg transition-all duration-300 flex items-center justify-center gap-2 group",
+              musicStyle
+                ? "bg-primary text-on-primary hover:shadow-xl active:scale-[0.98]"
+                : "bg-surface-container-highest text-on-surface-variant cursor-not-allowed opacity-50"
+            )}
+          >
             Próximo
             <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
               arrow_forward
