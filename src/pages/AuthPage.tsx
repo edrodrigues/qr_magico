@@ -1,16 +1,55 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Header, Footer } from "../components/Header";
+import { useAuth } from "../contexts/AuthContext";
 
 export function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const { signIn, signUp, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/wizard/ocasiao-nome";
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/wizard/ocasiao-nome");
+    setError(null);
+    setSuccessMessage(null);
+    setSubmitting(true);
+
+    if (isLogin) {
+      const { error } = await signIn(email, password);
+      if (error) {
+        setError(error);
+        setSubmitting(false);
+        return;
+      }
+      navigate(from, { replace: true });
+    } else {
+      const { error, needsEmailConfirmation } = await signUp(email, password);
+      if (error) {
+        setError(error);
+        setSubmitting(false);
+        return;
+      }
+      if (needsEmailConfirmation) {
+        setSuccessMessage("Confirme seu email antes de fazer login.");
+      } else {
+        setSuccessMessage("Conta criada! Você já pode fazer login.");
+      }
+      setSubmitting(false);
+      setIsLogin(true);
+    }
+  };
+
+  const handleGoogle = async () => {
+    setError(null);
+    await signInWithGoogle();
   };
 
   return (
@@ -33,6 +72,18 @@ export function AuthPage() {
                   : "Crie sua conta e comece a magia."}
               </p>
             </div>
+
+            {error && (
+              <div className="mb-4 p-3 rounded-xl bg-error/10 border border-error/30 text-error text-sm text-center">
+                {error}
+              </div>
+            )}
+
+            {successMessage && (
+              <div className="mb-4 p-3 rounded-xl bg-success/10 border border-success/30 text-success text-sm text-center">
+                {successMessage}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
@@ -67,9 +118,14 @@ export function AuthPage() {
 
               <button
                 type="submit"
-                className="w-full bg-primary text-on-primary py-3.5 rounded-full font-label-md text-label-md hover:bg-coral-deep transition-all hover:scale-[1.02] shadow-lg flex items-center justify-center gap-2"
+                disabled={submitting}
+                className="w-full bg-primary text-on-primary py-3.5 rounded-full font-label-md text-label-md hover:bg-coral-deep transition-all hover:scale-[1.02] shadow-lg flex items-center justify-center gap-2 disabled:opacity-60 disabled:hover:scale-100"
               >
-                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+                {submitting ? (
+                  <span className="animate-spin w-5 h-5 border-2 border-on-primary border-t-transparent rounded-full" />
+                ) : (
+                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+                )}
                 {isLogin ? "Entrar" : "Criar Conta"}
               </button>
             </form>
@@ -85,6 +141,7 @@ export function AuthPage() {
 
             <button
               type="button"
+              onClick={handleGoogle}
               className="w-full border-2 border-outline-variant text-on-surface py-3.5 rounded-full font-label-md text-label-md hover:bg-warm-gray/50 transition-all flex items-center justify-center gap-3"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -100,7 +157,7 @@ export function AuthPage() {
               {isLogin ? "Ainda não tem conta?" : "Já tem uma conta?"}{" "}
               <button
                 type="button"
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={() => { setIsLogin(!isLogin); setError(null); setSuccessMessage(null); }}
                 className="text-primary font-label-sm hover:underline"
               >
                 {isLogin ? "Criar Conta" : "Entrar"}
