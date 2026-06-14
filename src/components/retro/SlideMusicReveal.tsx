@@ -6,7 +6,7 @@ const MusicReveal = lazy(() =>
 );
 
 export function SlideMusicReveal() {
-  const { musica, isMuted } = useStoryViewer();
+  useStoryViewer();
 
   return (
     <Suspense

@@ -34,7 +34,7 @@ function StoryViewerInner({ slides, renderSlide }: {
   renderSlide: (slide: SlideConfig, index: number) => React.ReactNode;
 }) {
   const {
-    currentIndex, totalSlides, isPaused, isMuted,
+    currentIndex, isPaused, isMuted,
     goNext, goPrev, pause, resume, toggleMute,
   } = useStoryViewer();
 
@@ -103,7 +103,7 @@ function StoryViewerInner({ slides, renderSlide }: {
         const rect = target.getBoundingClientRect();
         tapZone(event.clientX, rect.width);
       },
-      onDrag: ({ movement: [mx], distance, event }) => {
+      onDrag: ({ movement: [mx], distance }) => {
         if (distance[0] < 50) return;
         if (mx < -30) goNext();
         if (mx > 30) goPrev();

@@ -2,13 +2,13 @@ import { useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { useStoryViewer } from "./StoryViewerContext";
 import { SlideWrapper } from "./SlideWrapper";
-import type { ConfettiOptions } from "canvas-confetti";
+import type confetti from "canvas-confetti";
 
 async function triggerConfetti(reducedMotion: boolean) {
   if (reducedMotion) return;
   try {
     const confetti = (await import("canvas-confetti")).default;
-    const defaults: ConfettiOptions = {
+    const defaults: confetti.Options = {
       spread: 60,
       ticks: 60,
       startVelocity: 20,

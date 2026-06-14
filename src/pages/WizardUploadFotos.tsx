@@ -22,7 +22,7 @@ export function WizardUploadFotos() {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const path = `uploads/${Date.now()}_${file.name}`;
-      const { data: uploadData, error } = await supabase.storage
+      const { data: _uploadData, error } = await supabase.storage
         .from("fotos")
         .upload(path, file);
 

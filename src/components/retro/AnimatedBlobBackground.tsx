@@ -14,7 +14,7 @@ const BLOB_PATHS = [
 ];
 
 export function AnimatedBlobBackground({ palette = DEFAULT_PALETTE, reducedMotion = false }: AnimatedBlobBackgroundProps) {
-  const [index, setIndex] = useState(0);
+  const [, setIndex] = useState(0);
 
   useEffect(() => {
     if (reducedMotion) return;

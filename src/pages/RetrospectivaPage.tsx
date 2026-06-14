@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState, useEffect } from "react";
+import { useMemo, useCallback, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useRetroData } from "../hooks/useRetroData";
@@ -16,14 +16,7 @@ import type { SlideConfig } from "../types/retro";
 export function RetrospectivaPage() {
   const { slug } = useParams<{ slug: string }>();
   const { data, loading, error, refetch } = useRetroData(slug ?? "");
-  const [showViewer, setShowViewer] = useState(false);
-  const [pageReady, setPageReady] = useState(false);
-
-  useEffect(() => {
-    if (data?.presente.status === "ready") {
-      setPageReady(true);
-    }
-  }, [data?.presente.status]);
+  const [showViewer] = useState(false);
 
   const handleLoadingReady = useCallback(() => {
     refetch();

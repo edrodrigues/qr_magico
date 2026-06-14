@@ -1,4 +1,4 @@
-import { motion, useSpring, useTransform, useMotionValue } from "framer-motion";
+import { motion, useTransform, useMotionValue } from "framer-motion";
 import { useEffect } from "react";
 
 interface CountUpProps {
@@ -9,10 +9,9 @@ interface CountUpProps {
   className?: string;
 }
 
-export function CountUp({ end, duration = 2, suffix = "", prefix = "", className }: CountUpProps) {
+export function CountUp({ end, suffix = "", prefix = "", className }: CountUpProps) {
   const count = useMotionValue(0);
   const rounded = useTransform(count, (v) => Math.round(v));
-  const spring = useSpring(count, { stiffness: 60, damping: 15 });
 
   useEffect(() => {
     count.set(0);
