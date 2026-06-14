@@ -377,7 +377,11 @@ export function Dashboard() {
   useEffect(() => {
     if (!hasProcessing) return;
     const interval = setInterval(refetch, 15000);
-    return () => clearInterval(interval);
+    const timeout = setTimeout(() => clearInterval(interval), 300000);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
   }, [hasProcessing, refetch]);
 
   const handleTabChange = (tabId: TabId) => {

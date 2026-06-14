@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from "react";
+import { useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthContext";
 
@@ -59,11 +60,23 @@ function generateSlug(name: string): string {
   return `${base}-${suffix}`;
 }
 
+const STEP_FROM_PATH: Record<string, number> = {
+  "/wizard/ocasiao-nome": 1,
+  "/wizard/data-relacao": 2,
+  "/wizard/relacao-sentimento": 3,
+  "/wizard/estilo-musical": 4,
+  "/wizard/upload-fotos": 5,
+  "/wizard/revisao-final": 6,
+  "/wizard/pagamento": 7,
+};
+
 export function WizardProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const location = useLocation();
   const [data, setData] = useState<WizardData>(EMPTY_DATA);
   const [draftId, setDraftId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const currentStep = useMemo(() => STEP_FROM_PATH[location.pathname] ?? 1, [location.pathname]);
 
   const setName = useCallback((name: string) => {
     setData((prev) => ({ ...prev, name }));
@@ -114,27 +127,41 @@ export function WizardProvider({ children }: { children: ReactNode }) {
         if (error) return { error: error.message };
         return { error: null };
       }
-      const slug = generateSlug(fields.nome_homenageado || "presente");
-      const { data: inserted, error } = await supabase
-        .from("presentes")
-        .insert({
-          usuario_id: user.id,
-          slug,
-          status: "draft",
-          ...fields,
-        })
-        .select("id")
-        .single();
-      if (error) return { error: error.message };
-      if (inserted) setDraftId(inserted.id);
-      return { error: null, slug };
+      let lastError: string | null = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const slug = generateSlug(fields.nome_homenageado || "presente");
+        const { data: inserted, error } = await supabase
+          .from("presentes")
+          .insert({
+            usuario_id: user.id,
+            slug,
+            status: "draft",
+            ...fields,
+          })
+          .select("id")
+          .single();
+        if (!error) {
+          if (inserted) setDraftId(inserted.id);
+          return { error: null, slug };
+        }
+        if (error.code !== "23505") {
+          return { error: error.message };
+        }
+        lastError = error.message;
+      }
+      return { error: lastError || "Erro ao criar presente" };
     } finally {
       setIsSaving(false);
     }
   }, [user, draftId]);
 
   const resetWizard = useCallback(() => {
-    setData(EMPTY_DATA);
+    setData((prev) => {
+      for (const photo of prev.photos) {
+        URL.revokeObjectURL(photo.preview);
+      }
+      return EMPTY_DATA;
+    });
     setDraftId(null);
   }, []);
 
@@ -149,7 +176,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
         setStory,
         setMusicStyle,
         setPhotos,
-        currentStep: 1,
+        currentStep,
         totalSteps: 7,
         draftId,
         setDraftId,

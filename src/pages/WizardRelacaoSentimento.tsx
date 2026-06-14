@@ -10,8 +10,10 @@ export function WizardRelacaoSentimento() {
 
   const handleNext = async () => {
     if (isSaving) return;
-    await saveDraft({ descricao_relacao: story });
-    navigate("/wizard/estilo-musical");
+    const result = await saveDraft({ descricao_relacao: story });
+    if (!result.error) {
+      navigate("/wizard/estilo-musical");
+    }
   };
 
   return (
@@ -82,23 +84,7 @@ export function WizardRelacaoSentimento() {
             <button
               onClick={handleNext}
               disabled={isSaving}
-              className="w-full md:w-2/3 py-4 text-on-primary rounded-full font-label-md text-label-md flex items-center justify-center gap-2 group disabled:opacity-60"
-              style={{
-                background:
-                  "linear-gradient(135deg, #a93539 0%, #D95353 50%, #e9c349 100%)",
-                boxShadow: "0 4px 15px rgba(169, 53, 57, 0.2)",
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.02)";
-                e.currentTarget.style.boxShadow =
-                  "0 6px 20px rgba(169, 53, 57, 0.3)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.boxShadow =
-                  "0 4px 15px rgba(169, 53, 57, 0.2)";
-              }}
+              className="w-full md:w-2/3 py-4 text-on-primary rounded-full font-label-md text-label-md flex items-center justify-center gap-2 group disabled:opacity-60 bg-gradient-to-br from-primary via-[#D95353] to-gold-glimmer shadow-lg shadow-primary/20 hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all duration-300"
             >
               {isSaving ? "Salvando..." : "Continuar a Mágica"}
               {!isSaving && (

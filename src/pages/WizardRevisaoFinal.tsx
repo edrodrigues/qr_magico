@@ -24,7 +24,7 @@ const STYLE_LABELS: Record<string, string> = {
 
 export function WizardRevisaoFinal() {
   const navigate = useNavigate();
-  const { data } = useWizard();
+  const { data, setName, setRemetente, setOccasion } = useWizard();
   const [termsChecked, setTermsChecked] = useState(false);
 
   return (
@@ -76,7 +76,10 @@ export function WizardRevisaoFinal() {
                     </span>
                     Resumo da Homenagem
                   </h2>
-                  <button className="text-primary hover:text-coral-deep transition-colors flex items-center gap-1 font-label-md text-label-md">
+                  <button
+                    onClick={() => navigate("/wizard/ocasiao-nome")}
+                    className="text-primary hover:text-coral-deep transition-colors flex items-center gap-1 font-label-md text-label-md"
+                  >
                     <span className="material-symbols-outlined text-[18px]">
                       edit
                     </span>
@@ -92,6 +95,16 @@ export function WizardRevisaoFinal() {
                       {data.name || "—"}
                     </span>
                   </div>
+                  {data.remetente && (
+                    <div className="flex flex-col border-b border-outline-variant/30 pb-4">
+                      <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">
+                        De quem?
+                      </span>
+                      <span className="font-body-lg text-body-lg font-semibold text-on-surface">
+                        {data.remetente}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex flex-col border-b border-outline-variant/30 pb-4">
                     <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">
                       Ocasiao Especial

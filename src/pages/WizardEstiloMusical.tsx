@@ -18,8 +18,10 @@ export function WizardEstiloMusical() {
 
   const handleNext = async () => {
     if (!musicStyle || isSaving) return;
-    await saveDraft({ estilo_musical: musicStyle });
-    navigate("/wizard/upload-fotos");
+    const result = await saveDraft({ estilo_musical: musicStyle });
+    if (!result.error) {
+      navigate("/wizard/upload-fotos");
+    }
   };
 
   return (

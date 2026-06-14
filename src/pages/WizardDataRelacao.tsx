@@ -10,8 +10,10 @@ export function WizardDataRelacao() {
 
   const handleNext = async () => {
     if (!startDate || isSaving) return;
-    await saveDraft({ data_inicio: startDate });
-    navigate("/wizard/relacao-sentimento");
+    const result = await saveDraft({ data_inicio: startDate });
+    if (!result.error) {
+      navigate("/wizard/relacao-sentimento");
+    }
   };
 
   return (

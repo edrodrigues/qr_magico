@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Header, Footer } from "../components/Header";
 import { useWizard } from "../contexts/WizardContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "../components/Toast";
 import { supabase } from "../lib/supabase";
 import { cn } from "../lib/utils";
 
@@ -11,8 +12,9 @@ type PaymentMethod = "pix" | "card";
 export function WizardPagamento() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { saveDraft, setDraftId, isSaving, resetWizard } = useWizard();
+  const { data: wizardData, draftId, saveDraft, setDraftId, isSaving, resetWizard } = useWizard();
   const [method, setMethod] = useState<PaymentMethod>("pix");
+  const { addToast } = useToast();
 
   const existingDraftId = searchParams.get("draftId");
   const { session } = useAuth();
@@ -26,55 +28,99 @@ export function WizardPagamento() {
   const handlePagar = async () => {
     const result = await saveDraft({ status: "generating" });
 
-    if (!result.error) {
-      const slug = result.slug;
-      let presenteId = existingDraftId;
-
-      if (slug) {
-        const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
-        const link = `${appUrl}/p/${slug}`;
-        const { data } = await supabase
-          .from("presentes")
-          .update({ link })
-          .eq("slug", slug)
-          .select("id")
-          .single();
-        if (data) presenteId = data.id;
-      } else if (existingDraftId) {
-        const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
-        const { data } = await supabase
-          .from("presentes")
-          .select("slug, id")
-          .eq("id", existingDraftId)
-          .single();
-        if (data?.slug) {
-          const link = `${appUrl}/p/${data.slug}`;
-          await supabase.from("presentes").update({ link }).eq("id", existingDraftId);
-          presenteId = data.id;
-        }
-      }
-
-      if (presenteId) {
-        await supabase.from("musicas").insert({
-          presente_id: presenteId,
-          estilo: "gerando",
-          status: "generating",
-        });
-
-        const edgeUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-music`;
-        fetch(edgeUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.access_token}`,
-          },
-          body: JSON.stringify({ presente_id: presenteId }),
-        });
-      }
-
-      resetWizard();
-      navigate("/dashboard");
+    if (result.error) {
+      addToast("Erro ao processar pagamento", "error");
+      return;
     }
+
+    const slug = result.slug;
+    let presenteId = existingDraftId;
+
+    if (slug) {
+      const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+      const link = `${appUrl}/p/${slug}`;
+      const { data } = await supabase
+        .from("presentes")
+        .update({ link })
+        .eq("slug", slug)
+        .select("id")
+        .single();
+      if (data) presenteId = data.id;
+    } else if (existingDraftId) {
+      const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+      const { data } = await supabase
+        .from("presentes")
+        .select("slug, id")
+        .eq("id", existingDraftId)
+        .single();
+      if (data?.slug) {
+        const link = `${appUrl}/p/${data.slug}`;
+        await supabase.from("presentes").update({ link }).eq("id", existingDraftId);
+        presenteId = data.id;
+      }
+    } else if (draftId) {
+      const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+      const { data } = await supabase
+        .from("presentes")
+        .select("slug, id")
+        .eq("id", draftId)
+        .single();
+      if (data?.slug) {
+        const link = `${appUrl}/p/${data.slug}`;
+        await supabase.from("presentes").update({ link }).eq("id", draftId);
+        presenteId = data.id;
+      }
+    }
+
+    if (!presenteId) {
+      addToast("Erro ao localizar o presente", "error");
+      return;
+    }
+
+    const { error: musicaError } = await supabase.from("musicas").insert({
+      presente_id: presenteId,
+      estilo: "gerando",
+      status: "generating",
+    });
+    if (musicaError) {
+      addToast("Erro ao preparar a música", "error");
+      console.error("musicas insert error:", musicaError);
+      return;
+    }
+
+    if (wizardData.photos.length > 0) {
+      const photoInserts = wizardData.photos.map((photo, index) => ({
+        presente_id: presenteId,
+        url: photo.storageUrl || "",
+        ordem: index,
+      }));
+      const { error: fotoError } = await supabase.from("fotos").insert(photoInserts);
+      if (fotoError) {
+        console.error("fotos insert error:", fotoError);
+      }
+    }
+
+    const edgeUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-music`;
+    try {
+      const response = await fetch(edgeUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ presente_id: presenteId }),
+      });
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("generate-music returned error:", response.status, errText);
+      }
+    } catch (err) {
+      console.error("Failed to call generate-music edge function:", err);
+      addToast("A geração da música pode estar atrasada", "info");
+    }
+
+    resetWizard();
+    navigate("/dashboard");
   };
 
   return (

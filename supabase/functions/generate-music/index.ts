@@ -28,6 +28,8 @@ const OCASIAO_LABELS: Record<string, string> = {
   outro: "momento especial",
 }
 
+let musicasBucketEnsured = false
+
 function buildLyricsPrompt(p: PresenteRow): string {
   const style = STYLE_DESCRIPTIONS[p.estilo_musical] || "emocionante"
   const ocasiao = OCASIAO_LABELS[p.ocasiao] || p.ocasiao
@@ -151,9 +153,12 @@ serve(async (req) => {
       isInstrumental = true
     }
 
-    const { data: buckets } = await supabase.storage.listBuckets()
-    if (!buckets?.find((b) => b.name === "musicas")) {
-      await supabase.storage.createBucket("musicas", { public: true })
+    if (!musicasBucketEnsured) {
+      const { data: buckets } = await supabase.storage.listBuckets()
+      if (!buckets?.find((b) => b.name === "musicas")) {
+        await supabase.storage.createBucket("musicas", { public: true })
+      }
+      musicasBucketEnsured = true
     }
 
     const filePath = `${presenteId}.mp3`
@@ -197,10 +202,6 @@ serve(async (req) => {
     console.error("generate-music error:", err)
     if (presenteId) {
       try {
-        const supabase = createClient(
-          Deno.env.get("SUPABASE_URL")!,
-          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-        )
         await supabase
           .from("musicas")
           .update({ status: "failed" })

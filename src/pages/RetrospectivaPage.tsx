@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState } from "react";
+import { useMemo, useCallback, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useRetroData } from "../hooks/useRetroData";
@@ -16,7 +16,14 @@ import type { SlideConfig } from "../types/retro";
 export function RetrospectivaPage() {
   const { slug } = useParams<{ slug: string }>();
   const { data, loading, error, refetch } = useRetroData(slug ?? "");
-  const [showViewer] = useState(false);
+
+  const isGenerating = data?.presente?.status === "generating";
+
+  useEffect(() => {
+    if (!isGenerating) return;
+    const interval = setInterval(refetch, 10000);
+    return () => clearInterval(interval);
+  }, [isGenerating, refetch]);
 
   const handleLoadingReady = useCallback(() => {
     refetch();
@@ -143,7 +150,7 @@ export function RetrospectivaPage() {
   }
 
   // Generating state
-  if (presente.status === "generating" && !showViewer) {
+  if (presente.status === "generating") {
     return (
       <div className="w-screen h-screen bg-background">
         <LoadingState status={presente.status} onReady={handleLoadingReady} />
@@ -157,7 +164,7 @@ export function RetrospectivaPage() {
       <Helmet>
         <title>QR Mágico — Para {presente.nome_homenageado}</title>
         <meta property="og:title" content={`QR Mágico — Para ${presente.nome_homenageado}`} />
-        <meta property="og:description" content={`Uma retrospectiva especial de ${presente.ocasiao}`} />
+        <meta property="og:description" content={`Uma retrospectiva especial de ${presente.ocasiao}${presente.nome_remetente ? ` — por ${presente.nome_remetente}` : ""}`} />
         {thumbnail && <meta property="og:image" content={thumbnail} />}
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
