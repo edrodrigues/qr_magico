@@ -24,7 +24,7 @@ const STYLE_LABELS: Record<string, string> = {
 
 export function WizardRevisaoFinal() {
   const navigate = useNavigate();
-  const { data, setName, setRemetente, setOccasion } = useWizard();
+  const { data } = useWizard();
   const [termsChecked, setTermsChecked] = useState(false);
 
   return (
