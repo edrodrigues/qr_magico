@@ -60,6 +60,7 @@ export function MusicReveal({ onReady }: MusicRevealProps) {
 
     const onEnded = () => setIsPlaying(false);
 
+    audio.loop = true;
     audio.addEventListener("loadedmetadata", onLoaded);
     audio.addEventListener("timeupdate", onTimeUpdate);
     audio.addEventListener("ended", onEnded);

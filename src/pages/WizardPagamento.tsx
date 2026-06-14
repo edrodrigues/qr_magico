@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Header, Footer } from "../components/Header";
 import { useWizard } from "../contexts/WizardContext";
+import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 import { cn } from "../lib/utils";
 
@@ -14,6 +15,7 @@ export function WizardPagamento() {
   const [method, setMethod] = useState<PaymentMethod>("pix");
 
   const existingDraftId = searchParams.get("draftId");
+  const { session } = useAuth();
 
   useEffect(() => {
     if (existingDraftId) {
@@ -57,6 +59,16 @@ export function WizardPagamento() {
           presente_id: presenteId,
           estilo: "gerando",
           status: "generating",
+        });
+
+        const edgeUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-music`;
+        fetch(edgeUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({ presente_id: presenteId }),
         });
       }
 
