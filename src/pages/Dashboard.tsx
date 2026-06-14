@@ -87,6 +87,7 @@ function GiftCard({
   copiedId,
   onDelete,
   onConfirmPayment,
+  onRetry,
   style,
 }: {
   gift: Gift;
@@ -94,6 +95,7 @@ function GiftCard({
   copiedId: string | null;
   onDelete: (gift: Gift) => void;
   onConfirmPayment: (id: string) => Promise<void>;
+  onRetry?: (gift: Gift) => void;
   style: { animationDelay: string };
 }) {
   return (
@@ -217,6 +219,14 @@ function GiftCard({
               {gift.description}
             </p>
             <div className="flex gap-4 mt-4">
+              {(gift.attempts ?? 0) >= 1 && (
+                <button
+                  onClick={() => onRetry?.(gift)}
+                  className="font-label-md text-label-md text-primary px-4 py-2 rounded-lg hover:bg-primary-fixed transition-all"
+                >
+                  Tentar novamente
+                </button>
+              )}
               <button
                 onClick={() => onDelete(gift)}
                 className="font-label-md text-label-md text-on-surface-variant px-4 py-2 rounded-lg hover:bg-warm-gray transition-all"
@@ -345,7 +355,7 @@ function ErrorBanner({ message, onRetry }: { message: string; onRetry: () => voi
 }
 
 export function Dashboard() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { gifts, loading, error, stats, refetch } = useGifts();
   const { addToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -394,6 +404,36 @@ export function Dashboard() {
     setCopiedId(id);
     addToast("Link copiado!", "success");
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleRetry = async (gift: Gift) => {
+    addToast("Reiniciando geração da música...", "info");
+    const { error: resetErr } = await supabase
+      .from("musicas")
+      .update({ attempts: 0, status: "generating", last_attempt_at: null })
+      .eq("presente_id", gift.id);
+    if (resetErr) {
+      addToast("Erro ao reiniciar a geração", "error");
+      return;
+    }
+    const edgeUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-music`;
+    try {
+      const response = await fetch(edgeUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ presente_id: gift.id }),
+      });
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("retry generate-music error:", response.status, errText);
+      }
+    } catch (err) {
+      console.error("retry generate-music fetch failed:", err);
+    }
+    refetch();
   };
 
   const handleDelete = async () => {
@@ -554,6 +594,7 @@ export function Dashboard() {
                   copiedId={copiedId}
                   onDelete={setDeleteTarget}
                   onConfirmPayment={handleConfirmPayment}
+                  onRetry={handleRetry}
                   style={{ animationDelay: `${0.3 + i * 0.08}s` }}
                 />
               ))}

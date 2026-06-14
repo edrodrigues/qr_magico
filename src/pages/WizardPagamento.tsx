@@ -33,48 +33,41 @@ export function WizardPagamento() {
       return;
     }
 
-    const slug = result.slug;
-    let presenteId = existingDraftId;
+    const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
 
-    if (slug) {
-      const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
-      const link = `${appUrl}/p/${slug}`;
+    // presenteId is the database UUID from wizard context or URL param
+    let presenteId = existingDraftId || draftId;
+
+    // Fallback: saveDraft did a fresh INSERT — fetch id from the returned slug
+    if (!presenteId && result.slug) {
       const { data } = await supabase
         .from("presentes")
-        .update({ link })
-        .eq("slug", slug)
         .select("id")
+        .eq("slug", result.slug)
         .single();
       if (data) presenteId = data.id;
-    } else if (existingDraftId) {
-      const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
-      const { data } = await supabase
-        .from("presentes")
-        .select("slug, id")
-        .eq("id", existingDraftId)
-        .single();
-      if (data?.slug) {
-        const link = `${appUrl}/p/${data.slug}`;
-        await supabase.from("presentes").update({ link }).eq("id", existingDraftId);
-        presenteId = data.id;
-      }
-    } else if (draftId) {
-      const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
-      const { data } = await supabase
-        .from("presentes")
-        .select("slug, id")
-        .eq("id", draftId)
-        .single();
-      if (data?.slug) {
-        const link = `${appUrl}/p/${data.slug}`;
-        await supabase.from("presentes").update({ link }).eq("id", draftId);
-        presenteId = data.id;
-      }
     }
 
     if (!presenteId) {
       addToast("Erro ao localizar o presente", "error");
       return;
+    }
+
+    // Ensure the public link is set
+    const slug = result.slug;
+    if (slug) {
+      const link = `${appUrl}/p/${slug}`;
+      await supabase.from("presentes").update({ link }).eq("slug", slug);
+    } else {
+      const { data: presente } = await supabase
+        .from("presentes")
+        .select("slug")
+        .eq("id", presenteId)
+        .single();
+      if (presente?.slug) {
+        const link = `${appUrl}/p/${presente.slug}`;
+        await supabase.from("presentes").update({ link }).eq("id", presenteId);
+      }
     }
 
     await supabase

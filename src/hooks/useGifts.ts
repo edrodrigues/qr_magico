@@ -15,6 +15,7 @@ export interface Gift {
   thumbnailUrl?: string;
   description?: string;
   createdAt: string;
+  attempts?: number;
 }
 
 const STATUS_MAP: Record<string, GiftStatus> = {
@@ -40,6 +41,9 @@ const STATUS_ICONS: Record<GiftStatus, string> = {
 
 function mapRowToGift(row: any): Gift {
   const status = STATUS_MAP[row.status] || "draft";
+  const attempts = row.musicas?.[0]?.attempts ?? 0;
+  const elapsed = Date.now() - new Date(row.updated_at ?? row.created_at).getTime();
+  const stuck = status === "generating" && elapsed > 5 * 60 * 1000;
   return {
     id: row.id,
     name: row.nome_homenageado,
@@ -49,9 +53,14 @@ function mapRowToGift(row: any): Gift {
     statusIcon: STATUS_ICONS[status],
     link: row.link || undefined,
     thumbnailUrl: row.thumbnail_url || undefined,
+    attempts,
     description:
       status === "generating"
-        ? "Estamos processando sua música personalizada..."
+        ? attempts >= 3
+          ? "Falha na geração. Tente novamente."
+          : stuck
+            ? `A geração está demorando mais que o esperado. Tentativa ${attempts + 1} de 3.`
+            : "Estamos processando sua música personalizada..."
         : status === "draft"
           ? `Iniciado em ${new Date(row.created_at).toLocaleDateString("pt-BR")}`
           : undefined,
@@ -77,7 +86,7 @@ export function useGifts() {
 
     const { data, error: err } = await supabase
       .from("presentes")
-      .select("*")
+      .select("*, musicas(attempts)")
       .eq("usuario_id", user.id)
       .neq("status", "cancelled")
       .order("created_at", { ascending: false });

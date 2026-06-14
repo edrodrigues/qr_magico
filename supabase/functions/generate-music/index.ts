@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0"
 
 const ELEVENLABS_API_URL = "https://api.elevenlabs.io/v1/music"
+const FETCH_TIMEOUT_MS = 55_000
 
 interface PresenteRow {
   id: string
@@ -67,30 +68,40 @@ async function callElevenLabs(
     body.force_instrumental = true
   }
 
-  const response = await fetch(ELEVENLABS_API_URL, {
-    method: "POST",
-    headers: {
-      "xi-api-key": apiKey,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
 
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`ElevenLabs error (${response.status}): ${errorText}`)
+  try {
+    const response = await fetch(ELEVENLABS_API_URL, {
+      method: "POST",
+      headers: {
+        "xi-api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`ElevenLabs error (${response.status}): ${errorText}`)
+    }
+
+    return await response.arrayBuffer()
+  } finally {
+    clearTimeout(timeoutId)
   }
-
-  return await response.arrayBuffer()
 }
 
 serve(async (req) => {
+  const startTime = Date.now()
+
   if (req.method === "OPTIONS") {
     return new Response(null, {
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers": "Authorization, Content-Type",
+        "Access-Control-Allow-Headers": "Content-Type",
       },
     })
   }
@@ -99,10 +110,11 @@ serve(async (req) => {
     return new Response("Method not allowed", { status: 405 })
   }
 
-  let presenteId: string | undefined
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   const supabase = createClient(supabaseUrl, supabaseKey)
+
+  let presenteId: string | undefined
 
   try {
     const body = await req.json()
@@ -123,6 +135,12 @@ serve(async (req) => {
     if (presenteErr || !presente) {
       return new Response(JSON.stringify({ error: "Presente not found" }), {
         status: 404,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      })
+    }
+
+    if (presente.status === "ready") {
+      return new Response(JSON.stringify({ success: true, skipped: true }), {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       })
     }
@@ -192,6 +210,9 @@ serve(async (req) => {
       .update({ status: "ready", updated_at: new Date().toISOString() })
       .eq("id", presenteId)
 
+    const elapsed = Date.now() - startTime
+    console.log(`generate-music OK ${presenteId} in ${elapsed}ms`)
+
     return new Response(JSON.stringify({ success: true, isInstrumental }), {
       headers: {
         "Content-Type": "application/json",
@@ -199,21 +220,34 @@ serve(async (req) => {
       },
     })
   } catch (err) {
-    console.error("generate-music error:", err)
+    const elapsed = Date.now() - startTime
+    console.error(`generate-music error ${presenteId} at ${elapsed}ms:`, err)
+
     if (presenteId) {
-      try {
-        await supabase
-          .from("musicas")
-          .update({ status: "failed" })
-          .eq("presente_id", presenteId)
-        await supabase
-          .from("presentes")
-          .update({ status: "pending_payment", updated_at: new Date().toISOString() })
-          .eq("id", presenteId)
-      } catch {
-        // ignore cleanup errors
-      }
+      const { data: musicasRow } = await supabase
+        .from("musicas")
+        .select("attempts")
+        .eq("presente_id", presenteId)
+        .maybeSingle()
+
+      const attempts = (musicasRow?.attempts ?? 0) + 1
+      const newStatus = attempts >= 3 ? "failed" : "generating"
+
+      await supabase
+        .from("musicas")
+        .update({
+          attempts,
+          last_attempt_at: new Date().toISOString(),
+          status: newStatus,
+        })
+        .eq("presente_id", presenteId)
+
+      await supabase
+        .from("presentes")
+        .update({ updated_at: new Date().toISOString() })
+        .eq("id", presenteId)
     }
+
     return new Response(
       JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }),
       {
