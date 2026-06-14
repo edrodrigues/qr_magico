@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "./contexts/AuthContext";
 import { WizardProvider } from "./contexts/WizardContext";
@@ -40,6 +40,7 @@ export default function App() {
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/retrospectiva" element={<RetrospectivaDesktop />} />
             <Route path="/p/:slug" element={<RetrospectivaPage />} />
+            <Route path="*" element={<Navigate to={window.location.pathname.toLowerCase()} replace />} />
           </Routes>
           </ToastProvider>
         </AuthProvider>
