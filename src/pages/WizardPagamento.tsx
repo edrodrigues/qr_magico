@@ -22,26 +22,44 @@ export function WizardPagamento() {
   }, [existingDraftId, setDraftId]);
 
   const handlePagar = async () => {
-    const result = await saveDraft({ status: "pending_payment" });
+    const result = await saveDraft({ status: "generating" });
 
     if (!result.error) {
       const slug = result.slug;
+      let presenteId = existingDraftId;
+
       if (slug) {
         const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
         const link = `${appUrl}/p/${slug}`;
-        await supabase.from("presentes").update({ link }).eq("slug", slug);
+        const { data } = await supabase
+          .from("presentes")
+          .update({ link })
+          .eq("slug", slug)
+          .select("id")
+          .single();
+        if (data) presenteId = data.id;
       } else if (existingDraftId) {
         const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
         const { data } = await supabase
           .from("presentes")
-          .select("slug")
+          .select("slug, id")
           .eq("id", existingDraftId)
           .single();
         if (data?.slug) {
           const link = `${appUrl}/p/${data.slug}`;
           await supabase.from("presentes").update({ link }).eq("id", existingDraftId);
+          presenteId = data.id;
         }
       }
+
+      if (presenteId) {
+        await supabase.from("musicas").insert({
+          presente_id: presenteId,
+          estilo: "gerando",
+          status: "generating",
+        });
+      }
+
       resetWizard();
       navigate("/dashboard");
     }

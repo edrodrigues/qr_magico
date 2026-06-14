@@ -13,12 +13,16 @@ const occasions = [
 
 export function WizardOcasiaoNome() {
   const navigate = useNavigate();
-  const { data, setName, setOccasion, saveDraft, isSaving } = useWizard();
-  const { name, occasion } = data;
+  const { data, setName, setRemetente, setOccasion, saveDraft, isSaving } = useWizard();
+  const { name, remetente, occasion } = data;
 
   const handleNext = async () => {
-    if (!name.trim() || !occasion || isSaving) return;
-    const result = await saveDraft({ nome_homenageado: name.trim(), ocasiao: occasion });
+    if (!name.trim() || !remetente.trim() || !occasion || isSaving) return;
+    const result = await saveDraft({
+      nome_homenageado: name.trim(),
+      nome_remetente: remetente.trim(),
+      ocasiao: occasion,
+    });
     if (!result.error) {
       navigate("/wizard/data-relacao");
     }
@@ -63,6 +67,22 @@ export function WizardOcasiaoNome() {
                   className="w-full bg-warm-gray border-transparent rounded-xl px-6 py-4 font-body-lg text-body-lg text-on-surface transition-all placeholder:text-outline/50 focus:ring-0 focus:border-secondary"
                 />
               </div>
+              <div className="max-w-md mx-auto">
+                <label
+                  className="block font-label-md text-label-md text-primary mb-3 uppercase tracking-wider"
+                  htmlFor="sender-name"
+                >
+                  Seu Nome (aparece na retrospectiva)
+                </label>
+                <input
+                  id="sender-name"
+                  type="text"
+                  value={remetente}
+                  onChange={(e) => setRemetente(e.target.value)}
+                  placeholder="Ex: João Pedro"
+                  className="w-full bg-warm-gray border-transparent rounded-xl px-6 py-4 font-body-lg text-body-lg text-on-surface transition-all placeholder:text-outline/50 focus:ring-0 focus:border-secondary"
+                />
+              </div>
               <div className="space-y-6">
                 <span className="block font-label-md text-label-md text-primary uppercase tracking-wider">
                   Qual a ocasião?
@@ -94,11 +114,11 @@ export function WizardOcasiaoNome() {
               <div className="pt-8 flex justify-center">
                 <button
                   type="button"
-                  disabled={!name.trim() || !occasion || isSaving}
+                  disabled={!name.trim() || !remetente.trim() || !occasion || isSaving}
                   onClick={handleNext}
                   className={cn(
                     "group relative px-12 py-4 rounded-full font-label-md text-label-md transition-all duration-300 overflow-hidden",
-                    name.trim() && occasion && !isSaving
+                    name.trim() && remetente.trim() && occasion && !isSaving
                       ? "bg-primary text-on-primary hover:scale-105 active:scale-95 shadow-lg hover:shadow-primary/20"
                       : "bg-surface-container-highest text-on-surface-variant cursor-not-allowed opacity-50"
                   )}
@@ -111,7 +131,7 @@ export function WizardOcasiaoNome() {
                       </span>
                     )}
                   </span>
-                  {name.trim() && occasion && !isSaving && (
+                  {name.trim() && remetente.trim() && occasion && !isSaving && (
                     <div className="absolute inset-0 bg-gradient-to-r from-primary via-coral-deep to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   )}
                 </button>

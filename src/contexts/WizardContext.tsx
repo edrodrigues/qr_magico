@@ -5,10 +5,12 @@ import { useAuth } from "./AuthContext";
 interface PhotoFile {
   file: File;
   preview: string;
+  storageUrl?: string;
 }
 
 interface WizardData {
   name: string;
+  remetente: string;
   occasion: string;
   startDate: string;
   story: string;
@@ -19,6 +21,7 @@ interface WizardData {
 interface WizardContextType {
   data: WizardData;
   setName: (name: string) => void;
+  setRemetente: (remetente: string) => void;
   setOccasion: (occasion: string) => void;
   setStartDate: (date: string) => void;
   setStory: (story: string) => void;
@@ -37,6 +40,7 @@ const WizardContext = createContext<WizardContextType | undefined>(undefined);
 
 const EMPTY_DATA: WizardData = {
   name: "",
+  remetente: "",
   occasion: "",
   startDate: "",
   story: "",
@@ -63,6 +67,10 @@ export function WizardProvider({ children }: { children: ReactNode }) {
 
   const setName = useCallback((name: string) => {
     setData((prev) => ({ ...prev, name }));
+  }, []);
+
+  const setRemetente = useCallback((remetente: string) => {
+    setData((prev) => ({ ...prev, remetente }));
   }, []);
 
   const setOccasion = useCallback((occasion: string) => {
@@ -135,6 +143,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
       value={{
         data,
         setName,
+        setRemetente,
         setOccasion,
         setStartDate,
         setStory,

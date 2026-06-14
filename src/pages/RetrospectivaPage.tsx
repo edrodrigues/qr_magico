@@ -1,47 +1,71 @@
-import { useState, useEffect } from "react";
+import { useMemo, useCallback, useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { supabase } from "../lib/supabase";
-import { Header, Footer } from "../components/Header";
-
-interface PresenteData {
-  nome_homenageado: string;
-  ocasiao: string;
-  descricao_relacao: string;
-  estilo_musical: string;
-  thumbnail_url: string;
-  data_inicio: string;
-  status: string;
-}
+import { Helmet } from "react-helmet-async";
+import { useRetroData } from "../hooks/useRetroData";
+import { StoryViewer } from "../components/retro/StoryViewer";
+import { SlideCover } from "../components/retro/SlideCover";
+import { SlideOccasion } from "../components/retro/SlideOccasion";
+import { SlideStory } from "../components/retro/SlideStory";
+import { SlideGallery } from "../components/retro/SlideGallery";
+import { SlideMusicStyle } from "../components/retro/SlideMusicStyle";
+import { SlideMusicReveal } from "../components/retro/SlideMusicReveal";
+import { SlideShare } from "../components/retro/SlideShare";
+import { LoadingState } from "../components/retro/LoadingState";
+import type { SlideConfig } from "../types/retro";
 
 export function RetrospectivaPage() {
   const { slug } = useParams<{ slug: string }>();
-  const [presente, setPresente] = useState<PresenteData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [qrOpen, setQrOpen] = useState(false);
+  const { data, loading, error, refetch } = useRetroData(slug ?? "");
+  const [showViewer, setShowViewer] = useState(false);
+  const [pageReady, setPageReady] = useState(false);
 
   useEffect(() => {
-    if (!slug) {
-      setError("Link inválido");
-      setLoading(false);
-      return;
+    if (data?.presente.status === "ready") {
+      setPageReady(true);
     }
-    supabase
-      .from("presentes")
-      .select("nome_homenageado, ocasiao, descricao_relacao, estilo_musical, thumbnail_url, data_inicio, status")
-      .eq("slug", slug)
-      .single()
-      .then(({ data, error: err }) => {
-        if (err || !data) {
-          setError(err?.message === "No rows found" ? "Presente não encontrado" : "Erro ao carregar presente");
-        } else {
-          setPresente(data as PresenteData);
-        }
-        setLoading(false);
-      });
-  }, [slug]);
+  }, [data?.presente.status]);
 
-  if (loading) {
+  const handleLoadingReady = useCallback(() => {
+    refetch();
+  }, [refetch]);
+
+  const slides: SlideConfig[] = useMemo(() => [
+    { id: "cover", duration: 4000 },
+    { id: "occasion", duration: 6000 },
+    { id: "story", duration: 8000 },
+    { id: "gallery", duration: 8000 },
+    { id: "music-style", duration: 4000 },
+    { id: "music-reveal", duration: 0, isManual: true },
+    { id: "share", duration: 0, isManual: true },
+  ], []);
+
+  const renderSlide = useCallback((slide: SlideConfig, index: number) => {
+    switch (slide.id) {
+      case "cover":
+        return <SlideCover />;
+      case "occasion":
+        return <SlideOccasion />;
+      case "story":
+        return <SlideStory />;
+      case "gallery":
+        return <SlideGallery />;
+      case "music-style":
+        return <SlideMusicStyle />;
+      case "music-reveal":
+        return <SlideMusicReveal />;
+      case "share":
+        return <SlideShare />;
+      default:
+        return <div className="w-full h-full flex items-center justify-center">Slide {index + 1}</div>;
+    }
+  }, []);
+
+  const thumbnail = data?.presente?.thumbnail_url
+    ?? data?.fotos?.[0]?.url
+    ?? "";
+
+  // Loading state
+  if (loading && !data) {
     return (
       <div className="bg-soft-cream min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -54,7 +78,8 @@ export function RetrospectivaPage() {
     );
   }
 
-  if (error || !presente) {
+  // Error state
+  if (error || !data) {
     return (
       <div className="bg-soft-cream min-h-screen flex items-center justify-center px-margin-mobile">
         <div className="text-center space-y-6 max-w-md">
@@ -78,7 +103,10 @@ export function RetrospectivaPage() {
     );
   }
 
-  if (presente.status !== "ready") {
+  const presente = data.presente;
+
+  // Non-ready status messages
+  if (presente.status !== "ready" && presente.status !== "generating") {
     const statusMessages: Record<string, { icon: string; title: string; message: string }> = {
       draft: {
         icon: "edit_note",
@@ -89,11 +117,6 @@ export function RetrospectivaPage() {
         icon: "hourglass_empty",
         title: "Aguardando pagamento",
         message: "O pagamento deste presente ainda não foi confirmado.",
-      },
-      generating: {
-        icon: "sync",
-        title: "Estamos preparando sua surpresa",
-        message: "Em breve a magia estará pronta. Volte mais tarde!",
       },
       cancelled: {
         icon: "cancel",
@@ -113,9 +136,7 @@ export function RetrospectivaPage() {
           <div className="w-20 h-20 rounded-full bg-surface-container-highest mx-auto flex items-center justify-center">
             <span className="material-symbols-outlined text-outline text-4xl">{info.icon}</span>
           </div>
-          <h1 className="font-headline-md-mobile text-headline-md-mobile text-on-surface">
-            {info.title}
-          </h1>
+          <h1 className="font-headline-md-mobile text-headline-md-mobile text-on-surface">{info.title}</h1>
           <p className="font-body-md text-body-md text-on-surface-variant">{info.message}</p>
           <Link
             to="/"
@@ -128,176 +149,47 @@ export function RetrospectivaPage() {
     );
   }
 
-  const occasionLabel = presente.ocasiao || "Especial";
+  // Generating state
+  if (presente.status === "generating" && !showViewer) {
+    return (
+      <div className="w-screen h-screen bg-background">
+        <LoadingState status={presente.status} onReady={handleLoadingReady} />
+      </div>
+    );
+  }
 
+  // Ready — show the StoryViewer
   return (
-    <div className="bg-soft-cream min-h-screen">
-      <Header
-        showNav
-        rightContent={
-          <button
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-full font-label-md text-label-md hover:scale-105 active:scale-95 transition-transform"
-            onClick={() => setQrOpen(true)}
-          >
-            <span className="material-symbols-outlined text-[20px]">qr_code_2</span>
-            <span>Ver QR Code</span>
-          </button>
-        }
-      />
+    <>
+      <Helmet>
+        <title>QR Mágico — Para {presente.nome_homenageado}</title>
+        <meta property="og:title" content={`QR Mágico — Para ${presente.nome_homenageado}`} />
+        <meta property="og:description" content={`Uma retrospectiva especial de ${presente.ocasiao}`} />
+        {thumbnail && <meta property="og:image" content={thumbnail} />}
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+      </Helmet>
 
-      <main className="pt-24 pb-20 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto overflow-hidden">
-        <div className="text-center mb-12 animate-reveal">
-          <h1 className="font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-4 leading-tight">
-            Para {presente.nome_homenageado}
-          </h1>
-          <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest mb-2">
-            {occasionLabel}
-          </p>
-          {presente.data_inicio && (
-            <p className="font-body-md text-body-md text-on-surface-variant">
-              Desde {new Date(presente.data_inicio).toLocaleDateString("pt-BR")}
-            </p>
-          )}
+      <div className="w-screen h-screen bg-black/90 flex items-center justify-center overflow-hidden">
+        {/* Desktop blurred background */}
+        {thumbnail && (
+          <div
+            className="hidden md:block absolute inset-0 bg-cover bg-center blur-3xl scale-110 opacity-30"
+            style={{ backgroundImage: `url(${thumbnail})` }}
+          />
+        )}
+
+        {/* 9:16 container */}
+        <div className="relative w-full h-full md:h-[90vh] md:w-auto md:aspect-[9/16] md:max-h-[90vh] shadow-2xl">
+          <StoryViewer
+            slides={slides}
+            presente={presente}
+            fotos={data.fotos}
+            musica={data.musica}
+            renderSlide={renderSlide}
+          />
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-          <div className="lg:col-span-8 space-y-8">
-            <div className="relative group rounded-[2rem] overflow-hidden shadow-2xl bg-warm-gray aspect-[4/5] md:aspect-video">
-              <div className="w-full h-full flex items-center justify-center">
-                {presente.thumbnail_url ? (
-                  <img className="w-full h-full object-cover" src={presente.thumbnail_url} alt="" />
-                ) : (
-                  <div className="text-center p-12">
-                    <span className="material-symbols-outlined text-outline-variant text-6xl mb-4 block">
-                      photo_library
-                    </span>
-                    <p className="font-body-md text-body-md text-on-surface-variant">
-                      Fotos em breve
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {presente.estilo_musical && (
-              <div className="glass-panel rounded-3xl p-6 md:p-8 shadow-lg border border-white/50">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 flex-shrink-0 rounded-2xl bg-primary/10 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-primary text-3xl">music_note</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-title-lg text-title-lg text-primary">Trilha Sonora</h3>
-                    <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
-                      {presente.estilo_musical}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-outline">hourglass_empty</span>
-                    <span className="font-label-sm text-label-sm text-on-surface-variant">Gerando...</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="lg:col-span-4 space-y-8">
-            <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-outline-variant/30">
-              <span className="material-symbols-outlined text-secondary text-[32px] mb-4">auto_awesome</span>
-              <h2 className="font-title-lg text-title-lg text-on-surface mb-4">Nossa História</h2>
-              <div className="font-body-md text-body-md text-on-surface-variant leading-relaxed">
-                {presente.descricao_relacao ? (
-                  <p>{presente.descricao_relacao}</p>
-                ) : (
-                  <p className="italic">Uma história especial está sendo escrita...</p>
-                )}
-              </div>
-              <div className="mt-8 pt-8 border-t border-outline-variant/20">
-                <p className="font-title-lg text-primary italic">
-                  &mdash; Com todo meu afeto.
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <button className="w-full bg-gradient-to-br from-coral-light to-gold-glimmer py-4 rounded-full font-label-md text-label-md text-on-primary-container shadow-lg flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all">
-                <span className="material-symbols-outlined">picture_as_pdf</span>
-                BAIXAR CARTÃO PARA IMPRESSÃO
-              </button>
-              <div className="grid grid-cols-2 gap-4">
-                <button className="flex items-center justify-center gap-2 p-4 bg-white border border-outline-variant/50 rounded-2xl hover:bg-warm-gray transition-colors">
-                  <span className="material-symbols-outlined text-primary text-2xl">share</span>
-                  <span className="font-label-md text-label-md">Compartilhar</span>
-                </button>
-                <button className="flex items-center justify-center gap-2 p-4 bg-white border border-outline-variant/50 rounded-2xl hover:bg-warm-gray transition-colors">
-                  <span className="material-symbols-outlined text-secondary text-2xl">favorite</span>
-                  <span className="font-label-md text-label-md">Favoritar</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-surface-container rounded-2xl p-6 text-center">
-              <p className="font-label-sm text-label-sm text-on-surface-variant mb-3">VOCÊ TAMBÉM PODE CRIAR UM</p>
-              <p className="font-body-md text-body-md font-semibold mb-4">Transforme suas fotos em memórias mágicas.</p>
-              <Link
-                to="/"
-                className="text-primary font-label-md text-label-md underline underline-offset-4 decoration-primary/30 hover:decoration-primary transition-all"
-              >
-                Começar agora
-              </Link>
-            </div>
-          </div>
-        </div>
-      </main>
-
-      {qrOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-on-surface/40 backdrop-blur-sm px-margin-mobile"
-          onClick={() => setQrOpen(false)}
-        >
-          <div className="bg-white rounded-[2.5rem] p-8 md:p-12 max-w-sm w-full text-center shadow-2xl relative" onClick={(e) => e.stopPropagation()}>
-            <button
-              className="absolute top-6 right-6 p-2 rounded-full hover:bg-warm-gray transition-colors"
-              onClick={() => setQrOpen(false)}
-            >
-              <span className="material-symbols-outlined">close</span>
-            </button>
-            <div className="w-full aspect-square bg-warm-gray rounded-3xl p-6 mb-6 flex items-center justify-center border-4 border-gold-glimmer">
-              <div className="relative w-full h-full bg-white rounded-xl p-4 flex flex-col items-center justify-center">
-                <div className="grid grid-cols-5 grid-rows-5 gap-2 w-full h-full opacity-80">
-                  {[
-                    [1,1,0,1,1],
-                    [1,0,1,0,1],
-                    [0,1,1,1,0],
-                    [1,0,1,0,1],
-                    [1,1,0,1,1],
-                  ].flat().map((v, i) => (
-                    <div key={i} className={v ? "bg-primary rounded-sm" : ""} />
-                  ))}
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-12 h-12 bg-white rounded-full p-1 shadow-lg flex items-center justify-center">
-                    <span className="material-symbols-outlined text-primary text-[24px]">favorite</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <h4 className="font-title-lg text-title-lg text-on-surface mb-2">Seu Portal Mágico</h4>
-            <p className="font-body-md text-body-md text-on-surface-variant mb-6">
-              Aponte a câmera para acessar esta retrospectiva em qualquer lugar.
-            </p>
-            <button
-              className="w-full py-4 border-2 border-primary text-primary rounded-full font-label-md text-label-md hover:bg-primary hover:text-white transition-all"
-              onClick={() => {
-                navigator.clipboard?.writeText(window.location.href);
-              }}
-            >
-              Compartilhar Link
-            </button>
-          </div>
-        </div>
-      )}
-
-      <Footer />
-    </div>
+      </div>
+    </>
   );
 }

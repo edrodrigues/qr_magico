@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header, Footer } from "../components/Header";
 import { useWizard } from "../contexts/WizardContext";
+import { supabase } from "../lib/supabase";
 import { cn } from "../lib/utils";
 
 export function WizardUploadFotos() {
@@ -13,40 +14,34 @@ export function WizardUploadFotos() {
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const processFiles = useCallback(
-    (files: File[]) => {
-      setPhotos((current) => {
-        const slotsLeft = 6 - current.length;
-        const incoming = Array.from(files).slice(0, slotsLeft);
-        const newPhotos = incoming.map((file) => ({
-          file,
-          preview: URL.createObjectURL(file),
-        }));
-        return [...current, ...newPhotos];
-      });
-    },
-    [setPhotos]
-  );
-
-  const simulateUpload = useCallback((files: File[]) => {
+  const uploadToStorage = useCallback(async (files: File[]) => {
     setUploading(true);
     setProgress(0);
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        const next = prev + Math.floor(Math.random() * 15);
-        if (next >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            setUploading(false);
-            setProgress(0);
-            processFiles(files);
-          }, 500);
-          return 100;
-        }
-        return next;
-      });
-    }, 150);
-  }, [processFiles]);
+    const uploaded: typeof photos = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const path = `uploads/${Date.now()}_${file.name}`;
+      const { data: uploadData, error } = await supabase.storage
+        .from("fotos")
+        .upload(path, file);
+
+      if (error) {
+        console.error("Upload error:", error.message);
+        continue;
+      }
+
+      const { data: urlData } = supabase.storage.from("fotos").getPublicUrl(path);
+      const publicUrl = urlData?.publicUrl || "";
+
+      uploaded.push({ file, preview: URL.createObjectURL(file), storageUrl: publicUrl });
+      setProgress(Math.round(((i + 1) / files.length) * 100));
+    }
+
+    setPhotos((current) => [...current, ...uploaded]);
+    setUploading(false);
+    setProgress(0);
+  }, [setPhotos]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -55,9 +50,9 @@ export function WizardUploadFotos() {
       const files = Array.from(e.dataTransfer.files).filter((f) =>
         f.type.startsWith("image/")
       );
-      if (files.length) simulateUpload(files);
+      if (files.length) uploadToStorage(files);
     },
-    [simulateUpload]
+    [uploadToStorage]
   );
 
   const handleFileChange = useCallback(
@@ -65,10 +60,10 @@ export function WizardUploadFotos() {
       const files = Array.from(e.target.files || []).filter((f) =>
         f.type.startsWith("image/")
       );
-      if (files.length) simulateUpload(files);
+      if (files.length) uploadToStorage(files);
       if (fileInputRef.current) fileInputRef.current.value = "";
     },
-    [simulateUpload]
+    [uploadToStorage]
   );
 
   const dragIndexRef = useRef<number | null>(null);
