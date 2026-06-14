@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { cn } from "../lib/utils";
 import { useAuth } from "../contexts/AuthContext";
@@ -17,17 +17,17 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "payment", label: "Pagamento" },
 ];
 
-const STATUS_TAB_MAP: Record<TabId, GiftStatus | null> = {
-  all: null,
-  ready: "ready",
-  drafts: "draft",
-  payment: "pending_payment",
+const STATUS_TAB_MAP: Record<TabId, GiftStatus[]> = {
+  all: [],
+  ready: ["ready"],
+  drafts: ["draft"],
+  payment: ["pending_payment", "generating"],
 };
 
 function getStatusTabCount(gifts: Gift[], tabId: TabId): number {
   if (tabId === "all") return gifts.length;
-  const status = STATUS_TAB_MAP[tabId];
-  return gifts.filter((g) => g.status === status).length;
+  const statuses = STATUS_TAB_MAP[tabId];
+  return gifts.filter((g) => statuses.includes(g.status)).length;
 }
 
 const OCCASION_SUGGESTIONS = [
@@ -86,12 +86,14 @@ function GiftCard({
   onCopy,
   copiedId,
   onDelete,
+  onConfirmPayment,
   style,
 }: {
   gift: Gift;
   onCopy: (id: string, link: string) => void;
   copiedId: string | null;
   onDelete: (gift: Gift) => void;
+  onConfirmPayment: (id: string) => Promise<void>;
   style: { animationDelay: string };
 }) {
   return (
@@ -214,18 +216,7 @@ function GiftCard({
             <p className="font-body-md text-body-md text-on-surface-variant mt-2 italic">
               {gift.description}
             </p>
-            <div className="mt-4 space-y-2">
-              <div className="progress-bar">
-                <div className="progress-bar-fill w-2/3" />
-              </div>
-              <p className="font-label-sm text-label-sm text-on-surface-variant">
-                Gerando música com IA...
-              </p>
-            </div>
             <div className="flex gap-4 mt-4">
-              <button className="font-label-md text-label-md text-primary border border-primary/20 px-4 py-2 rounded-lg hover:bg-primary/5 transition-all">
-                Ver Visualização
-              </button>
               <button
                 onClick={() => onDelete(gift)}
                 className="font-label-md text-label-md text-on-surface-variant px-4 py-2 rounded-lg hover:bg-warm-gray transition-all"
@@ -237,19 +228,30 @@ function GiftCard({
         )}
 
         {gift.status === "pending_payment" && (
-          <div className="flex items-center gap-3 mt-4">
-            <span className="w-2 h-2 rounded-full bg-secondary animate-pulse-dot" />
-            <p className="font-body-md text-body-md text-on-surface-variant flex-1">
-              Finalize o pagamento para liberar o presente
-            </p>
-            <button className="bg-primary text-on-primary px-6 py-2 rounded-full font-label-md text-label-md hover:bg-coral-deep transition-all flex-shrink-0">
-              Finalizar Pagamento
-            </button>
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="w-2 h-2 rounded-full bg-secondary animate-pulse-dot" />
+              <p className="font-body-md text-body-md text-on-surface-variant flex-1">
+                Finalize o pagamento para liberar o presente
+              </p>
+              <Link
+                to={`/wizard/pagamento?draftId=${gift.id}`}
+                className="bg-primary text-on-primary px-6 py-2 rounded-full font-label-md text-label-md hover:bg-coral-deep transition-all flex-shrink-0"
+              >
+                Finalizar Pagamento
+              </Link>
+              <button
+                onClick={() => onDelete(gift)}
+                className="material-symbols-outlined text-on-surface-variant hover:text-error transition-colors"
+              >
+                delete
+              </button>
+            </div>
             <button
-              onClick={() => onDelete(gift)}
-              className="material-symbols-outlined text-on-surface-variant hover:text-error transition-colors"
+              onClick={() => onConfirmPayment(gift.id)}
+              className="text-xs text-secondary hover:underline underline-offset-2 transition-all"
             >
-              delete
+              Confirmar pagamento (admin)
             </button>
           </div>
         )}
@@ -357,6 +359,27 @@ export function Dashboard() {
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "name">("newest");
   const [deleteTarget, setDeleteTarget] = useState<Gift | null>(null);
 
+  const handleConfirmPayment = async (id: string) => {
+    const { error: err } = await supabase
+      .from("presentes")
+      .update({ status: "generating", updated_at: new Date().toISOString() })
+      .eq("id", id);
+    if (err) {
+      addToast("Erro ao confirmar pagamento", "error");
+    } else {
+      addToast("Pagamento confirmado! Presente em processamento.", "success");
+      refetch();
+    }
+  };
+
+  const hasProcessing = useMemo(() => gifts.some((g) => g.status === "generating"), [gifts]);
+
+  useEffect(() => {
+    if (!hasProcessing) return;
+    const interval = setInterval(refetch, 15000);
+    return () => clearInterval(interval);
+  }, [hasProcessing, refetch]);
+
   const handleTabChange = (tabId: TabId) => {
     setActiveTab(tabId);
     setSearchParams(tabId === "all" ? {} : { tab: tabId });
@@ -391,9 +414,9 @@ export function Dashboard() {
   const filteredGifts = useMemo(() => {
     let result = gifts;
 
-    const statusFilter = STATUS_TAB_MAP[activeTab];
-    if (statusFilter) {
-      result = result.filter((g) => g.status === statusFilter);
+    const statuses = STATUS_TAB_MAP[activeTab];
+    if (statuses.length > 0) {
+      result = result.filter((g) => statuses.includes(g.status));
     }
 
     if (searchQuery.trim()) {
@@ -443,7 +466,7 @@ export function Dashboard() {
           <StatCard label="Rascunhos" value={stats.draft} icon="edit_note" color="#735c00" />
           <StatCard
             label="Pagamento"
-            value={stats.pendingPayment}
+            value={stats.payment}
             icon="hourglass_empty"
             color="#a93539"
           />
@@ -526,6 +549,7 @@ export function Dashboard() {
                   onCopy={handleCopy}
                   copiedId={copiedId}
                   onDelete={setDeleteTarget}
+                  onConfirmPayment={handleConfirmPayment}
                   style={{ animationDelay: `${0.3 + i * 0.08}s` }}
                 />
               ))}

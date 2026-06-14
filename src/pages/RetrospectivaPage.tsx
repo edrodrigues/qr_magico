@@ -10,6 +10,7 @@ interface PresenteData {
   estilo_musical: string;
   thumbnail_url: string;
   data_inicio: string;
+  status: string;
 }
 
 export function RetrospectivaPage() {
@@ -27,7 +28,7 @@ export function RetrospectivaPage() {
     }
     supabase
       .from("presentes")
-      .select("nome_homenageado, ocasiao, descricao_relacao, estilo_musical, thumbnail_url, data_inicio")
+      .select("nome_homenageado, ocasiao, descricao_relacao, estilo_musical, thumbnail_url, data_inicio, status")
       .eq("slug", slug)
       .single()
       .then(({ data, error: err }) => {
@@ -66,6 +67,56 @@ export function RetrospectivaPage() {
           <p className="font-body-md text-body-md text-on-surface-variant">
             Este link pode estar expirado ou o presente foi removido.
           </p>
+          <Link
+            to="/"
+            className="inline-block bg-primary text-on-primary px-8 py-3 rounded-full font-label-md text-label-md hover:brightness-110 transition-all"
+          >
+            Criar meu QR Mágico
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (presente.status !== "ready") {
+    const statusMessages: Record<string, { icon: string; title: string; message: string }> = {
+      draft: {
+        icon: "edit_note",
+        title: "Ainda está sendo criado",
+        message: "Este presente ainda está sendo preparado. Volte mais tarde!",
+      },
+      pending_payment: {
+        icon: "hourglass_empty",
+        title: "Aguardando pagamento",
+        message: "O pagamento deste presente ainda não foi confirmado.",
+      },
+      generating: {
+        icon: "sync",
+        title: "Estamos preparando sua surpresa",
+        message: "Em breve a magia estará pronta. Volte mais tarde!",
+      },
+      cancelled: {
+        icon: "cancel",
+        title: "Não está mais disponível",
+        message: "Este presente foi cancelado e não está mais disponível.",
+      },
+    };
+    const info = statusMessages[presente.status] || {
+      icon: "help",
+      title: "Indisponível",
+      message: "Este presente não está disponível no momento.",
+    };
+
+    return (
+      <div className="bg-soft-cream min-h-screen flex items-center justify-center px-margin-mobile">
+        <div className="text-center space-y-6 max-w-md animate-reveal">
+          <div className="w-20 h-20 rounded-full bg-surface-container-highest mx-auto flex items-center justify-center">
+            <span className="material-symbols-outlined text-outline text-4xl">{info.icon}</span>
+          </div>
+          <h1 className="font-headline-md-mobile text-headline-md-mobile text-on-surface">
+            {info.title}
+          </h1>
+          <p className="font-body-md text-body-md text-on-surface-variant">{info.message}</p>
           <Link
             to="/"
             className="inline-block bg-primary text-on-primary px-8 py-3 rounded-full font-label-md text-label-md hover:brightness-110 transition-all"

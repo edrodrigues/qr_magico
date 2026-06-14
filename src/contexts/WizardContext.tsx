@@ -27,6 +27,7 @@ interface WizardContextType {
   currentStep: number;
   totalSteps: number;
   draftId: string | null;
+  setDraftId: (id: string | null) => void;
   saveDraft: (fields: Record<string, string>) => Promise<{ error: string | null; slug?: string }>;
   isSaving: boolean;
   resetWizard: () => void;
@@ -142,6 +143,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
         currentStep: 1,
         totalSteps: 7,
         draftId,
+        setDraftId,
         saveDraft,
         isSaving,
         resetWizard,

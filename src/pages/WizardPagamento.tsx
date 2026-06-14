@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Header, Footer } from "../components/Header";
 import { useWizard } from "../contexts/WizardContext";
 import { supabase } from "../lib/supabase";
@@ -9,17 +9,38 @@ type PaymentMethod = "pix" | "card";
 
 export function WizardPagamento() {
   const navigate = useNavigate();
-  const { saveDraft, isSaving, resetWizard } = useWizard();
+  const [searchParams] = useSearchParams();
+  const { saveDraft, setDraftId, isSaving, resetWizard } = useWizard();
   const [method, setMethod] = useState<PaymentMethod>("pix");
+
+  const existingDraftId = searchParams.get("draftId");
+
+  useEffect(() => {
+    if (existingDraftId) {
+      setDraftId(existingDraftId);
+    }
+  }, [existingDraftId, setDraftId]);
 
   const handlePagar = async () => {
     const result = await saveDraft({ status: "pending_payment" });
+
     if (!result.error) {
       const slug = result.slug;
       if (slug) {
         const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
         const link = `${appUrl}/p/${slug}`;
         await supabase.from("presentes").update({ link }).eq("slug", slug);
+      } else if (existingDraftId) {
+        const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+        const { data } = await supabase
+          .from("presentes")
+          .select("slug")
+          .eq("id", existingDraftId)
+          .single();
+        if (data?.slug) {
+          const link = `${appUrl}/p/${data.slug}`;
+          await supabase.from("presentes").update({ link }).eq("id", existingDraftId);
+        }
       }
       resetWizard();
       navigate("/dashboard");

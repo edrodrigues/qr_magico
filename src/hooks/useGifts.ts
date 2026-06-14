@@ -26,9 +26,9 @@ const STATUS_MAP: Record<string, GiftStatus> = {
 
 const STATUS_LABELS: Record<GiftStatus, string> = {
   draft: "Rascunho",
-  pending_payment: "Aguardando pagamento",
-  generating: "Gerando trilha sonora",
-  ready: "Pronto para entrega",
+  pending_payment: "Em pagamento",
+  generating: "Em processamento",
+  ready: "Prontos",
 };
 
 const STATUS_ICONS: Record<GiftStatus, string> = {
@@ -51,7 +51,7 @@ function mapRowToGift(row: any): Gift {
     thumbnailUrl: row.thumbnail_url || undefined,
     description:
       status === "generating"
-        ? "Estamos selecionando as melhores melodias para combinar com suas fotos..."
+        ? "Estamos processando sua música personalizada..."
         : status === "draft"
           ? `Iniciado em ${new Date(row.created_at).toLocaleDateString("pt-BR")}`
           : undefined,
@@ -102,6 +102,7 @@ export function useGifts() {
     draft: gifts.filter((g) => g.status === "draft").length,
     pendingPayment: gifts.filter((g) => g.status === "pending_payment").length,
     generating: gifts.filter((g) => g.status === "generating").length,
+    payment: gifts.filter((g) => g.status === "pending_payment" || g.status === "generating").length,
   };
 
   return { gifts, loading, error, stats, refetch: fetchGifts };
