@@ -100,6 +100,10 @@ serve(async (req) => {
   }
 
   let presenteId: string | undefined
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!
+  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  const supabase = createClient(supabaseUrl, supabaseKey)
+
   try {
     const body = await req.json()
     presenteId = body.presente_id
@@ -109,10 +113,6 @@ serve(async (req) => {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       })
     }
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    const supabase = createClient(supabaseUrl, supabaseKey)
 
     const { data: presente, error: presenteErr } = await supabase
       .from("presentes")
@@ -206,6 +206,10 @@ serve(async (req) => {
           .from("musicas")
           .update({ status: "failed" })
           .eq("presente_id", presenteId)
+        await supabase
+          .from("presentes")
+          .update({ status: "pending_payment", updated_at: new Date().toISOString() })
+          .eq("id", presenteId)
       } catch {
         // ignore cleanup errors
       }

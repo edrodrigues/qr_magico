@@ -77,6 +77,12 @@ export function WizardPagamento() {
       return;
     }
 
+    await supabase
+      .from("musicas")
+      .delete()
+      .eq("presente_id", presenteId)
+      .eq("status", "failed");
+
     const { error: musicaError } = await supabase.from("musicas").insert({
       presente_id: presenteId,
       estilo: "gerando",
