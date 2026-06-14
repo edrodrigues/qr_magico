@@ -63,6 +63,25 @@ export function SplashScreen() {
           </p>
         </div>
 
+        <div className="w-full max-w-xs mx-auto mb-8 p-3 rounded-2xl bg-surface-container-lowest/80 border border-outline-variant/20 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <span className="material-symbols-outlined text-primary shrink-0" style={{ fontSize: 20 }}>
+              link
+            </span>
+            <div className="min-w-0">
+              <p className="font-label-sm text-label-sm text-on-surface-variant/60 text-left">
+                Sua URL única
+              </p>
+              <p className="font-body-sm text-body-sm text-primary truncate text-left">
+                qrmagico.app/p/sua-memoria-unica
+              </p>
+            </div>
+            <span className="material-symbols-outlined text-tertiary shrink-0 ml-auto" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>
+              check_circle
+            </span>
+          </div>
+        </div>
+
         <div className="flex flex-col items-center gap-6">
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
