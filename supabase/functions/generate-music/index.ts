@@ -2,10 +2,11 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0"
 
 const ELEVENLABS_API_URL = "https://api.elevenlabs.io/v1/music"
-const FETCH_TIMEOUT_MS = 55_000
+const FETCH_TIMEOUT_MS = 120_000
 
 interface PresenteRow {
   id: string
+  usuario_id: string
   nome_homenageado: string
   nome_remetente: string
   ocasiao: string
@@ -101,7 +102,7 @@ serve(async (req) => {
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
       },
     })
   }
@@ -111,8 +112,26 @@ serve(async (req) => {
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!
-  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-  const supabase = createClient(supabaseUrl, supabaseKey)
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+  const authHeader = req.headers.get("Authorization")
+  if (!authHeader) {
+    return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    })
+  }
+
+  const { data: { user }, error: userErr } = await supabase.auth.getUser(
+    authHeader.replace("Bearer ", ""),
+  )
+  if (userErr || !user) {
+    return new Response(JSON.stringify({ error: "Invalid token" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    })
+  }
 
   let presenteId: string | undefined
 
@@ -139,8 +158,22 @@ serve(async (req) => {
       })
     }
 
+    if (presente.usuario_id !== user.id) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      })
+    }
+
     if (presente.status === "ready") {
       return new Response(JSON.stringify({ success: true, skipped: true }), {
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      })
+    }
+
+    if (!["generating", "pending_payment"].includes(presente.status)) {
+      return new Response(JSON.stringify({ error: "Presente is not in a processable state" }), {
+        status: 409,
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       })
     }
@@ -197,13 +230,12 @@ serve(async (req) => {
 
     await supabase
       .from("musicas")
-      .update({
+      .upsert({
+        presente_id: presenteId,
         url_audio: publicUrl,
         estilo: presente.estilo_musical,
-        lyrics: [],
         status: "ready",
-      })
-      .eq("presente_id", presenteId)
+      }, { onConflict: "presente_id" })
 
     await supabase
       .from("presentes")
@@ -235,16 +267,19 @@ serve(async (req) => {
 
       await supabase
         .from("musicas")
-        .update({
+        .upsert({
+          presente_id: presenteId,
           attempts,
           last_attempt_at: new Date().toISOString(),
           status: newStatus,
-        })
-        .eq("presente_id", presenteId)
+        }, { onConflict: "presente_id" })
 
       await supabase
         .from("presentes")
-        .update({ updated_at: new Date().toISOString() })
+        .update({
+          status: newStatus === "failed" ? "failed" : undefined,
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", presenteId)
     }
 

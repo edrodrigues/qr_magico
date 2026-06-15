@@ -16,11 +16,9 @@ export function MusicReveal({ onReady }: MusicRevealProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [currentLyricIndex, setCurrentLyricIndex] = useState(-1);
   const [audioLoaded, setAudioLoaded] = useState(false);
 
   const audioUrl = musica?.url_audio;
-  const lyrics = musica?.lyrics ?? [];
 
   const setupAudioContext = useCallback(() => {
     if (!audioRef.current || analyserRef.current) return;
@@ -52,10 +50,6 @@ export function MusicReveal({ onReady }: MusicRevealProps) {
 
     const onTimeUpdate = () => {
       setCurrentTime(audio.currentTime);
-      if (lyrics.length > 0) {
-        const idx = lyrics.findLastIndex((l) => l.time <= audio.currentTime);
-        setCurrentLyricIndex(idx);
-      }
     };
 
     const onEnded = () => setIsPlaying(false);
@@ -72,7 +66,7 @@ export function MusicReveal({ onReady }: MusicRevealProps) {
       audio.pause();
       audio.src = "";
     };
-  }, [audioUrl, lyrics, onReady]);
+  }, [audioUrl, onReady]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -174,26 +168,6 @@ export function MusicReveal({ onReady }: MusicRevealProps) {
           </p>
         </div>
       </div>
-
-      {/* Lyrics */}
-      {lyrics.length > 0 && (
-        <div className="w-full max-w-xs max-h-32 overflow-y-auto text-center space-y-1 scroll-smooth">
-          {lyrics.map((line, i) => (
-            <p
-              key={i}
-              className={`transition-all duration-300 ${
-                i === currentLyricIndex
-                  ? "text-primary font-bold text-body-lg scale-105"
-                  : i < currentLyricIndex
-                    ? "text-on-surface-variant/40 text-body-md"
-                    : "text-on-surface-variant/60 text-body-md"
-              }`}
-            >
-              {line.text}
-            </p>
-          ))}
-        </div>
-      )}
 
       {/* Download */}
       {audioUrl && (

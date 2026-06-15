@@ -21,7 +21,7 @@ const STATUS_TAB_MAP: Record<TabId, GiftStatus[]> = {
   all: [],
   ready: ["ready"],
   drafts: ["draft"],
-  payment: ["pending_payment", "generating"],
+  payment: ["pending_payment", "generating", "failed"],
 };
 
 function getStatusTabCount(gifts: Gift[], tabId: TabId): number {
@@ -162,6 +162,7 @@ function GiftCard({
               gift.status === "ready" && "bg-secondary-container text-on-secondary-container",
               gift.status === "generating" && "bg-gold-glimmer text-secondary",
               gift.status === "pending_payment" && "bg-surface-variant text-on-surface-variant",
+              gift.status === "failed" && "bg-error-container text-on-error-container",
               gift.status === "draft" && "bg-warm-gray text-on-surface-variant"
             )}
           >
@@ -213,20 +214,18 @@ function GiftCard({
           </div>
         )}
 
-        {gift.status === "generating" && (
+        {(gift.status === "generating" || gift.status === "failed") && (
           <>
             <p className="font-body-md text-body-md text-on-surface-variant mt-2 italic">
               {gift.description}
             </p>
             <div className="flex gap-4 mt-4">
-              {(gift.attempts ?? 0) >= 1 && (
-                <button
-                  onClick={() => onRetry?.(gift)}
-                  className="font-label-md text-label-md text-primary px-4 py-2 rounded-lg hover:bg-primary-fixed transition-all"
-                >
-                  Tentar novamente
-                </button>
-              )}
+              <button
+                onClick={() => onRetry?.(gift)}
+                className="font-label-md text-label-md text-primary px-4 py-2 rounded-lg hover:bg-primary-fixed transition-all"
+              >
+                Tentar novamente
+              </button>
               <button
                 onClick={() => onDelete(gift)}
                 className="font-label-md text-label-md text-on-surface-variant px-4 py-2 rounded-lg hover:bg-warm-gray transition-all"
@@ -410,8 +409,12 @@ export function Dashboard() {
     addToast("Reiniciando geração da música...", "info");
     const { error: resetErr } = await supabase
       .from("musicas")
-      .update({ attempts: 0, status: "generating", last_attempt_at: null })
-      .eq("presente_id", gift.id);
+      .upsert({
+        presente_id: gift.id,
+        attempts: 0,
+        status: "generating",
+        last_attempt_at: null,
+      }, { onConflict: "presente_id" });
     if (resetErr) {
       addToast("Erro ao reiniciar a geração", "error");
       return;

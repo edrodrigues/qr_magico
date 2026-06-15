@@ -70,32 +70,32 @@ export function WizardPagamento() {
       }
     }
 
-    await supabase
-      .from("musicas")
-      .delete()
-      .eq("presente_id", presenteId)
-      .eq("status", "failed");
-
-    const { error: musicaError } = await supabase.from("musicas").insert({
+    const { error: musicaError } = await supabase.from("musicas").upsert({
       presente_id: presenteId,
-      estilo: "gerando",
+      estilo: wizardData.musicStyle || "gerando",
       status: "generating",
-    });
+      attempts: 0,
+      last_attempt_at: null,
+    }, { onConflict: "presente_id" });
     if (musicaError) {
       addToast("Erro ao preparar a música", "error");
-      console.error("musicas insert error:", musicaError);
+      console.error("musicas upsert error:", musicaError);
       return;
     }
 
     if (wizardData.photos.length > 0) {
-      const photoInserts = wizardData.photos.map((photo, index) => ({
-        presente_id: presenteId,
-        url: photo.storageUrl || "",
-        ordem: index,
-      }));
-      const { error: fotoError } = await supabase.from("fotos").insert(photoInserts);
-      if (fotoError) {
-        console.error("fotos insert error:", fotoError);
+      const photoInserts = wizardData.photos
+        .filter((photo) => photo.storageUrl)
+        .map((photo, index) => ({
+          presente_id: presenteId,
+          url: photo.storageUrl!,
+          ordem: index,
+        }));
+      if (photoInserts.length > 0) {
+        const { error: fotoError } = await supabase.from("fotos").insert(photoInserts);
+        if (fotoError) {
+          console.error("fotos insert error:", fotoError);
+        }
       }
     }
 
@@ -112,6 +112,7 @@ export function WizardPagamento() {
       if (!response.ok) {
         const errText = await response.text();
         console.error("generate-music returned error:", response.status, errText);
+        addToast(`Erro na geração da música (${response.status})`, "error");
       }
     } catch (err) {
       console.error("Failed to call generate-music edge function:", err);

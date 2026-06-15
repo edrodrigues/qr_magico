@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
 
-export type GiftStatus = "draft" | "pending_payment" | "generating" | "ready";
+export type GiftStatus = "draft" | "pending_payment" | "generating" | "ready" | "failed";
 
 export interface Gift {
   id: string;
@@ -23,6 +23,7 @@ const STATUS_MAP: Record<string, GiftStatus> = {
   pending_payment: "pending_payment",
   generating: "generating",
   ready: "ready",
+  failed: "failed",
 };
 
 const STATUS_LABELS: Record<GiftStatus, string> = {
@@ -30,6 +31,7 @@ const STATUS_LABELS: Record<GiftStatus, string> = {
   pending_payment: "Em pagamento",
   generating: "Em processamento",
   ready: "Prontos",
+  failed: "Falha",
 };
 
 const STATUS_ICONS: Record<GiftStatus, string> = {
@@ -37,6 +39,7 @@ const STATUS_ICONS: Record<GiftStatus, string> = {
   pending_payment: "hourglass_empty",
   generating: "sync",
   ready: "celebration",
+  failed: "error",
 };
 
 function mapRowToGift(row: any): Gift {
@@ -56,14 +59,14 @@ function mapRowToGift(row: any): Gift {
     attempts,
     description:
       status === "generating"
-        ? attempts >= 3
-          ? "Falha na geração. Tente novamente."
-          : stuck
-            ? `A geração está demorando mais que o esperado. Tentativa ${attempts + 1} de 3.`
-            : "Estamos processando sua música personalizada..."
+        ? stuck
+          ? `A geração está demorando mais que o esperado. Tentativa ${attempts + 1} de 3.`
+          : "Estamos processando sua música personalizada..."
         : status === "draft"
           ? `Iniciado em ${new Date(row.created_at).toLocaleDateString("pt-BR")}`
-          : undefined,
+          : status === "failed"
+            ? "Falha na geração. Tente novamente."
+            : undefined,
     createdAt: row.created_at,
   };
 }
