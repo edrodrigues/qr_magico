@@ -1,4 +1,4 @@
-# QR Magico — End-to-End Debug Review
+# Momento Mágico — End-to-End Debug Review
 
 Date: 2026-06-14
 Scope: Full creation flow (wizard → storage → edge function → public view)

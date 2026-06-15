@@ -56,7 +56,7 @@ export function SplashScreen() {
 
         <div className="space-y-4 mb-16">
           <h1 className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary tracking-tight">
-            QR <span className="text-on-surface">Mágico</span>
+            Momento <span className="text-on-surface">Mágico</span>
           </h1>
           <p className="font-body-lg text-body-lg text-on-surface-variant max-w-xs mx-auto">
             Transformando momentos técnicos em memórias físicas.
@@ -96,7 +96,7 @@ export function SplashScreen() {
 
       <footer className="fixed bottom-12 w-full text-center">
         <p className="font-label-sm text-label-sm text-on-surface-variant/40">
-          &copy; 2024 QR Mágico. Tecnologia com Alma.
+          &copy; 2024 Momento Mágico. Tecnologia com Alma.
         </p>
       </footer>
     </div>

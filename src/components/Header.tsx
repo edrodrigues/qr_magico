@@ -52,8 +52,8 @@ export function Header({ showNav, showCreateBtn, showClose, rightContent }: Head
       aria-label="Navegação principal"
     >
       <div className="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto">
-        <Link to="/" className="font-headline-md text-headline-md font-bold text-primary" aria-label="QR Mágico - Página inicial">
-          QR Mágico
+        <Link to="/" className="font-headline-md text-headline-md font-bold text-primary" aria-label="Momento Mágico - Página inicial">
+          Momento Mágico
         </Link>
 
         {user ? (
@@ -63,7 +63,7 @@ export function Header({ showNav, showCreateBtn, showClose, rightContent }: Head
                 to="/dashboard"
                 className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
               >
-                Meus QR Mágicos
+                Meus Momentos Mágicos
               </Link>
               <Link
                 to="/dashboard?tab=drafts"
@@ -78,7 +78,7 @@ export function Header({ showNav, showCreateBtn, showClose, rightContent }: Head
                 to="/wizard/ocasiao-nome"
                 className="hidden md:flex bg-primary text-on-primary px-6 py-2 rounded-full font-label-md text-label-md hover:brightness-110 transition-all scale-95 active:scale-90"
               >
-                Criar Novo QR Mágico
+                Criar Novo Momento Mágico
               </Link>
 
               <div className="relative" ref={menuRef}>
@@ -99,7 +99,7 @@ export function Header({ showNav, showCreateBtn, showClose, rightContent }: Head
                       onClick={() => setMenuOpen(false)}
                       className="block px-4 py-2 font-label-md text-label-md text-on-surface hover:bg-warm-gray/50 transition-colors"
                     >
-                      Meus QR Mágicos
+                      Meus Momentos Mágicos
                     </Link>
                     <Link
                       to="/dashboard?tab=drafts"
@@ -113,7 +113,7 @@ export function Header({ showNav, showCreateBtn, showClose, rightContent }: Head
                       onClick={() => setMenuOpen(false)}
                       className="block md:hidden px-4 py-2 font-label-md text-label-md text-primary hover:bg-warm-gray/50 transition-colors"
                     >
-                      Criar Novo QR Mágico
+                      Criar Novo Momento Mágico
                     </Link>
                     <button
                       onClick={handleSignOut}
@@ -142,7 +142,7 @@ export function Header({ showNav, showCreateBtn, showClose, rightContent }: Head
                     onClick={() => setMobileMenuOpen(false)}
                     className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors py-2"
                   >
-                    Meus QR Mágicos
+                    Meus Momentos Mágicos
                   </Link>
                   <Link
                     to="/dashboard?tab=drafts"
@@ -156,7 +156,7 @@ export function Header({ showNav, showCreateBtn, showClose, rightContent }: Head
                     onClick={() => setMobileMenuOpen(false)}
                     className="bg-primary text-on-primary px-6 py-3 rounded-full font-label-md text-label-md text-center hover:brightness-110 transition-all"
                   >
-                    Criar Novo QR Mágico
+                    Criar Novo Momento Mágico
                   </Link>
                 </div>
               </div>
@@ -196,8 +196,8 @@ export function Footer() {
     <footer className="w-full py-12 bg-surface-container-low" role="contentinfo">
       <div className="flex flex-col md:flex-row justify-between items-center gap-8 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
         <div className="flex flex-col items-center md:items-start gap-2">
-          <span className="font-headline-md-mobile text-headline-md-mobile text-primary">QR Mágico</span>
-          <p className="font-body-md text-body-md text-on-surface-variant opacity-80">© 2026 QR Mágico. Tecnologia com Alma.</p>
+          <span className="font-headline-md-mobile text-headline-md-mobile text-primary">Momento Mágico</span>
+          <p className="font-body-md text-body-md text-on-surface-variant opacity-80">© 2026 Momento Mágico. Tecnologia com Alma.</p>
         </div>
         <div className="flex flex-wrap justify-center gap-6">
           <a className="font-label-sm text-label-sm text-on-surface-variant hover:text-secondary transition-colors" href="#" aria-label="Termos de Uso">Termos de Uso</a>

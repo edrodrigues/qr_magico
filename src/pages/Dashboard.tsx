@@ -304,7 +304,7 @@ function EmptyState({ onSelectOccasion }: { onSelectOccasion: (o: string) => voi
         Nenhum presente aqui ainda
       </h3>
       <p className="font-body-md text-body-md text-on-surface-variant max-w-sm mb-8">
-        Comece a criar um QR Mágico personalizado para alguém especial.
+        Comece a criar um Momento Mágico personalizado para alguém especial.
       </p>
       <Link
         to="/wizard/ocasiao-nome"
@@ -502,7 +502,7 @@ export function Dashboard() {
                 Olá, <span className="text-primary font-bold">{userName}</span>
               </p>
               <h1 className="font-headline-md-mobile md:text-headline-md text-headline-md text-on-surface">
-                Meus QR Mágicos
+                Meus Momentos Mágicos
               </h1>
             </div>
           </div>
@@ -671,7 +671,7 @@ export function Dashboard() {
         <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
           auto_awesome
         </span>
-        <span className="font-label-md text-label-md hidden sm:inline">Criar Novo QR Mágico</span>
+        <span className="font-label-md text-label-md hidden sm:inline">Criar Novo Momento Mágico</span>
         <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity shimmer-overlay" />
       </Link>
 

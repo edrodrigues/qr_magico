@@ -96,7 +96,7 @@ export function RetrospectivaPage() {
             to="/"
             className="inline-block bg-primary text-on-primary px-8 py-3 rounded-full font-label-md text-label-md hover:brightness-110 transition-all"
           >
-            Criar meu QR Mágico
+            Criar meu Momento Mágico
           </Link>
         </div>
       </div>
@@ -142,7 +142,7 @@ export function RetrospectivaPage() {
             to="/"
             className="inline-block bg-primary text-on-primary px-8 py-3 rounded-full font-label-md text-label-md hover:brightness-110 transition-all"
           >
-            Criar meu QR Mágico
+            Criar meu Momento Mágico
           </Link>
         </div>
       </div>
@@ -162,8 +162,8 @@ export function RetrospectivaPage() {
   return (
     <>
       <Helmet>
-        <title>QR Mágico — Para {presente.nome_homenageado}</title>
-        <meta property="og:title" content={`QR Mágico — Para ${presente.nome_homenageado}`} />
+        <title>Momento Mágico — Para {presente.nome_homenageado}</title>
+        <meta property="og:title" content={`Momento Mágico — Para ${presente.nome_homenageado}`} />
         <meta property="og:description" content={`Uma retrospectiva especial de ${presente.ocasiao}${presente.nome_remetente ? ` — por ${presente.nome_remetente}` : ""}`} />
         {thumbnail && <meta property="og:image" content={thumbnail} />}
         <meta property="og:type" content="website" />

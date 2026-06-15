@@ -94,7 +94,7 @@ function AnimatedCounter({ end, suffix = "" }: { end: number; suffix?: string })
 
 const testimonials = [
   {
-    quote: "O QR Mágico transformou o aniversário da minha mãe em algo eterno. Ela não para de ouvir a música.",
+    quote: "O Momento Mágico transformou o aniversário da minha mãe em algo eterno. Ela não para de ouvir a música.",
     name: "Mariana Silva",
     city: "São Paulo, SP",
     img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCERXDWfSqXWnIQz96_wj3JX0kT7yfi8Wg4dbHwN2rjXsmhn9CHh-RToIl6cTWgCoyt8NSBFj9RoH9SBaAaezTc88BlFP7HfrM11Uh0vNEHk7XJP-pZNMLUZwPSRKuNw8d83XrsoyzwnOPJ8lBfQCAEDbxKyH6gmMqb3BtAO8Rr-HtuT4vDnoaI_4fM7ZjtyRDwBLP5mF86c1Eyc9uboBtS2XVoDyE-2DE7peWSfqnrKxwXaVmM9-kARjd-Fsg6-uX5nmS5ZHLeulo",

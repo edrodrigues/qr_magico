@@ -1,7 +1,7 @@
-# QR Mágico - Prompt de Design para LLM
+# Momento Mágico - Prompt de Design para LLM
 
 ## 1. Objetivo
-Crie uma web-app responsiva, mobile-first, premium e emocional chamada QR Mágico.
+Crie uma web-app responsiva, mobile-first, premium e emocional chamada Momento Mágico.
 O produto gera presentes digitais personalizados com retrospectiva animada, trilha sonora original por IA e entrega por link único + QR Code + PDF para imprimir.
 
 ## 2. Público e tom
@@ -140,4 +140,4 @@ Quero que você gere:
 - frames prontos para apresentação
 
 ## 9. Prompt final para execução
-Gere a experiência completa da QR Mágico como uma web-app responsiva, mobile-first, premium e emocional, pronta para Figma/Artboard, seguindo todos os requisitos acima e mantendo o conteúdo em pt-BR.
+Gere a experiência completa do Momento Mágico como uma web-app responsiva, mobile-first, premium e emocional, pronta para Figma/Artboard, seguindo todos os requisitos acima e mantendo o conteúdo em pt-BR.

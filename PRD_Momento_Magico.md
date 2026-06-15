@@ -1,4 +1,4 @@
-# PRD: QR Mágico
+# PRD: Momento Mágico
 
 ## 1. Visão Geral
 
@@ -37,7 +37,7 @@ Uma aplicação web onde o usuário:
 
 ## 5. Diferenciais Competitivos
 
-| Característica | Lovepanda | QR Mágico |
+| Característica | Lovepanda | Momento Mágico |
 |---|---|---|
 | Ocasiões | Foco em casais / Dia dos Namorados | Qualquer data comemorativa |
 | Trilha sonora | Música escolhida pelo usuário | **Gerada por IA** (única para a pessoa) |

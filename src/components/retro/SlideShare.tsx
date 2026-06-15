@@ -41,7 +41,7 @@ export function SlideShare() {
 
   const handleShare = useCallback(async () => {
     const shareData = {
-      title: `QR Mágico — Para ${presente.nome_homenageado}`,
+      title: `Momento Mágico — Para ${presente.nome_homenageado}`,
       text: `Uma retrospectiva especial para ${presente.nome_homenageado}`,
       url: window.location.href,
     };
@@ -114,7 +114,7 @@ export function SlideShare() {
           className="mt-8 font-label-sm text-label-sm text-on-surface-variant"
         >
           Crie a sua própria retrospectiva em{" "}
-          <a href={appUrl} className="text-primary underline">QR Mágico</a>
+          <a href={appUrl} className="text-primary underline">Momento Mágico</a>
         </motion.p>
       </SlideWrapper>
     </div>
