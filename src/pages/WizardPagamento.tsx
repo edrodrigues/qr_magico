@@ -119,6 +119,25 @@ export function WizardPagamento() {
       addToast("A geração da música pode estar atrasada", "info");
     }
 
+    // Trigger render-video edge function
+    const renderUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/render-video`;
+    try {
+      const response = await fetch(renderUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ presente_id: presenteId }),
+      });
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("render-video returned error:", response.status, errText);
+      }
+    } catch (err) {
+      console.error("Failed to call render-video edge function:", err);
+    }
+
     resetWizard();
     navigate("/dashboard");
   };

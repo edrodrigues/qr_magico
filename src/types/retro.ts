@@ -10,6 +10,7 @@ export interface PresenteData {
   descricao_relacao: string;
   estilo_musical: string;
   thumbnail_url: string;
+  video_url?: string;
   status: 'draft' | 'pending_payment' | 'generating' | 'ready' | 'cancelled' | 'failed';
 }
 

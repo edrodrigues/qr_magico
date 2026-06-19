@@ -13,6 +13,7 @@ export interface Gift {
   statusIcon: string;
   link?: string;
   thumbnailUrl?: string;
+  videoUrl?: string;
   description?: string;
   createdAt: string;
   attempts?: number;
@@ -56,6 +57,7 @@ function mapRowToGift(row: any): Gift {
     statusIcon: STATUS_ICONS[status],
     link: row.link || undefined,
     thumbnailUrl: row.thumbnail_url || undefined,
+    videoUrl: row.video_url || undefined,
     attempts,
     description:
       status === "generating"

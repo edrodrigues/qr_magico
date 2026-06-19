@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useEffect } from "react";
+import { useMemo, useCallback, useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useRetroData } from "../hooks/useRetroData";
@@ -11,6 +11,7 @@ import { SlideMusicStyle } from "../components/retro/SlideMusicStyle";
 import { SlideMusicReveal } from "../components/retro/SlideMusicReveal";
 import { SlideShare } from "../components/retro/SlideShare";
 import { LoadingState } from "../components/retro/LoadingState";
+import { VideoPlayer } from "../components/VideoPlayer";
 import type { SlideConfig } from "../types/retro";
 
 export function RetrospectivaPage() {
@@ -158,7 +159,44 @@ export function RetrospectivaPage() {
     );
   }
 
-  // Ready — show the StoryViewer
+  // Video state
+  const [showVideo, setShowVideo] = useState(true);
+  const hasVideo = !!presente.video_url;
+
+  // Show VideoPlayer as main experience when video_url exists
+  if (hasVideo && showVideo) {
+    return (
+      <>
+        <Helmet>
+          <title>Momento Mágico — Para {presente.nome_homenageado}</title>
+          <meta property="og:title" content={`Momento Mágico — Para ${presente.nome_homenageado}`} />
+          <meta property="og:description" content={`Uma retrospectiva especial de ${presente.ocasiao}${presente.nome_remetente ? ` — por ${presente.nome_remetente}` : ""}`} />
+          {thumbnail && <meta property="og:image" content={thumbnail} />}
+          <meta property="og:type" content="website" />
+          <meta name="twitter:card" content="summary_large_image" />
+        </Helmet>
+
+        <div className="w-screen h-screen bg-black/90 flex items-center justify-center overflow-hidden">
+          {thumbnail && (
+            <div
+              className="hidden md:block absolute inset-0 bg-cover bg-center blur-3xl scale-110 opacity-30"
+              style={{ backgroundImage: `url(${thumbnail})` }}
+            />
+          )}
+
+          <div className="relative w-full h-full md:h-[90vh] md:w-auto md:aspect-[9/16] md:max-h-[90vh] shadow-2xl">
+            <VideoPlayer
+              videoUrl={presente.video_url!}
+              posterUrl={thumbnail}
+              onShowStory={() => setShowVideo(false)}
+            />
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Ready — show the StoryViewer (default or fallback from "Ver História")
   return (
     <>
       <Helmet>

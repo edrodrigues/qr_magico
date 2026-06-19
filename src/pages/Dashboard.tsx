@@ -178,7 +178,7 @@ function GiftCard({
           </span>
         </div>
 
-        {gift.status === "ready" && (
+          {gift.status === "ready" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
             <div className="p-3 bg-warm-gray/30 rounded-lg border border-outline-variant/30">
               <span className="font-label-sm text-label-sm text-on-surface-variant block mb-1">
@@ -203,7 +203,17 @@ function GiftCard({
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <button className="flex-1 bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-coral-deep transition-all flex items-center justify-center gap-2">
+              {gift.videoUrl && (
+                <a
+                  href={gift.videoUrl}
+                  download
+                  className="flex-1 bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-coral-deep transition-all flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[18px]">download</span>
+                  Baixar V\u00eddeo
+                </a>
+              )}
+              <button className="flex-1 bg-surface-variant text-on-surface-variant px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-surface-container-highest transition-all flex items-center justify-center gap-2">
                 <span className="material-symbols-outlined text-[18px]">picture_as_pdf</span>
                 Baixar PDF
               </button>
