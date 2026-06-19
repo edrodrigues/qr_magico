@@ -1,4 +1,4 @@
-import { AbsoluteFill, useCurrentFrame, interpolate, spring, Easing } from "remotion";
+import { AbsoluteFill, useCurrentFrame, interpolate, spring } from "remotion";
 
 export function LogoEnd() {
   const frame = useCurrentFrame();

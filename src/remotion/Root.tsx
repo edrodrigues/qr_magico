@@ -6,7 +6,7 @@ export const RemotionRoot: React.FC = () => {
   return (
     <Composition
       id="Retrospectiva"
-      component={RetrospectivaComposition}
+      component={RetrospectivaComposition as unknown as React.ComponentType<Record<string, unknown>>}
       durationInFrames={1410}
       fps={30}
       width={1080}
@@ -18,7 +18,7 @@ export const RemotionRoot: React.FC = () => {
         data_inicio: "2024-01-01",
         descricao_relacao: "Uma história especial.",
         estilo_musical: "mpb",
-        fotos: [] as string[],
+        fotos: [],
         thumbnail_url: "",
         musicaUrl: "",
       }}

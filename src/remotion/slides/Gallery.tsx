@@ -1,4 +1,4 @@
-import { AbsoluteFill, useCurrentFrame, interpolate, Img, spring } from "remotion";
+import { AbsoluteFill, useCurrentFrame, interpolate, Img } from "remotion";
 
 interface GalleryProps {
   fotos: string[];

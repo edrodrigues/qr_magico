@@ -14,7 +14,6 @@ export function VideoPlayer({ videoUrl, posterUrl, onShowStory }: VideoPlayerPro
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
   const [showOverlay, setShowOverlay] = useState(false);
   const [hasEnded, setHasEnded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -192,7 +191,7 @@ export function VideoPlayer({ videoUrl, posterUrl, onShowStory }: VideoPlayerPro
                 </span>
               </button>
               <span className="text-white/60 text-xs font-mono">
-                {formatTime(currentTime)} / {formatTime(duration)}
+                {formatTime(currentTime)} / {formatTime(videoRef.current?.duration ?? 0)}
               </span>
             </div>
             <button
