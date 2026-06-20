@@ -66,6 +66,25 @@ export function RetrospectivaPage() {
     ?? "";
 
   const [showVideo, setShowVideo] = useState(true);
+  const [videoPlayUrl, setVideoPlayUrl] = useState<string | null>(null);
+
+  const edgeUrl = import.meta.env.VITE_SUPABASE_URL
+    ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`
+    : "";
+
+  useEffect(() => {
+    if (!data?.presente?.video_url || !data?.presente?.id) {
+      setVideoPlayUrl(null);
+      return;
+    }
+    setVideoPlayUrl(null);
+    fetch(`${edgeUrl}/proxy-video?presente_id=${data.presente.id}&format=json`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((res) => {
+        if (res?.url) setVideoPlayUrl(res.url);
+      })
+      .catch(() => {});
+  }, [data?.presente?.id, data?.presente?.video_url, edgeUrl]);
 
   // Loading state
   if (loading && !data) {
@@ -163,6 +182,7 @@ export function RetrospectivaPage() {
 
   // Show VideoPlayer as main experience when video_url exists
   if (presente.video_url && showVideo) {
+    const videoUrl = videoPlayUrl || presente.video_url;
     return (
       <>
         <Helmet>
@@ -184,7 +204,7 @@ export function RetrospectivaPage() {
 
           <div className="relative w-full h-full md:h-[90vh] md:w-auto md:aspect-[9/16] md:max-h-[90vh] shadow-2xl">
             <VideoPlayer
-              videoUrl={presente.video_url!}
+              videoUrl={videoUrl}
               posterUrl={thumbnail}
               onShowStory={() => setShowVideo(false)}
             />

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { cn } from "../lib/utils";
 import { useAuth } from "../contexts/AuthContext";
@@ -88,6 +88,10 @@ function GiftCard({
   onDelete,
   onConfirmPayment,
   onRetry,
+  onDownload,
+  downloadingId,
+  onDownloadPdf,
+  downloadingPdfId,
   style,
 }: {
   gift: Gift;
@@ -96,6 +100,10 @@ function GiftCard({
   onDelete: (gift: Gift) => void;
   onConfirmPayment: (id: string) => Promise<void>;
   onRetry?: (gift: Gift) => void;
+  onDownload?: (gift: Gift) => void;
+  downloadingId?: string | null;
+  onDownloadPdf?: (gift: Gift) => void;
+  downloadingPdfId?: string | null;
   style: { animationDelay: string };
 }) {
   return (
@@ -203,19 +211,27 @@ function GiftCard({
               </div>
             </div>
             <div className="flex items-center gap-3">
-              {gift.videoUrl && (
-                <a
-                  href={gift.videoUrl}
-                  download
-                  className="flex-1 bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-coral-deep transition-all flex items-center justify-center gap-2"
+              {gift.status === "ready" && (
+                <button
+                  onClick={() => onDownload?.(gift)}
+                  disabled={downloadingId === gift.id}
+                  className="flex-1 bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-coral-deep transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  <span className="material-symbols-outlined text-[18px]">download</span>
-                  Baixar V\u00eddeo
-                </a>
+                  <span className="material-symbols-outlined text-[18px]">
+                    {downloadingId === gift.id ? "hourglass_top" : "download"}
+                  </span>
+                  {downloadingId === gift.id ? "Baixando..." : "Baixar Vídeo"}
+                </button>
               )}
-              <button className="flex-1 bg-surface-variant text-on-surface-variant px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-surface-container-highest transition-all flex items-center justify-center gap-2">
-                <span className="material-symbols-outlined text-[18px]">picture_as_pdf</span>
-                Baixar PDF
+              <button
+                onClick={() => onDownloadPdf?.(gift)}
+                disabled={downloadingPdfId === gift.id}
+                className="flex-1 bg-surface-variant text-on-surface-variant px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-surface-container-highest transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  {downloadingPdfId === gift.id ? "hourglass_top" : "picture_as_pdf"}
+                </span>
+                {downloadingPdfId === gift.id ? "Gerando PDF..." : "Baixar PDF"}
               </button>
               <button className="w-10 h-10 border border-outline flex items-center justify-center rounded-lg hover:bg-white transition-all text-on-surface-variant">
                 <span className="material-symbols-outlined text-[20px]">edit</span>
@@ -377,6 +393,9 @@ export function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "name">("newest");
   const [deleteTarget, setDeleteTarget] = useState<Gift | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [downloadingPdfId, setDownloadingPdfId] = useState<string | null>(null);
+  const [checkingIds, setCheckingIds] = useState<Set<string>>(new Set());
 
   const handleConfirmPayment = async (id: string) => {
     const { error: err } = await supabase
@@ -391,17 +410,175 @@ export function Dashboard() {
     }
   };
 
+  const handleDownload = async (gift: Gift) => {
+    if (!session) {
+      addToast("Sessão expirada. Faça login novamente.", "error");
+      return;
+    }
+    setDownloadingId(gift.id);
+    try {
+      const edgeUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+      const res = await fetch(`${edgeUrl}/get-download-url`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ presente_id: gift.id }),
+      });
+      const data = await res.json();
+      if (data.status === "pending") {
+        addToast("O vídeo ainda está sendo gerado. Tente novamente em alguns instantes.", "info");
+        return;
+      }
+      if (!res.ok || !data.download_url) {
+        addToast("Erro ao baixar vídeo. Tente novamente.", "error");
+        return;
+      }
+      const anchor = document.createElement("a");
+      anchor.href = data.download_url;
+      anchor.download = `momento-magico-${gift.name}.mp4`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+    } catch {
+      addToast("Erro ao baixar vídeo. Tente novamente.", "error");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  const handleDownloadPdf = async (gift: Gift) => {
+    if (!session) {
+      addToast("Sessão expirada. Faça login novamente.", "error");
+      return;
+    }
+    setDownloadingPdfId(gift.id);
+    try {
+      const { data: p, error: err } = await supabase
+        .from("presentes")
+        .select("*, musicas(lyrics)")
+        .eq("id", gift.id)
+        .single();
+
+      if (err || !p) {
+        addToast("Erro ao buscar dados do presente", "error");
+        return;
+      }
+
+      const QRCode = (await import("qrcode")).default;
+      const qrDataUrl = await QRCode.toDataURL(p.link || "", {
+        width: 400,
+        margin: 2,
+        color: { dark: "#000000", light: "#FFFFFF" },
+      });
+
+      const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF({ format: "a5", unit: "mm" });
+      const pw = doc.internal.pageSize.getWidth();
+      const ph = doc.internal.pageSize.getHeight();
+
+      doc.setFillColor(255, 252, 250);
+      doc.rect(0, 0, pw, ph, "F");
+
+      doc.setDrawColor(169, 53, 57);
+      doc.setLineWidth(0.5);
+      doc.rect(8, 8, pw - 16, ph - 16);
+
+      doc.setTextColor(169, 53, 57);
+      doc.setFontSize(22);
+      doc.text("Momento M\u00e1gico", pw / 2, 26, { align: "center" });
+
+      const qs = 52;
+      doc.addImage(qrDataUrl, "PNG", (pw - qs) / 2, 35, qs, qs);
+
+      let y = 95;
+      doc.setTextColor(60, 60, 60);
+      doc.setFontSize(10);
+
+      const dados: [string, string][] = [
+        ["Para", p.nome_homenageado],
+        ["De", p.nome_remetente],
+        ["Ocasi\u00e3o", p.ocasiao],
+        ["Desde", p.data_inicio],
+        ["Estilo", p.estilo_musical],
+      ];
+      dados.forEach(([label, val]) => {
+        if (val) {
+          doc.setFont("Helvetica", "bold");
+          doc.text(`${label}:`, 20, y);
+          doc.setFont("Helvetica", "normal");
+          doc.text(val, 48, y);
+          y += 7;
+        }
+      });
+
+      if (p.descricao_relacao) {
+        y += 2;
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.3);
+        doc.rect(18, y - 1, pw - 36, 26);
+        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(8);
+        const lines = doc.splitTextToSize(p.descricao_relacao, pw - 44);
+        doc.text(lines.slice(0, 5), 24, y + 4);
+        y += 32;
+      }
+
+      doc.setTextColor(115, 92, 0);
+      doc.setFontSize(8);
+      doc.text("Escaneie o QR Code para ver o presente especial!", pw / 2, y + 5, { align: "center" });
+      doc.text("qrmagico.vercel.app", pw / 2, y + 11, { align: "center" });
+
+      doc.save(`momento-magico-${gift.name}.pdf`);
+    } catch {
+      addToast("Erro ao gerar PDF", "error");
+    } finally {
+      setDownloadingPdfId(null);
+    }
+  };
+
+  const checkVideoStatus = useCallback(async (gift: Gift) => {
+    if (!session || checkingIds.has(gift.id)) return;
+    setCheckingIds((prev) => new Set(prev).add(gift.id));
+    try {
+      const edgeUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+      const res = await fetch(`${edgeUrl}/get-download-url`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ presente_id: gift.id }),
+      });
+      const data = await res.json();
+      if (data.status === "ready") {
+        refetch();
+      }
+    } catch {
+    } finally {
+      setCheckingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(gift.id);
+        return next;
+      });
+    }
+  }, [session, checkingIds, refetch]);
+
   const hasProcessing = useMemo(() => gifts.some((g) => g.status === "generating"), [gifts]);
 
   useEffect(() => {
     if (!hasProcessing) return;
-    const interval = setInterval(refetch, 15000);
+    const interval = setInterval(() => {
+      refetch();
+      gifts.filter((g) => g.status === "generating").forEach(checkVideoStatus);
+    }, 15000);
     const timeout = setTimeout(() => clearInterval(interval), 300000);
     return () => {
       clearInterval(interval);
       clearTimeout(timeout);
     };
-  }, [hasProcessing, refetch]);
+  }, [hasProcessing, refetch, gifts, checkVideoStatus]);
 
   const handleTabChange = (tabId: TabId) => {
     setActiveTab(tabId);
@@ -610,6 +787,10 @@ export function Dashboard() {
                   onDelete={setDeleteTarget}
                   onConfirmPayment={handleConfirmPayment}
                   onRetry={handleRetry}
+                  onDownload={handleDownload}
+                  downloadingId={downloadingId}
+                  onDownloadPdf={handleDownloadPdf}
+                  downloadingPdfId={downloadingPdfId}
                   style={{ animationDelay: `${0.3 + i * 0.08}s` }}
                 />
               ))}

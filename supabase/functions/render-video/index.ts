@@ -247,13 +247,10 @@ serve(async (req) => {
     const lambdaRequestId = response.headers.get("x-amzn-RequestId") || "";
     console.log(`Lambda invoked successfully for ${presenteId}: requestId=${lambdaRequestId}`);
 
-    const videoUrl = `https://${bucketName}.s3.${awsRegion}.amazonaws.com/${outDir}/out.mp4`;
     const { error: updateErr } = await supabase
       .from("presentes")
       .update({
-        video_url: videoUrl,
         render_request_id: lambdaRequestId,
-        status: "ready",
         updated_at: new Date().toISOString(),
       })
       .eq("id", presenteId);
@@ -261,7 +258,7 @@ serve(async (req) => {
     if (updateErr) {
       console.error(`Failed to update presente ${presenteId} after Lambda invocation:`, updateErr);
     } else {
-      console.log(`Presente ${presenteId} updated: video_url set, status=ready`);
+      console.log(`Presente ${presenteId} updated: render_request_id set, status remains generating`);
     }
 
     return new Response(JSON.stringify({ success: true, presenteId, requestId: lambdaRequestId }), {
