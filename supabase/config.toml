@@ -1,4 +1,3 @@
 [functions]
 [functions.generate-music]
-timeout_seconds = 120
 verify_jwt = false

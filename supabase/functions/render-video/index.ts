@@ -1,6 +1,86 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
-import { renderMediaOnLambda } from "npm:@remotion/lambda@4.0.481/client";
+
+const crypto = globalThis.crypto;
+
+function sha256(data: string): Promise<string> {
+  return crypto.subtle.digest("SHA-256", new TextEncoder().encode(data)).then(
+    (h) => Array.from(new Uint8Array(h)).map((b) => b.toString(16).padStart(2, "0")).join(""),
+  );
+}
+
+function hmac(key: Uint8Array, data: string): Promise<Uint8Array> {
+  return crypto.subtle.importKey("raw", key, { name: "HMAC", hash: "SHA-256" }, false, ["sign"])
+    .then((k) => crypto.subtle.sign("HMAC", k, new TextEncoder().encode(data)))
+    .then((s) => new Uint8Array(s));
+}
+
+async function hmacHex(key: Uint8Array, data: string): Promise<string> {
+  const sig = await hmac(key, data);
+  return Array.from(sig).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function getSignatureKey(
+  key: string,
+  dateStamp: string,
+  region: string,
+  service: string,
+): Promise<Uint8Array> {
+  const kDate = await hmac(new TextEncoder().encode("AWS4" + key), dateStamp);
+  const kRegion = await hmac(kDate, region);
+  const kService = await hmac(kRegion, service);
+  return await hmac(kService, "aws4_request");
+}
+
+async function invokeLambda(
+  region: string,
+  functionName: string,
+  payload: Record<string, unknown>,
+  accessKeyId: string,
+  secretAccessKey: string,
+): Promise<Response> {
+  const host = `lambda.${region}.amazonaws.com`;
+  const path = `/2015-03-31/functions/${functionName}/invocations`;
+  const body = JSON.stringify(payload);
+  const now = new Date();
+  const amzDate = now.toISOString().replace(/[:-]/g, "").replace(/\.\d{3}/, "");
+  const dateStamp = amzDate.slice(0, 8);
+  const algorithm = "AWS4-HMAC-SHA256";
+  const service = "lambda";
+
+  const bodyHash = await sha256(body);
+
+  const canonicalHeaders =
+    `host:${host}\n` +
+    `x-amz-date:${amzDate}\n` +
+    `x-amz-target:Invoke\n`;
+  const signedHeaders = "host;x-amz-date;x-amz-target";
+
+  const canonicalRequest =
+    `POST\n${path}\n\n${canonicalHeaders}\n${signedHeaders}\n${bodyHash}`;
+
+  const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
+  const stringToSign =
+    `${algorithm}\n${amzDate}\n${credentialScope}\n${await sha256(canonicalRequest)}`;
+
+  const signingKey = await getSignatureKey(secretAccessKey, dateStamp, region, service);
+  const signature = await hmacHex(signingKey, stringToSign);
+
+  const authorizationHeader =
+    `${algorithm} Credential=${accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+
+  return fetch(`https://${host}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Amz-Date": amzDate,
+      "X-Amz-Target": "Invoke",
+      "Authorization": authorizationHeader,
+      "X-Amz-Invocation-Type": "Event",
+    },
+    body,
+  });
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -86,6 +166,8 @@ serve(async (req) => {
     const awsRegion = Deno.env.get("AWS_REGION") || "us-east-1";
     const functionName = Deno.env.get("REMOTION_FUNCTION_NAME") || "";
     const serveUrl = Deno.env.get("REMOTION_SERVE_URL") || "";
+    const awsAccessKeyId = Deno.env.get("AWS_ACCESS_KEY_ID") || "";
+    const awsSecretAccessKey = Deno.env.get("AWS_SECRET_ACCESS_KEY") || "";
 
     if (!functionName || !serveUrl) {
       return new Response(JSON.stringify({ error: "Remotion Lambda not configured" }), {
@@ -106,27 +188,42 @@ serve(async (req) => {
       musicaUrl: musica?.url_audio || "",
     };
 
-    const { renderId, bucketName } = await renderMediaOnLambda({
-      region: awsRegion,
-      functionName,
-      serveUrl,
+    const payload = {
+      type: "start",
       composition: "Retrospectiva",
       inputProps,
+      serveUrl,
       framesPerLambda: 30,
-      logLevel: "warn",
-    });
+    };
 
-    console.log(`render-video started: ${presenteId}, renderId=${renderId}`);
+    const response = await invokeLambda(
+      awsRegion,
+      functionName,
+      payload,
+      awsAccessKeyId,
+      awsSecretAccessKey,
+    );
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`Lambda invocation failed: ${response.status} ${errText}`);
+      return new Response(JSON.stringify({ error: "Lambda invocation failed" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      });
+    }
+
+    console.log(`render-video started: ${presenteId}`);
 
     await supabase
       .from("presentes")
       .update({
-        video_url: `s3://${bucketName}/renders/${renderId}/out.mp4`,
+        video_url: `s3://${Deno.env.get("REMOTION_BUCKET_NAME") || ""}/renders/${presenteId}/out.mp4`,
         updated_at: new Date().toISOString(),
       })
       .eq("id", presenteId);
 
-    return new Response(JSON.stringify({ success: true, renderId }), {
+    return new Response(JSON.stringify({ success: true, presenteId }), {
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
@@ -134,12 +231,6 @@ serve(async (req) => {
     });
   } catch (err) {
     console.error(`render-video error ${presenteId}:`, err);
-
-    await supabase
-      .from("presentes")
-      .update({ status: "failed", updated_at: new Date().toISOString() })
-      .eq("id", presenteId);
-
     return new Response(
       JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }),
       {
