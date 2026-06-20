@@ -109,143 +109,134 @@ function GiftCard({
   return (
     <div
       className={cn(
-        "glass-card p-6 rounded-xl flex flex-col md:flex-row gap-6 hover:shadow-lg transition-all duration-300 animate-reveal gradient-border-card",
-        gift.status === "ready" && "border-l-4 border-l-primary",
+        "glass-card p-6 rounded-xl animate-reveal gradient-border-card transition-all duration-300",
+        gift.status === "ready" && "hover:shadow-lg",
         gift.status === "pending_payment" && "grayscale"
       )}
       style={style}
     >
       {gift.status === "ready" && (
-        <div className="relative w-full md:w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-warm-gray">
-          <img
-            className="w-full h-full object-cover"
-            src={gift.thumbnailUrl}
-            alt=""
-            loading="lazy"
-          />
-          <div className="absolute top-2 left-2 bg-white/80 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-bold text-primary tracking-wider uppercase">
-            Premium
+        <div className="flex flex-col sm:flex-row gap-5">
+          <div className="relative w-full sm:w-28 h-28 flex-shrink-0 rounded-xl overflow-hidden bg-warm-gray shadow-md">
+            <img
+              className="w-full h-full object-cover"
+              src={gift.thumbnailUrl}
+              alt=""
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/15 to-transparent" />
+            <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2.5 py-0.5 rounded-full text-[10px] font-bold text-primary tracking-wider shadow-sm">
+              Premium
+            </div>
           </div>
-        </div>
-      )}
 
-      {gift.status === "generating" && (
-        <div className="w-full md:w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-warm-gray flex items-center justify-center relative">
-          <span className="material-symbols-outlined text-[48px] text-outline-variant">
-            auto_awesome
-          </span>
-          <div className="absolute inset-0 shimmer-overlay" />
-        </div>
-      )}
-
-      {gift.status === "pending_payment" && (
-        <div className="w-full md:w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-surface-container-highest flex items-center justify-center">
-          <span className="material-symbols-outlined text-[40px] text-outline">
-            shopping_bag
-          </span>
-        </div>
-      )}
-
-      {gift.status === "draft" && (
-        <div className="w-full md:w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-warm-gray/50 flex items-center justify-center border-2 border-dashed border-outline-variant/50">
-          <span className="material-symbols-outlined text-[40px] text-outline-variant">
-            edit_note
-          </span>
-        </div>
-      )}
-
-      <div className="flex-1 min-w-0">
-        <div className="flex flex-wrap justify-between items-start gap-4 mb-2">
-          <div>
-            <h3 className="font-title-lg text-title-lg text-on-surface truncate max-w-[260px] md:max-w-sm">
-              {gift.name}
-            </h3>
-            <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">
-              {gift.occasion}
-            </p>
-          </div>
-          <span
-            className={cn(
-              "inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-sm text-label-sm flex-shrink-0",
-              gift.status === "ready" && "bg-secondary-container text-on-secondary-container",
-              gift.status === "generating" && "bg-gold-glimmer text-secondary",
-              gift.status === "pending_payment" && "bg-surface-variant text-on-surface-variant",
-              gift.status === "failed" && "bg-error-container text-on-error-container",
-              gift.status === "draft" && "bg-warm-gray text-on-surface-variant"
-            )}
-          >
-            <span
-              className={cn(
-                "material-symbols-outlined text-[16px]",
-                gift.status === "generating" && "animate-spin"
-              )}
-            >
-              {gift.statusIcon}
-            </span>
-            {gift.statusLabel}
-          </span>
-        </div>
-
-          {gift.status === "ready" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-            <div className="p-3 bg-warm-gray/30 rounded-lg border border-outline-variant/30">
-              <span className="font-label-sm text-label-sm text-on-surface-variant block mb-1">
-                Link do Presente
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap justify-between items-start gap-3">
+              <div className="min-w-0">
+                <h3 className="font-title-lg text-title-lg text-on-surface truncate max-w-[260px] md:max-w-sm">
+                  {gift.name}
+                </h3>
+                <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest mt-0.5">
+                  {gift.occasion}
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm flex-shrink-0">
+                <span className="material-symbols-outlined text-[16px]">
+                  {gift.statusIcon}
+                </span>
+                {gift.statusLabel}
               </span>
-              <div className="flex items-center justify-between gap-2">
-                <code className="text-sm font-mono text-primary truncate">{gift.link}</code>
+            </div>
+
+            <div className="flex items-center gap-3 my-4 sm:my-5">
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-primary/20 to-primary-fixed-dim/30" />
+              <span className="font-label-sm text-label-sm text-on-surface-variant tracking-[0.15em] uppercase flex-shrink-0">
+                <span className="material-symbols-outlined text-[14px] align-middle -mt-0.5 inline-block">share</span>
+                {" "}Compartilhe
+              </span>
+              <div className="h-px flex-1 bg-gradient-to-r from-primary-fixed-dim/30 via-primary/20 to-transparent" />
+            </div>
+
+            <div className="bg-gradient-to-r from-primary/[0.06] to-primary-fixed/[0.08] rounded-xl p-1">
+              <div className="bg-surface-bright rounded-lg px-4 py-3 flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="font-label-sm text-label-sm text-on-surface-variant mb-0.5">
+                    Link do Presente
+                  </p>
+                  <code className="text-sm font-mono text-primary truncate block">{gift.link}</code>
+                </div>
                 <button
-                  className="p-1 hover:bg-white rounded transition-colors flex-shrink-0"
-                  title="Copiar Link"
                   onClick={() => onCopy(gift.id, gift.link!)}
+                  className={cn(
+                    "flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-200",
+                    copiedId === gift.id
+                      ? "bg-green-50 text-green-700"
+                      : "bg-primary/[0.08] text-primary hover:bg-primary/[0.14] active:scale-95"
+                  )}
+                  title="Copiar Link"
                 >
-                  <span
-                    className={cn(
-                      "material-symbols-outlined text-primary text-[18px]",
-                      copiedId === gift.id && "text-green-600"
-                    )}
-                  >
+                  <span className="material-symbols-outlined text-[18px]">
                     {copiedId === gift.id ? "check" : "content_copy"}
                   </span>
                 </button>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              {gift.status === "ready" && (
-                <button
-                  onClick={() => onDownload?.(gift)}
-                  disabled={downloadingId === gift.id}
-                  className="flex-1 bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-coral-deep transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  <span className="material-symbols-outlined text-[18px]">
-                    {downloadingId === gift.id ? "hourglass_top" : "download"}
-                  </span>
-                  {downloadingId === gift.id ? "Baixando..." : "Baixar Vídeo"}
-                </button>
-              )}
+
+            <div className="grid grid-cols-2 gap-3 mt-4">
+              <button
+                onClick={() => onDownload?.(gift)}
+                disabled={downloadingId === gift.id}
+                className="group flex flex-col items-center justify-center gap-2 bg-gradient-to-b from-primary to-coral-deep text-on-primary px-4 py-3.5 rounded-xl font-label-md text-label-md hover:shadow-lg hover:brightness-110 active:scale-[0.97] transition-all disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-[22px]">
+                  {downloadingId === gift.id ? "hourglass_top" : "download"}
+                </span>
+                <span>{downloadingId === gift.id ? "Baixando..." : "Baixar Vídeo"}</span>
+              </button>
               <button
                 onClick={() => onDownloadPdf?.(gift)}
                 disabled={downloadingPdfId === gift.id}
-                className="flex-1 bg-surface-variant text-on-surface-variant px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-surface-container-highest transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className="group flex flex-col items-center justify-center gap-2 bg-surface-variant text-on-surface-variant px-4 py-3.5 rounded-xl font-label-md text-label-md hover:bg-surface-container-highest hover:shadow-md active:scale-[0.97] transition-all disabled:opacity-50"
               >
-                <span className="material-symbols-outlined text-[18px]">
+                <span className="material-symbols-outlined text-[22px]">
                   {downloadingPdfId === gift.id ? "hourglass_top" : "picture_as_pdf"}
                 </span>
-                {downloadingPdfId === gift.id ? "Gerando PDF..." : "Baixar PDF"}
-              </button>
-              <button className="w-10 h-10 border border-outline flex items-center justify-center rounded-lg hover:bg-white transition-all text-on-surface-variant">
-                <span className="material-symbols-outlined text-[20px]">edit</span>
+                <span>{downloadingPdfId === gift.id ? "Gerando PDF..." : "Baixar PDF"}</span>
               </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {(gift.status === "generating" || gift.status === "failed") && (
-          <>
-            <p className="font-body-md text-body-md text-on-surface-variant mt-2 italic">
+      {gift.status === "generating" && (
+        <div className="flex flex-col sm:flex-row gap-5">
+          <div className="w-full sm:w-28 h-28 flex-shrink-0 rounded-xl overflow-hidden bg-warm-gray flex items-center justify-center relative">
+            <span className="material-symbols-outlined text-[44px] text-outline-variant">
+              auto_awesome
+            </span>
+            <div className="absolute inset-0 shimmer-overlay" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap justify-between items-start gap-3">
+              <div className="min-w-0">
+                <h3 className="font-title-lg text-title-lg text-on-surface truncate max-w-[260px] md:max-w-sm">
+                  {gift.name}
+                </h3>
+                <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest mt-0.5">
+                  {gift.occasion}
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold-glimmer text-secondary font-label-sm text-label-sm flex-shrink-0">
+                <span className="material-symbols-outlined text-[16px] animate-spin">
+                  {gift.statusIcon}
+                </span>
+                {gift.statusLabel}
+              </span>
+            </div>
+            <p className="font-body-md text-body-md text-on-surface-variant mt-3 italic">
               {gift.description}
             </p>
-            <div className="flex gap-4 mt-4">
+            <div className="flex gap-3 mt-4">
               <button
                 onClick={() => onRetry?.(gift)}
                 className="font-label-md text-label-md text-primary px-4 py-2 rounded-lg hover:bg-primary-fixed transition-all"
@@ -259,61 +250,157 @@ function GiftCard({
                 Cancelar
               </button>
             </div>
-          </>
-        )}
-
-        {gift.status === "pending_payment" && (
-          <div className="mt-4 space-y-3">
-            <div className="flex items-center gap-3">
-              <span className="w-2 h-2 rounded-full bg-secondary animate-pulse-dot" />
-              <p className="font-body-md text-body-md text-on-surface-variant flex-1">
-                Finalize o pagamento para liberar o presente
-              </p>
-              <Link
-                to={`/wizard/pagamento?draftId=${gift.id}`}
-                className="bg-primary text-on-primary px-6 py-2 rounded-full font-label-md text-label-md hover:bg-coral-deep transition-all flex-shrink-0"
-              >
-                Finalizar Pagamento
-              </Link>
-              <button
-                onClick={() => onDelete(gift)}
-                className="material-symbols-outlined text-on-surface-variant hover:text-error transition-colors"
-              >
-                delete
-              </button>
-            </div>
-            <button
-              onClick={() => onConfirmPayment(gift.id)}
-              className="text-xs text-secondary hover:underline underline-offset-2 transition-all"
-            >
-              Ja paguei (confirmar)
-            </button>
           </div>
-        )}
+        </div>
+      )}
 
-        {gift.status === "draft" && (
-          <div className="flex items-center justify-between mt-4">
-            <p className="font-body-md text-body-md text-on-surface-variant italic">
+      {gift.status === "failed" && (
+        <div className="flex flex-col sm:flex-row gap-5">
+          <div className="w-full sm:w-28 h-28 flex-shrink-0 rounded-xl overflow-hidden bg-warm-gray flex items-center justify-center">
+            <span className="material-symbols-outlined text-[40px] text-outline-variant">
+              error_outline
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap justify-between items-start gap-3">
+              <div className="min-w-0">
+                <h3 className="font-title-lg text-title-lg text-on-surface truncate max-w-[260px] md:max-w-sm">
+                  {gift.name}
+                </h3>
+                <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest mt-0.5">
+                  {gift.occasion}
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm flex-shrink-0">
+                <span className="material-symbols-outlined text-[16px]">
+                  {gift.statusIcon}
+                </span>
+                {gift.statusLabel}
+              </span>
+            </div>
+            <p className="font-body-md text-body-md text-on-surface-variant mt-3 italic">
               {gift.description}
             </p>
-            <div className="flex gap-3">
-              <Link
-                to="/wizard/ocasiao-nome"
-                className="bg-primary text-on-primary px-5 py-2 rounded-lg font-label-md text-label-md hover:brightness-110 transition-all flex items-center gap-2"
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={() => onRetry?.(gift)}
+                className="font-label-md text-label-md text-primary px-4 py-2 rounded-lg hover:bg-primary-fixed transition-all"
               >
-                <span className="material-symbols-outlined text-[18px]">edit</span>
-                Continuar
-              </Link>
+                Tentar novamente
+              </button>
               <button
                 onClick={() => onDelete(gift)}
-                className="w-10 h-10 border border-outline flex items-center justify-center rounded-lg hover:bg-warm-gray transition-all text-on-surface-variant"
+                className="font-label-md text-label-md text-on-surface-variant px-4 py-2 rounded-lg hover:bg-warm-gray transition-all"
               >
-                <span className="material-symbols-outlined text-[20px]">delete</span>
+                Cancelar
               </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {gift.status === "pending_payment" && (
+        <div className="flex flex-col sm:flex-row gap-5">
+          <div className="w-full sm:w-28 h-28 flex-shrink-0 rounded-xl overflow-hidden bg-surface-container-highest flex items-center justify-center">
+            <span className="material-symbols-outlined text-[40px] text-outline">
+              shopping_bag
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap justify-between items-start gap-3">
+              <div className="min-w-0">
+                <h3 className="font-title-lg text-title-lg text-on-surface truncate max-w-[260px] md:max-w-sm">
+                  {gift.name}
+                </h3>
+                <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest mt-0.5">
+                  {gift.occasion}
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-variant text-on-surface-variant font-label-sm text-label-sm flex-shrink-0">
+                <span className="material-symbols-outlined text-[16px]">
+                  {gift.statusIcon}
+                </span>
+                {gift.statusLabel}
+              </span>
+            </div>
+            <div className="mt-4 space-y-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="w-2 h-2 rounded-full bg-secondary animate-pulse-dot" />
+                <p className="font-body-md text-body-md text-on-surface-variant flex-1 min-w-[160px]">
+                  Finalize o pagamento para liberar o presente
+                </p>
+                <Link
+                  to={`/wizard/pagamento?draftId=${gift.id}`}
+                  className="bg-primary text-on-primary px-6 py-2.5 rounded-full font-label-md text-label-md hover:bg-coral-deep transition-all flex-shrink-0 shadow-sm"
+                >
+                  Finalizar Pagamento
+                </Link>
+                <button
+                  onClick={() => onDelete(gift)}
+                  className="w-9 h-9 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-warm-gray hover:text-error transition-all"
+                >
+                  <span className="material-symbols-outlined text-[20px]">delete</span>
+                </button>
+              </div>
+              <button
+                onClick={() => onConfirmPayment(gift.id)}
+                className="text-xs text-secondary hover:text-secondary/80 hover:underline underline-offset-2 transition-all font-label-md"
+              >
+                Já paguei (confirmar)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {gift.status === "draft" && (
+        <div className="flex flex-col sm:flex-row gap-5">
+          <div className="w-full sm:w-28 h-28 flex-shrink-0 rounded-xl overflow-hidden bg-warm-gray/50 flex items-center justify-center border-2 border-dashed border-outline-variant/50">
+            <span className="material-symbols-outlined text-[40px] text-outline-variant">
+              edit_note
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap justify-between items-start gap-3">
+              <div className="min-w-0">
+                <h3 className="font-title-lg text-title-lg text-on-surface truncate max-w-[260px] md:max-w-sm">
+                  {gift.name}
+                </h3>
+                <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest mt-0.5">
+                  {gift.occasion}
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-warm-gray text-on-surface-variant font-label-sm text-label-sm flex-shrink-0">
+                <span className="material-symbols-outlined text-[16px]">
+                  {gift.statusIcon}
+                </span>
+                {gift.statusLabel}
+              </span>
+            </div>
+            <p className="font-body-md text-body-md text-on-surface-variant mt-3 italic">
+              {gift.description}
+            </p>
+            <div className="flex items-center justify-between mt-4">
+              <div />
+              <div className="flex gap-3">
+                <Link
+                  to="/wizard/ocasiao-nome"
+                  className="bg-primary text-on-primary px-5 py-2.5 rounded-lg font-label-md text-label-md hover:brightness-110 transition-all flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[18px]">edit</span>
+                  Continuar
+                </Link>
+                <button
+                  onClick={() => onDelete(gift)}
+                  className="w-10 h-10 border border-outline/40 flex items-center justify-center rounded-lg hover:bg-warm-gray transition-all text-on-surface-variant"
+                >
+                  <span className="material-symbols-outlined text-[20px]">delete</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
