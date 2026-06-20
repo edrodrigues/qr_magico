@@ -65,6 +65,8 @@ export function RetrospectivaPage() {
     ?? data?.fotos?.[0]?.url
     ?? "";
 
+  const [showVideo, setShowVideo] = useState(true);
+
   // Loading state
   if (loading && !data) {
     return (
@@ -159,12 +161,8 @@ export function RetrospectivaPage() {
     );
   }
 
-  // Video state
-  const [showVideo, setShowVideo] = useState(true);
-  const hasVideo = !!presente.video_url;
-
   // Show VideoPlayer as main experience when video_url exists
-  if (hasVideo && showVideo) {
+  if (presente.video_url && showVideo) {
     return (
       <>
         <Helmet>

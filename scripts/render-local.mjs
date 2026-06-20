@@ -12,15 +12,15 @@ const __dirname = dirname(__filename);
 const root = resolve(__dirname, "..");
 
 const inputProps = {
-  nome_homenageado: "Rafaela",
-  nome_remetente: "",
-  ocasiao: "outro",
-  data_inicio: "2026-06-14",
-  descricao_relacao: "Parabens pela aprovacao no concurso. Muitas felicidades na sua nova fase em Brasilia.",
-  estilo_musical: "mpb",
+  nome_homenageado: "Samuel",
+  nome_remetente: "Edmilson",
+  ocasiao: "gratidao",
+  data_inicio: "2015-12-15",
+  descricao_relacao: "Filho, é uma satisfação e um privilégio ser seu pai. Você é um ótimo filho. Espero que continue sendo assim, inteligente, dedicado, esforçado, bom filho e um bom garoto. Nós te amamos!",
+  estilo_musical: "pop",
   fotos: [],
   thumbnail_url: "",
-  musicaUrl: "",
+  musicaUrl: null,
 };
 
 async function main() {
@@ -51,6 +51,8 @@ async function main() {
     composition,
     serveUrl: bundleLocation,
     codec: "h264",
+    videoBitrate: "8M",
+    x264Preset: "medium",
     outputLocation,
     inputProps,
   });

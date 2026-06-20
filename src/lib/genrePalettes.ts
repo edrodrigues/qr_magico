@@ -1,15 +1,15 @@
 export const GENRE_PALETTES: Record<string, string[]> = {
-  mpb: ['#1a6b4a', '#2d9b6e', '#c4e6d8'],
-  pop: ['#a93539', '#f26b6b', '#ffdad8'],
-  piano: ['#2c3e50', '#5d7a9a', '#d4e1f0'],
-  lofi: ['#5c4a3a', '#b8a08a', '#efe6dc'],
-  sertanejo: ['#8b5e3c', '#d4a76a', '#f5e6d3'],
-  acoustic: ['#7a6b5d', '#c4a97d', '#ede0d4'],
-  eletronica: ['#4a0e6b', '#8a2be2', '#e0b0ff'],
-  rock: ['#2d2d2d', '#6b6b6b', '#d4d4d4'],
+  mpb: ['#3d5a4a', '#7a9a82', '#dce8e0'],
+  pop: ['#8a5a5a', '#b88a8a', '#ede0e0'],
+  piano: ['#4a5a70', '#7a8aa0', '#e0e4ec'],
+  lofi: ['#6a5a4a', '#a09080', '#e8e5e0'],
+  sertanejo: ['#7a6a50', '#b0a088', '#ece6e0'],
+  acoustic: ['#5a5548', '#958a7a', '#e6e4e0'],
+  eletronica: ['#4a3a60', '#7a6a90', '#e6e0ee'],
+  rock: ['#3a3a3a', '#7a7a7a', '#e0e0e0'],
 };
 
-export const DEFAULT_PALETTE = ['#a93539', '#f26b6b', '#ffdad8'];
+export const DEFAULT_PALETTE = ['#8a7a6a', '#b8a898', '#e8e4e0'];
 
 export function getPalette(genre: string): string[] {
   return GENRE_PALETTES[genre.toLowerCase()] ?? DEFAULT_PALETTE;

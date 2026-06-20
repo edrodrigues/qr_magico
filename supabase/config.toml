@@ -1,3 +1,6 @@
 [functions]
 [functions.generate-music]
 verify_jwt = false
+
+[functions.render-video]
+verify_jwt = false

@@ -18,32 +18,32 @@ export function Story({ descricao_relacao }: StoryProps) {
   return (
     <AbsoluteFill
       style={{
-        background: "linear-gradient(180deg, #f5f0ea 0%, #fcf9f5 100%)",
+        background: "linear-gradient(180deg, #f5f0ea 0%, #faf8f5 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         fontFamily: "var(--font-display)",
-        padding: "48px 56px",
+        padding: "48px 64px",
       }}
     >
       <h3
         style={{
-          color: "#a93539",
-          fontSize: 20,
+          color: "#8a7a6a",
+          fontSize: 18,
           fontWeight: 600,
           letterSpacing: 3,
           textTransform: "uppercase",
           opacity: titleOpacity,
-          marginBottom: 40,
+          marginBottom: 32,
         }}
       >
         A História de Vocês
       </h3>
 
-      <div style={{ maxWidth: 700, textAlign: "center" }}>
+      <div style={{ maxWidth: 900, textAlign: "center" }}>
         {sentences.map((sentence, si) => {
           const wordDelay = 15 + si * 8;
-          const wordStagger = 3;
+          const wordStagger = 2;
           const words = sentence.split(" ");
 
           return (
@@ -51,7 +51,7 @@ export function Story({ descricao_relacao }: StoryProps) {
               key={si}
               style={{
                 fontFamily: "var(--font-body)",
-                fontSize: 32,
+                fontSize: 28,
                 lineHeight: 1.6,
                 color: "#2c2c2c",
                 marginBottom: 12,
@@ -59,7 +59,7 @@ export function Story({ descricao_relacao }: StoryProps) {
             >
               {words.map((word, wi) => {
                 const wordStart = wordDelay + wi * wordStagger;
-                const wordOpacity = interpolate(frame, [wordStart, wordStart + 5], [0, 1]);
+                const wordOpacity = interpolate(frame, [wordStart, wordStart + 5], [0.3, 1]);
                 return (
                   <span
                     key={wi}

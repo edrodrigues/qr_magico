@@ -4,14 +4,14 @@ export function Credits() {
   const frame = useCurrentFrame();
 
   const titleOpacity = interpolate(frame, [0, 20], [0, 1]);
-  const titleY = interpolate(frame, [0, 20], [30, 0]);
+  const titleY = interpolate(frame, [0, 20], [20, 0]);
   const ctaOpacity = interpolate(frame, [30, 60], [0, 1]);
-  const ctaY = interpolate(frame, [30, 60], [30, 0]);
+  const ctaY = interpolate(frame, [30, 60], [20, 0]);
 
   return (
     <AbsoluteFill
       style={{
-        background: "linear-gradient(135deg, #a93539 0%, #8a282c 100%)",
+        background: "linear-gradient(135deg, #2a2a2a 0%, #4a4a4a 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -23,11 +23,9 @@ export function Credits() {
       <svg
         style={{
           position: "absolute",
-          width: "120%",
-          height: "120%",
-          top: "-10%",
-          left: "-10%",
-          opacity: 0.08,
+          width: "100%",
+          height: "100%",
+          opacity: 0.06,
         }}
         viewBox="-100 -100 200 200"
       >
@@ -38,7 +36,7 @@ export function Credits() {
         <h2
           style={{
             color: "white",
-            fontSize: 52,
+            fontSize: 44,
             fontWeight: 700,
             opacity: titleOpacity,
             transform: `translateY(${titleY}px)`,
@@ -60,15 +58,15 @@ export function Credits() {
           <div
             style={{
               display: "inline-block",
-              border: "2px solid rgba(255,255,255,0.5)",
+              border: "2px solid rgba(255,255,255,0.4)",
               borderRadius: 50,
-              padding: "16px 48px",
+              padding: "14px 44px",
             }}
           >
             <p
               style={{
                 color: "white",
-                fontSize: 28,
+                fontSize: 24,
                 fontWeight: 600,
               }}
             >

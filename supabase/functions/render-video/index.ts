@@ -151,11 +151,23 @@ serve(async (req) => {
       });
     }
 
-    const { data: fotos } = await supabase
+    const { data: fotos, error: fotosErr } = await supabase
       .from("fotos")
       .select("url, ordem")
       .eq("presente_id", presenteId)
       .order("ordem", { ascending: true });
+
+    if (fotosErr) {
+      console.error(`Failed to fetch fotos for ${presenteId}:`, fotosErr);
+    }
+
+    const fotosUrls = (fotos || []).map((f: { url: string }) => f.url);
+    console.log(
+      `Fetched ${fotosUrls.length} photos for ${presenteId}:`,
+      fotosUrls.length > 0
+        ? fotosUrls.map((u: string) => u.substring(u.lastIndexOf("/") + 1))
+        : "none",
+    );
 
     let musicaUrl: string | null = null;
     try {
@@ -165,6 +177,7 @@ serve(async (req) => {
         .eq("presente_id", presenteId)
         .maybeSingle();
       musicaUrl = musica?.url_audio ?? null;
+      console.log(`Music URL ${musicaUrl ? "found" : "not found"} for ${presenteId}`);
     } catch (e) {
       console.warn("Failed to fetch music, rendering without audio:", e);
     }
@@ -189,7 +202,7 @@ serve(async (req) => {
       data_inicio: presente.data_inicio,
       descricao_relacao: presente.descricao_relacao,
       estilo_musical: presente.estilo_musical,
-      fotos: (fotos || []).map((f: { url: string }) => f.url),
+      fotos: fotosUrls,
       thumbnail_url: presente.thumbnail_url || "",
       musicaUrl,
     };
@@ -204,7 +217,15 @@ serve(async (req) => {
       serveUrl,
       framesPerLambda: 30,
       outName: `${outDir}/out.mp4`,
+      codec: "h264",
+      videoBitrate: "8M",
+      x264Preset: "medium",
     };
+
+    const payloadSize = new TextEncoder().encode(JSON.stringify(payload)).length;
+    console.log(
+      `Invoking Lambda for ${presenteId}: payload=${(payloadSize / 1024).toFixed(1)}KB, ${fotosUrls.length} photos`,
+    );
 
     const response = await invokeLambda(
       awsRegion,
@@ -216,26 +237,34 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error(`Lambda invocation failed: ${response.status} ${errText}`);
+      console.error(`Lambda invocation failed for ${presenteId}: ${response.status} ${errText}`);
       return new Response(JSON.stringify({ error: "Lambda invocation failed" }), {
         status: 500,
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       });
     }
 
-    console.log(`render-video started: ${presenteId}`);
+    const lambdaRequestId = response.headers.get("x-amzn-RequestId") || "";
+    console.log(`Lambda invoked successfully for ${presenteId}: requestId=${lambdaRequestId}`);
 
     const videoUrl = `https://${bucketName}.s3.${awsRegion}.amazonaws.com/${outDir}/out.mp4`;
-    await supabase
+    const { error: updateErr } = await supabase
       .from("presentes")
       .update({
         video_url: videoUrl,
+        render_request_id: lambdaRequestId,
         status: "ready",
         updated_at: new Date().toISOString(),
       })
       .eq("id", presenteId);
 
-    return new Response(JSON.stringify({ success: true, presenteId }), {
+    if (updateErr) {
+      console.error(`Failed to update presente ${presenteId} after Lambda invocation:`, updateErr);
+    } else {
+      console.log(`Presente ${presenteId} updated: video_url set, status=ready`);
+    }
+
+    return new Response(JSON.stringify({ success: true, presenteId, requestId: lambdaRequestId }), {
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",

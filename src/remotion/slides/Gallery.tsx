@@ -14,7 +14,7 @@ export function Gallery({ fotos }: GalleryProps) {
     return (
       <AbsoluteFill
         style={{
-          background: "linear-gradient(180deg, #fcf9f5 0%, #f5f0ea 100%)",
+          background: "linear-gradient(180deg, #faf8f5 0%, #f5f0ea 100%)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -39,9 +39,9 @@ export function Gallery({ fotos }: GalleryProps) {
   const nextIndex = photoIndex;
 
   const crossfadeProgress = isFirstCycle ? 1 : Math.min(photoFrame / CROSSFADE, 1);
-  const kenBurnsScale = interpolate(photoFrame, [0, PHOTO_DURATION], [1, 1.08]);
-  const kenBurnsX = interpolate(photoFrame, [0, PHOTO_DURATION], [0, -1]);
-  const kenBurnsY = interpolate(photoFrame, [0, PHOTO_DURATION], [0, -1]);
+  const kenBurnsScale = interpolate(photoFrame, [0, PHOTO_DURATION], [1, 1.04]);
+  const kenBurnsX = interpolate(photoFrame, [0, PHOTO_DURATION], [0, -0.5]);
+  const kenBurnsY = interpolate(photoFrame, [0, PHOTO_DURATION], [0, -0.5]);
 
   return (
     <AbsoluteFill style={{ backgroundColor: "black" }}>

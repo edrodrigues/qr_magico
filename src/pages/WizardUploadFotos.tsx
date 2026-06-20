@@ -22,7 +22,8 @@ export function WizardUploadFotos() {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const uniqueId = crypto.randomUUID();
-      const path = `uploads/${Date.now()}_${uniqueId}_${file.name}`;
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `uploads/${Date.now()}_${uniqueId}_${safeName}`;
       const { data: _uploadData, error } = await supabase.storage
         .from("fotos")
         .upload(path, file);

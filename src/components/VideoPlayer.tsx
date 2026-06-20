@@ -16,11 +16,16 @@ export function VideoPlayer({ videoUrl, posterUrl, onShowStory }: VideoPlayerPro
   const [currentTime, setCurrentTime] = useState(0);
   const [showOverlay, setShowOverlay] = useState(false);
   const [hasEnded, setHasEnded] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+
+    setIsLoaded(false);
+    setHasEnded(false);
+    setHasError(false);
 
     const onLoaded = () => {
       setIsLoaded(true);
@@ -39,12 +44,16 @@ export function VideoPlayer({ videoUrl, posterUrl, onShowStory }: VideoPlayerPro
       setHasEnded(true);
       setShowOverlay(true);
     };
+    const onError = () => {
+      setHasError(true);
+    };
 
     video.addEventListener("loadeddata", onLoaded);
     video.addEventListener("timeupdate", onTimeUpdate);
     video.addEventListener("play", onPlay);
     video.addEventListener("pause", onPause);
     video.addEventListener("ended", onEnded);
+    video.addEventListener("error", onError);
 
     return () => {
       video.removeEventListener("loadeddata", onLoaded);
@@ -52,8 +61,9 @@ export function VideoPlayer({ videoUrl, posterUrl, onShowStory }: VideoPlayerPro
       video.removeEventListener("play", onPlay);
       video.removeEventListener("pause", onPause);
       video.removeEventListener("ended", onEnded);
+      video.removeEventListener("error", onError);
     };
-  }, []);
+  }, [videoUrl]);
 
   const togglePlay = useCallback(() => {
     const video = videoRef.current;
@@ -201,6 +211,29 @@ export function VideoPlayer({ videoUrl, posterUrl, onShowStory }: VideoPlayerPro
               <span className="material-symbols-outlined">
                 {isFullscreen ? "fullscreen_exit" : "fullscreen"}
               </span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {hasError && (
+        <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+          <div className="text-center px-8">
+            <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-6">
+              <span className="material-symbols-outlined text-white text-5xl">hourglass_empty</span>
+            </div>
+            <p className="text-white font-headline-md text-headline-md mb-2">
+              Ainda processando...
+            </p>
+            <p className="text-white/60 font-body-md text-body-md mb-6">
+              O v&iacute;deo ainda est&aacute; sendo gerado. Volte em alguns minutos.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="max-w-xs bg-white/15 text-white px-6 py-3 rounded-full font-label-md text-label-md hover:bg-white/25 transition-colors flex items-center justify-center gap-2 mx-auto"
+            >
+              <span className="material-symbols-outlined text-[20px]">refresh</span>
+              Tentar novamente
             </button>
           </div>
         </div>

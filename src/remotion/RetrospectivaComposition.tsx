@@ -51,7 +51,7 @@ export function RetrospectivaComposition({
   const allPhotos = fotos.length > 0 ? fotos : thumbnail_url ? [thumbnail_url] : [];
 
   return (
-    <AbsoluteFill style={{ backgroundColor: "#fcf9f5" }}>
+    <AbsoluteFill style={{ backgroundColor: "#faf8f5" }}>
       {musicaUrl && <Audio src={musicaUrl} />}
 
       {/* Cover: frames 0-149 (5s) */}

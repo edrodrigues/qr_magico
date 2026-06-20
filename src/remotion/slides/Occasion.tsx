@@ -18,57 +18,58 @@ export function Occasion({ nome_remetente, occasionLabel, data_inicio }: Occasio
   const days = computeDaysSince(data_inicio);
 
   const remetenteOpacity = interpolate(frame, [0, 20], [0, 1]);
-  const remetenteY = interpolate(frame, [0, 20], [30, 0]);
-  const titleClip = interpolate(frame, [10, 50], [100, 0]);
+  const remetenteY = interpolate(frame, [0, 20], [20, 0]);
+  const titleOpacity = interpolate(frame, [15, 45], [0, 1]);
+  const titleY = interpolate(frame, [15, 45], [20, 0]);
   const cardOpacity = interpolate(frame, [40, 70], [0, 1]);
-  const cardY = interpolate(frame, [40, 70], [30, 0]);
+  const cardY = interpolate(frame, [40, 70], [20, 0]);
 
   return (
     <AbsoluteFill
       style={{
-        background: "linear-gradient(180deg, #fcf9f5 0%, #f5f0ea 100%)",
+        background: "linear-gradient(180deg, #faf8f5 0%, #f5f0ea 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         fontFamily: "var(--font-display)",
-        padding: 48,
+        padding: "48px 64px",
       }}
     >
       {nome_remetente && (
         <p
           style={{
-            color: "#a93539",
-            fontSize: 20,
+            color: "#8a7a6a",
+            fontSize: 18,
             fontWeight: 600,
             letterSpacing: 3,
             textTransform: "uppercase",
             opacity: remetenteOpacity,
             transform: `translateY(${remetenteY}px)`,
-            marginBottom: 16,
+            marginBottom: 12,
           }}
         >
           de {nome_remetente}
         </p>
       )}
 
-      <div style={{ overflow: "hidden", marginBottom: 32 }}>
-        <h1
-          style={{
-            color: "#2c2c2c",
-            fontSize: 72,
-            fontWeight: 700,
-            lineHeight: 1.1,
-            clipPath: `inset(0 ${titleClip}% 0 0)`,
-          }}
-        >
-          {occasionLabel}
-        </h1>
-      </div>
+      <h1
+        style={{
+          color: "#2c2c2c",
+          fontSize: 56,
+          fontWeight: 700,
+          lineHeight: 1.1,
+          opacity: titleOpacity,
+          transform: `translateY(${titleY}px)`,
+          marginBottom: 32,
+        }}
+      >
+        {occasionLabel}
+      </h1>
 
       {data_inicio && (
         <div
           style={{
-            backgroundColor: "rgba(169, 53, 57, 0.08)",
+            backgroundColor: "rgba(138, 122, 106, 0.08)",
             borderRadius: 16,
             padding: "24px 48px",
             textAlign: "center",
@@ -79,7 +80,7 @@ export function Occasion({ nome_remetente, occasionLabel, data_inicio }: Occasio
           <p
             style={{
               color: "#6b6b6b",
-              fontSize: 20,
+              fontSize: 18,
               fontFamily: "var(--font-body)",
               marginBottom: 8,
             }}
@@ -90,7 +91,7 @@ export function Occasion({ nome_remetente, occasionLabel, data_inicio }: Occasio
               year: "numeric",
             })}
           </p>
-          <p style={{ color: "#a93539", fontSize: 28, fontWeight: 700 }}>
+          <p style={{ color: "#8a7a6a", fontSize: 24, fontWeight: 700 }}>
             {days} dias juntos
           </p>
         </div>

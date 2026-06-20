@@ -9,8 +9,8 @@ export const RemotionRoot: React.FC = () => {
       component={RetrospectivaComposition as unknown as React.ComponentType<Record<string, unknown>>}
       durationInFrames={1410}
       fps={30}
-      width={1080}
-      height={1920}
+      width={1920}
+      height={1080}
       defaultProps={{
         nome_homenageado: "Nome",
         nome_remetente: "Remetente",
