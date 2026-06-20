@@ -224,6 +224,7 @@ serve(async (req) => {
       .from("presentes")
       .update({
         video_url: videoUrl,
+        status: "ready",
         updated_at: new Date().toISOString(),
       })
       .eq("id", presenteId);

@@ -5,9 +5,9 @@ import { AnimatedBlobBackground } from "./AnimatedBlobBackground";
 const PHRASES = [
   "Estamos preparando sua surpresa...",
   "Compondo a música perfeita...",
+  "Renderizando o vídeo especial...",
   "Organizando as memórias...",
   "Quase pronto...",
-  "A magia está a caminho...",
 ];
 
 interface LoadingStateProps {

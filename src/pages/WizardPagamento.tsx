@@ -79,7 +79,7 @@ export function WizardPagamento() {
     }, { onConflict: "presente_id" });
     if (musicaError) {
       addToast("Erro ao preparar a música", "error");
-      console.error("musicas upsert error:", musicaError);
+      console.error("musicas upsert error:", { code: musicaError.code, message: musicaError.message, details: musicaError.details });
       return;
     }
 
@@ -99,49 +99,30 @@ export function WizardPagamento() {
       }
     }
 
-    const edgeUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-music`;
-    let musicOk = false;
-    try {
-      const response = await fetch(edgeUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-        body: JSON.stringify({ presente_id: presenteId }),
-      });
-      if (!response.ok) {
-        const errText = await response.text();
-        console.error("generate-music returned error:", response.status, errText);
-        addToast(`Erro na geração da música (${response.status})`, "error");
-      } else {
-        musicOk = true;
-      }
-    } catch (err) {
-      console.error("Failed to call generate-music edge function:", err);
-      addToast("A geração da música pode estar atrasada", "info");
-    }
+    const edgeUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session?.access_token}`,
+    };
+    const body = JSON.stringify({ presente_id: presenteId });
 
-    // Only trigger render-video if music generation was scheduled successfully
-    if (musicOk) {
-      const renderUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/render-video`;
-      try {
-        const response = await fetch(renderUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.access_token}`,
-          },
-          body: JSON.stringify({ presente_id: presenteId }),
-        });
-        if (!response.ok) {
-          const errText = await response.text();
-          console.error("render-video returned error:", response.status, errText);
-        }
-      } catch (err) {
-        console.error("Failed to call render-video edge function:", err);
+    Promise.allSettled([
+      fetch(`${edgeUrl}/generate-music`, { method: "POST", headers, body }),
+      fetch(`${edgeUrl}/render-video`, { method: "POST", headers, body }),
+    ]).then(([musicRes, videoRes]) => {
+      if (musicRes.status === "rejected") {
+        console.error("generate-music failed:", musicRes.reason);
+      } else if (!musicRes.value.ok) {
+        console.error("generate-music returned error:", musicRes.value.status);
+        musicRes.value.text().then((t) => console.error(t));
       }
-    }
+      if (videoRes.status === "rejected") {
+        console.error("render-video failed:", videoRes.reason);
+      } else if (!videoRes.value.ok) {
+        console.error("render-video returned error:", videoRes.value.status);
+        videoRes.value.text().then((t) => console.error(t));
+      }
+    });
 
     resetWizard();
     navigate("/dashboard");
@@ -370,7 +351,7 @@ export function WizardPagamento() {
                 disabled={isSaving}
                 className="w-full bg-primary text-on-primary py-5 rounded-full font-headline-md-mobile text-headline-md-mobile shadow-lg shadow-primary/20 hover:bg-coral-deep transition-all transform active:scale-95 mb-4 disabled:opacity-50"
               >
-                {isSaving ? "Processando..." : "Pagar Agora"}
+                {isSaving ? "Gerando..." : "Finalizar e Gerar Presente"}
               </button>
               <p className="text-center text-xs text-on-surface-variant leading-relaxed">
                 Ao clicar em &quot;Pagar Agora&quot;, voc&ecirc; concorda com

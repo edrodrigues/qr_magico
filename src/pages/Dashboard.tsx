@@ -416,7 +416,11 @@ export function Dashboard() {
   };
 
   const handleRetry = async (gift: Gift) => {
-    addToast("Reiniciando geração da música...", "info");
+    if (!session) {
+      addToast("Sessão expirada. Faça login novamente.", "error");
+      return;
+    }
+    addToast("Reiniciando geração...", "info");
     const { error: resetErr } = await supabase
       .from("musicas")
       .upsert({
@@ -427,25 +431,30 @@ export function Dashboard() {
       }, { onConflict: "presente_id" });
     if (resetErr) {
       addToast("Erro ao reiniciar a geração", "error");
+      console.error("musicas retry upsert error:", { code: resetErr.code, message: resetErr.message, details: resetErr.details });
       return;
     }
-    const edgeUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-music`;
-    try {
-      const response = await fetch(edgeUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-        body: JSON.stringify({ presente_id: gift.id }),
-      });
-      if (!response.ok) {
-        const errText = await response.text();
-        console.error("retry generate-music error:", response.status, errText);
+    const edgeUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session?.access_token}`,
+    };
+    const body = JSON.stringify({ presente_id: gift.id });
+    Promise.allSettled([
+      fetch(`${edgeUrl}/generate-music`, { method: "POST", headers, body }),
+      fetch(`${edgeUrl}/render-video`, { method: "POST", headers, body }),
+    ]).then(([musicRes, videoRes]) => {
+      if (musicRes.status === "rejected") {
+        console.error("retry generate-music failed:", musicRes.reason);
+      } else if (!musicRes.value.ok) {
+        console.error("retry generate-music error:", musicRes.value.status);
       }
-    } catch (err) {
-      console.error("retry generate-music fetch failed:", err);
-    }
+      if (videoRes.status === "rejected") {
+        console.error("retry render-video failed:", videoRes.reason);
+      } else if (!videoRes.value.ok) {
+        console.error("retry render-video error:", videoRes.value.status);
+      }
+    });
     refetch();
   };
 
