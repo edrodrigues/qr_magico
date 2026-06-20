@@ -4,3 +4,6 @@ verify_jwt = false
 
 [functions.render-video]
 verify_jwt = false
+
+[functions.proxy-video]
+verify_jwt = false
