@@ -573,10 +573,8 @@ export function Dashboard() {
       refetch();
       gifts.filter((g) => g.status === "generating").forEach(checkVideoStatus);
     }, 15000);
-    const timeout = setTimeout(() => clearInterval(interval), 300000);
     return () => {
       clearInterval(interval);
-      clearTimeout(timeout);
     };
   }, [hasProcessing, refetch, gifts, checkVideoStatus]);
 
@@ -615,16 +613,17 @@ export function Dashboard() {
       Authorization: `Bearer ${session?.access_token}`,
     };
     const body = JSON.stringify({ presente_id: gift.id });
-    Promise.allSettled([
-      fetch(`${edgeUrl}/generate-music`, { method: "POST", headers, body }),
-      fetch(`${edgeUrl}/render-video`, { method: "POST", headers, body }),
-    ]).then(([, videoRes]) => {
-      if (videoRes.status === "rejected") {
-        console.error("retry render-video failed:", videoRes.reason);
-      } else if (!videoRes.value.ok) {
-        console.error("retry render-video error:", videoRes.value.status);
+    (async () => {
+      const musicRes = await fetch(`${edgeUrl}/generate-music`, { method: "POST", headers, body });
+      if (!musicRes.ok) {
+        console.error("retry generate-music failed:", musicRes.status);
+        return;
       }
-    });
+      const videoRes = await fetch(`${edgeUrl}/render-video`, { method: "POST", headers, body });
+      if (!videoRes.ok) {
+        console.error("retry render-video error:", videoRes.status);
+      }
+    })();
     refetch();
   };
 

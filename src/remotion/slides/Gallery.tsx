@@ -29,6 +29,39 @@ export function Gallery({ fotos }: GalleryProps) {
     );
   }
 
+  if (fotos.length === 1) {
+    const kenBurnsScale = interpolate(frame, [0, 540], [1, 1.04]);
+    const kenBurnsX = interpolate(frame, [0, 540], [0, -0.5]);
+    const kenBurnsY = interpolate(frame, [0, 540], [0, -0.5]);
+    return (
+      <AbsoluteFill style={{ backgroundColor: "black" }}>
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }} />
+        <Img
+          src={fotos[0]}
+          onError={(e: React.SyntheticEvent<HTMLImageElement>) => { (e.target as HTMLImageElement).style.display = "none"; }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            transform: `scale(${kenBurnsScale}) translate(${kenBurnsX}px, ${kenBurnsY}px)`,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 128,
+            background: "linear-gradient(transparent, rgba(0,0,0,0.4))",
+          }}
+        />
+      </AbsoluteFill>
+    );
+  }
+
   const totalDuration = fotos.length * PHOTO_DURATION;
   const effectiveFrame = frame % totalDuration;
   const photoIndex = Math.floor(effectiveFrame / PHOTO_DURATION);
@@ -46,30 +79,38 @@ export function Gallery({ fotos }: GalleryProps) {
   return (
     <AbsoluteFill style={{ backgroundColor: "black" }}>
       {!isFirstCycle && (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }} />
+          <Img
+            src={fotos[prevIndex]}
+            onError={(e: React.SyntheticEvent<HTMLImageElement>) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              opacity: 1 - crossfadeProgress,
+            }}
+          />
+        </div>
+      )}
+      <div style={{ position: "absolute", inset: 0 }}>
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }} />
         <Img
-          src={fotos[prevIndex]}
+          src={fotos[nextIndex]}
+          onError={(e: React.SyntheticEvent<HTMLImageElement>) => { (e.target as HTMLImageElement).style.display = "none"; }}
           style={{
             position: "absolute",
             inset: 0,
             width: "100%",
             height: "100%",
             objectFit: "cover",
-            opacity: 1 - crossfadeProgress,
+            transform: `scale(${kenBurnsScale}) translate(${kenBurnsX}px, ${kenBurnsY}px)`,
+            opacity: isFirstCycle ? 1 : crossfadeProgress,
           }}
         />
-      )}
-      <Img
-        src={fotos[nextIndex]}
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          transform: `scale(${kenBurnsScale}) translate(${kenBurnsX}px, ${kenBurnsY}px)`,
-          opacity: isFirstCycle ? 1 : crossfadeProgress,
-        }}
-      />
+      </div>
 
       <div
         style={{

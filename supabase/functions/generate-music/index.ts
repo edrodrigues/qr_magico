@@ -237,11 +237,6 @@ serve(async (req) => {
         status: "ready",
       }, { onConflict: "presente_id" })
 
-    await supabase
-      .from("presentes")
-      .update({ status: "ready", updated_at: new Date().toISOString() })
-      .eq("id", presenteId)
-
     const elapsed = Date.now() - startTime
     console.log(`generate-music OK ${presenteId} in ${elapsed}ms`)
 

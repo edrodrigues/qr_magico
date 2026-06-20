@@ -118,17 +118,14 @@ export function WizardPagamento() {
     };
     const body = JSON.stringify({ presente_id: presenteId });
 
-    Promise.allSettled([
-      fetch(`${edgeUrl}/generate-music`, { method: "POST", headers, body }),
-      fetch(`${edgeUrl}/render-video`, { method: "POST", headers, body }),
-    ]).then(([, videoRes]) => {
-      if (videoRes.status === "rejected") {
-        console.error("render-video failed:", videoRes.reason);
-      } else if (!videoRes.value.ok) {
-        console.error("render-video returned error:", videoRes.value.status);
-        videoRes.value.text().then((t) => console.error(t));
+    (async () => {
+      const musicRes = await fetch(`${edgeUrl}/generate-music`, { method: "POST", headers, body });
+      if (!musicRes.ok) {
+        console.error("generate-music failed:", musicRes.status);
+        return;
       }
-    });
+      await fetch(`${edgeUrl}/render-video`, { method: "POST", headers, body });
+    })();
 
     resetWizard();
     navigate("/dashboard");

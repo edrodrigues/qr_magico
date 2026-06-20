@@ -127,13 +127,6 @@ serve(async (req) => {
       });
     }
 
-    if (!presente.video_url) {
-      return new Response(JSON.stringify({ error: "Video not available" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-      });
-    }
-
     const region = Deno.env.get("AWS_REGION") || "us-east-1";
     const bucket = Deno.env.get("REMOTION_BUCKET_NAME") || "";
     const accessKeyId = Deno.env.get("AWS_ACCESS_KEY_ID") || "";
@@ -147,6 +140,26 @@ serve(async (req) => {
     }
 
     const key = `renders/${presente.id}/out.mp4`;
+
+    if (!presente.video_url) {
+      const headUrl = `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
+      const headResp = await fetch(headUrl, { method: "HEAD" });
+      if (headResp.status === 404 || headResp.status === 403) {
+        return new Response(JSON.stringify({ error: "Video not available" }), {
+          status: 404,
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        });
+      }
+      const proxyUrl = `${supabaseUrl}/functions/v1/proxy-video?presente_id=${presente.id}`;
+      await supabase
+        .from("presentes")
+        .update({
+          video_url: proxyUrl,
+          status: "ready",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", presente.id);
+    }
     const presignedUrl = await generatePresignedGetUrl(
       bucket, key, region, accessKeyId, secretAccessKey, 3600,
     );

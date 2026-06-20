@@ -171,13 +171,18 @@ serve(async (req) => {
 
     let musicaUrl: string | null = null;
     try {
-      const { data: musica } = await supabase
-        .from("musicas")
-        .select("url_audio")
-        .eq("presente_id", presenteId)
-        .maybeSingle();
-      musicaUrl = musica?.url_audio ?? null;
-      console.log(`Music URL ${musicaUrl ? "found" : "not found"} for ${presenteId}`);
+      for (let i = 0; i < 20; i++) {
+        const { data: musica } = await supabase
+          .from("musicas")
+          .select("url_audio")
+          .eq("presente_id", presenteId)
+          .maybeSingle();
+        musicaUrl = musica?.url_audio ?? null;
+        if (musicaUrl) break;
+        console.log(`Waiting for music URL (attempt ${i + 1}/20) for ${presenteId}`);
+        await new Promise((r) => setTimeout(r, 3000));
+      }
+      console.log(`Music URL ${musicaUrl ? "found" : "not found after 60s"} for ${presenteId}`);
     } catch (e) {
       console.warn("Failed to fetch music, rendering without audio:", e);
     }
@@ -210,6 +215,9 @@ serve(async (req) => {
     const outDir = `renders/${presenteId}`;
     const bucketName = Deno.env.get("REMOTION_BUCKET_NAME") || "";
 
+    const webhookUrl = `${supabaseUrl}/functions/v1/render-complete`;
+    const webhookSecret = Deno.env.get("RENDER_WEBHOOK_SECRET") || "";
+
     const payload = {
       type: "start",
       composition: "Retrospectiva",
@@ -220,6 +228,8 @@ serve(async (req) => {
       codec: "h264",
       videoBitrate: "8M",
       x264Preset: "medium",
+      webhookUrl,
+      webhookSecret,
     };
 
     const payloadSize = new TextEncoder().encode(JSON.stringify(payload)).length;
@@ -238,6 +248,10 @@ serve(async (req) => {
     if (!response.ok) {
       const errText = await response.text();
       console.error(`Lambda invocation failed for ${presenteId}: ${response.status} ${errText}`);
+      await supabase
+        .from("presentes")
+        .update({ status: "failed", updated_at: new Date().toISOString() })
+        .eq("id", presenteId);
       return new Response(JSON.stringify({ error: "Lambda invocation failed" }), {
         status: 500,
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
@@ -269,6 +283,12 @@ serve(async (req) => {
     });
   } catch (err) {
     console.error(`render-video error ${presenteId}:`, err);
+    if (presenteId) {
+      await supabase
+        .from("presentes")
+        .update({ status: "failed", updated_at: new Date().toISOString() })
+        .eq("id", presenteId).catch(() => {});
+    }
     return new Response(
       JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }),
       {
