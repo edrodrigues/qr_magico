@@ -157,11 +157,17 @@ serve(async (req) => {
       .eq("presente_id", presenteId)
       .order("ordem", { ascending: true });
 
-    const { data: musica } = await supabase
-      .from("musicas")
-      .select("url_audio")
-      .eq("presente_id", presenteId)
-      .maybeSingle();
+    let musicaUrl: string | null = null;
+    try {
+      const { data: musica } = await supabase
+        .from("musicas")
+        .select("url_audio")
+        .eq("presente_id", presenteId)
+        .maybeSingle();
+      musicaUrl = musica?.url_audio ?? null;
+    } catch (e) {
+      console.warn("Failed to fetch music, rendering without audio:", e);
+    }
 
     const awsRegion = Deno.env.get("AWS_REGION") || "us-east-1";
     const functionName = Deno.env.get("REMOTION_FUNCTION_NAME") || "";
@@ -185,7 +191,7 @@ serve(async (req) => {
       estilo_musical: presente.estilo_musical,
       fotos: (fotos || []).map((f: { url: string }) => f.url),
       thumbnail_url: presente.thumbnail_url || "",
-      musicaUrl: musica?.url_audio || "",
+      musicaUrl,
     };
 
     const outDir = `renders/${presenteId}`;

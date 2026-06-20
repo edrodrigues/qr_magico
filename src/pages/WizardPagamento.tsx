@@ -26,7 +26,15 @@ export function WizardPagamento() {
   }, [existingDraftId, setDraftId]);
 
   const handlePagar = async () => {
-    const result = await saveDraft({ status: "generating" });
+    const result = await saveDraft({
+      status: "generating",
+      nome_homenageado: wizardData.name,
+      ocasiao: wizardData.occasion,
+      descricao_relacao: wizardData.story,
+      estilo_musical: wizardData.musicStyle || "gerando",
+      nome_remetente: wizardData.remetente,
+      data_inicio: wizardData.startDate,
+    });
 
     if (result.error) {
       addToast("Erro ao processar pagamento", "error");
@@ -62,13 +70,13 @@ export function WizardPagamento() {
       }
     }
 
-    const { error: musicaError } = await supabase.from("musicas").upsert({
-      presente_id: presenteId,
-      estilo: wizardData.musicStyle || "gerando",
-      status: "generating",
-      attempts: 0,
-      last_attempt_at: null,
-    }, { onConflict: "presente_id" });
+    const { error: musicaError } = await supabase.rpc("upsert_musica", {
+      p_presente_id: presenteId,
+      p_status: "generating",
+      p_estilo: wizardData.musicStyle || "gerando",
+      p_attempts: 0,
+      p_last_attempt_at: null,
+    });
     if (musicaError) {
       console.error("musicas upsert error:", { code: musicaError.code, message: musicaError.message, details: musicaError.details, presente_id: presenteId });
       addToast(`Erro ao preparar a música (${musicaError.code})`, "error");
@@ -101,13 +109,7 @@ export function WizardPagamento() {
     Promise.allSettled([
       fetch(`${edgeUrl}/generate-music`, { method: "POST", headers, body }),
       fetch(`${edgeUrl}/render-video`, { method: "POST", headers, body }),
-    ]).then(([musicRes, videoRes]) => {
-      if (musicRes.status === "rejected") {
-        console.error("generate-music failed:", musicRes.reason);
-      } else if (!musicRes.value.ok) {
-        console.error("generate-music returned error:", musicRes.value.status);
-        musicRes.value.text().then((t) => console.error(t));
-      }
+    ]).then(([, videoRes]) => {
       if (videoRes.status === "rejected") {
         console.error("render-video failed:", videoRes.reason);
       } else if (!videoRes.value.ok) {

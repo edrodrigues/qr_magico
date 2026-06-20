@@ -16,7 +16,7 @@ export interface RetroInputProps {
   estilo_musical: string;
   fotos: string[];
   thumbnail_url: string;
-  musicaUrl: string;
+  musicaUrl: string | null;
 }
 
 const OCCASION_LABELS: Record<string, string> = {

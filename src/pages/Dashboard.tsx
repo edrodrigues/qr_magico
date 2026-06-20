@@ -421,14 +421,12 @@ export function Dashboard() {
       return;
     }
     addToast("Reiniciando geração...", "info");
-    const { error: resetErr } = await supabase
-      .from("musicas")
-      .upsert({
-        presente_id: gift.id,
-        attempts: 0,
-        status: "generating",
-        last_attempt_at: null,
-      }, { onConflict: "presente_id" });
+    const { error: resetErr } = await supabase.rpc("upsert_musica", {
+      p_presente_id: gift.id,
+      p_status: "generating",
+      p_attempts: 0,
+      p_last_attempt_at: null,
+    });
     if (resetErr) {
       console.error("musicas retry upsert error:", { code: resetErr.code, message: resetErr.message, details: resetErr.details, presente_id: gift.id });
       addToast(`Erro ao reiniciar a geração (${resetErr.code})`, "error");
@@ -443,12 +441,7 @@ export function Dashboard() {
     Promise.allSettled([
       fetch(`${edgeUrl}/generate-music`, { method: "POST", headers, body }),
       fetch(`${edgeUrl}/render-video`, { method: "POST", headers, body }),
-    ]).then(([musicRes, videoRes]) => {
-      if (musicRes.status === "rejected") {
-        console.error("retry generate-music failed:", musicRes.reason);
-      } else if (!musicRes.value.ok) {
-        console.error("retry generate-music error:", musicRes.value.status);
-      }
+    ]).then(([, videoRes]) => {
       if (videoRes.status === "rejected") {
         console.error("retry render-video failed:", videoRes.reason);
       } else if (!videoRes.value.ok) {
