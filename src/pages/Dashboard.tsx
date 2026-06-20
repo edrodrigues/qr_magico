@@ -649,6 +649,48 @@ export function Dashboard() {
               </span>
             </div>
 
+            <Link
+              to="/dashboard/creditos"
+              className="glass-card p-5 rounded-xl flex items-center gap-4 hover:shadow-md transition-all group"
+            >
+              <span className="material-symbols-outlined text-primary text-[28px]">
+                redeem
+              </span>
+              <div>
+                <p className="font-label-md text-label-md text-on-surface font-bold group-hover:text-primary transition-colors">
+                  Créditos
+                </p>
+                <p className="font-body-md text-body-md text-on-surface-variant text-sm">
+                  Resgate cupons e gere grátis
+                </p>
+              </div>
+              <span className="material-symbols-outlined text-outline ml-auto text-[20px] group-hover:translate-x-1 transition-transform">
+                arrow_forward
+              </span>
+            </Link>
+
+            {user?.email === "ed.ufpe@gmail.com" && (
+              <Link
+                to="/admin"
+                className="glass-card p-5 rounded-xl flex items-center gap-4 hover:shadow-md transition-all group border border-primary/20"
+              >
+                <span className="material-symbols-outlined text-primary text-[28px]">
+                  admin_panel_settings
+                </span>
+                <div>
+                  <p className="font-label-md text-label-md text-on-surface font-bold group-hover:text-primary transition-colors">
+                    Admin
+                  </p>
+                  <p className="font-body-md text-body-md text-on-surface-variant text-sm">
+                    Gerenciar cupons e usuários
+                  </p>
+                </div>
+                <span className="material-symbols-outlined text-outline ml-auto text-[20px] group-hover:translate-x-1 transition-transform">
+                  arrow_forward
+                </span>
+              </Link>
+            )}
+
             {stats.draft > 0 && (
               <div className="glass-card p-5 rounded-xl border-l-4 border-l-secondary">
                 <div className="flex items-start gap-3">

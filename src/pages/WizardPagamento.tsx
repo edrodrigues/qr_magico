@@ -14,10 +14,22 @@ export function WizardPagamento() {
   const [searchParams] = useSearchParams();
   const { data: wizardData, draftId, saveDraft, setDraftId, isSaving, resetWizard } = useWizard();
   const [method, setMethod] = useState<PaymentMethod>("pix");
+  const [hasFreeCredit, setHasFreeCredit] = useState(false);
   const { addToast } = useToast();
 
   const existingDraftId = searchParams.get("draftId");
-  const { session } = useAuth();
+  const { user, session } = useAuth();
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("cupons_uso")
+      .select("id", { count: "exact", head: true })
+      .eq("usuario_id", user.id)
+      .then(({ count }) => {
+        setHasFreeCredit(count !== null && count > 0);
+      });
+  }, [user]);
 
   useEffect(() => {
     if (existingDraftId) {
@@ -132,58 +144,92 @@ export function WizardPagamento() {
             Finalizar presente
           </h1>
           <p className="font-body-lg text-body-lg text-on-surface-variant">
-            Escolha a melhor forma de pagamento para voc&ecirc;.
+            {hasFreeCredit
+              ? "Seu cupom está ativo! Gere seu Momento Mágico gratuitamente."
+              : "Escolha a melhor forma de pagamento para voc&ecirc;."}
           </p>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter-desktop">
           <div className="lg:col-span-7 flex flex-col gap-8">
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => setMethod("pix")}
-                className={cn(
-                  "flex items-center justify-center gap-3 p-6 rounded-xl border-2 glass-panel transition-all duration-300",
-                  method === "pix"
-                    ? "border-primary bg-surface-container-low"
-                    : "border-outline-variant"
-                )}
-              >
-                <span className="material-symbols-outlined text-primary">
-                  qr_code_2
+            {hasFreeCredit ? (
+              <div className="glass-panel p-8 rounded-2xl border border-primary/30 flex flex-col items-center text-center">
+                <span className="material-symbols-outlined text-primary text-[64px] mb-4">
+                  redeem
                 </span>
-                <div className="text-left">
-                  <p className="font-label-md text-label-md text-on-surface">
-                    PIX
-                  </p>
-                  <p className="text-xs text-secondary font-semibold">
-                    R&aacute;pido e seguro
-                  </p>
+                <h2 className="font-title-lg text-title-lg text-on-surface mb-2">
+                  Crédito disponível!
+                </h2>
+                <p className="font-body-md text-body-md text-on-surface-variant mb-6 max-w-sm">
+                  Seu cupom foi resgatado com sucesso. Clique no botão abaixo para gerar seu
+                  Momento Mágico gratuitamente, sem custos.
+                </p>
+                <button
+                  onClick={handlePagar}
+                  disabled={isSaving}
+                  className="bg-primary text-on-primary px-10 py-4 rounded-full font-headline-md-mobile text-headline-md-mobile shadow-lg shadow-primary/20 hover:brightness-110 transition-all transform active:scale-95 disabled:opacity-50 flex items-center gap-3"
+                >
+                  {isSaving ? (
+                    <>
+                      <span className="material-symbols-outlined text-[22px] animate-spin">refresh</span>
+                      Gerando...
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-[22px]">auto_awesome</span>
+                      Gerar Grátis
+                    </>
+                  )}
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    onClick={() => setMethod("pix")}
+                    className={cn(
+                      "flex items-center justify-center gap-3 p-6 rounded-xl border-2 glass-panel transition-all duration-300",
+                      method === "pix"
+                        ? "border-primary bg-surface-container-low"
+                        : "border-outline-variant"
+                    )}
+                  >
+                    <span className="material-symbols-outlined text-primary">
+                      qr_code_2
+                    </span>
+                    <div className="text-left">
+                      <p className="font-label-md text-label-md text-on-surface">
+                        PIX
+                      </p>
+                      <p className="text-xs text-secondary font-semibold">
+                        R&aacute;pido e seguro
+                      </p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setMethod("card")}
+                    className={cn(
+                      "flex items-center justify-center gap-3 p-6 rounded-xl border-2 glass-panel transition-all duration-300",
+                      method === "card"
+                        ? "border-primary bg-surface-container-low"
+                        : "border-outline-variant"
+                    )}
+                  >
+                    <span className="material-symbols-outlined text-on-surface-variant">
+                      credit_card
+                    </span>
+                    <div className="text-left">
+                      <p className="font-label-md text-label-md text-on-surface">
+                        Cart&atilde;o
+                      </p>
+                      <p className="text-xs text-on-surface-variant">
+                        D&eacute;bito ou cr&eacute;dito &agrave; vista
+                      </p>
+                    </div>
+                  </button>
                 </div>
-              </button>
-              <button
-                onClick={() => setMethod("card")}
-                className={cn(
-                  "flex items-center justify-center gap-3 p-6 rounded-xl border-2 glass-panel transition-all duration-300",
-                  method === "card"
-                    ? "border-primary bg-surface-container-low"
-                    : "border-outline-variant"
-                )}
-              >
-                <span className="material-symbols-outlined text-on-surface-variant">
-                  credit_card
-                </span>
-                <div className="text-left">
-                  <p className="font-label-md text-label-md text-on-surface">
-                    Cart&atilde;o
-                  </p>
-                  <p className="text-xs text-on-surface-variant">
-                    D&eacute;bito ou cr&eacute;dito &agrave; vista
-                  </p>
-                </div>
-              </button>
-            </div>
 
-            {method === "pix" && (
+                {method === "pix" && (
               <div className="glass-panel p-8 rounded-2xl border border-outline-variant/30 flex flex-col items-center text-center">
                 <div className="bg-white p-4 rounded-xl shadow-inner mb-6 relative">
                   <img
@@ -295,6 +341,8 @@ export function WizardPagamento() {
                 </span>
               </div>
             </div>
+            </>
+            )}
           </div>
 
           <aside className="lg:col-span-5">
@@ -319,14 +367,14 @@ export function WizardPagamento() {
                       </p>
                     </div>
                   </div>
-                  <p className="font-label-md text-label-md">R$ 19,90</p>
+                  <p className="font-label-md text-label-md">{hasFreeCredit ? "Grátis" : "R$ 19,90"}</p>
                 </div>
                 <div className="border-t border-outline-variant/20 pt-4 flex justify-between">
                   <span className="font-body-md text-body-md text-on-surface-variant">
                     Subtotal
                   </span>
                   <span className="font-body-md text-body-md text-on-surface">
-                    R$ 19,90
+                    {hasFreeCredit ? "Grátis" : "R$ 19,90"}
                   </span>
                 </div>
               </div>
@@ -336,7 +384,7 @@ export function WizardPagamento() {
                     Total a pagar
                   </p>
                   <p className="font-headline-md-mobile text-headline-md-mobile text-primary font-bold">
-                    R$ 19,90
+                    {hasFreeCredit ? "Grátis" : "R$ 19,90"}
                   </p>
                 </div>
               </div>
@@ -345,19 +393,24 @@ export function WizardPagamento() {
                 disabled={isSaving}
                 className="w-full bg-primary text-on-primary py-5 rounded-full font-headline-md-mobile text-headline-md-mobile shadow-lg shadow-primary/20 hover:bg-coral-deep transition-all transform active:scale-95 mb-4 disabled:opacity-50"
               >
-                {isSaving ? "Gerando..." : "Finalizar e Gerar Presente"}
+                {isSaving ? "Gerando..." : hasFreeCredit ? "Gerar Grátis" : "Finalizar e Gerar Presente"}
               </button>
               <p className="text-center text-xs text-on-surface-variant leading-relaxed">
-                Ao clicar em &quot;Pagar Agora&quot;, voc&ecirc; concorda com
-                nossos{" "}
-                <a className="underline" href="#">
-                  Termos de Uso
-                </a>{" "}
-                e{" "}
-                <a className="underline" href="#">
-                  Pol&iacute;ticas de Privacidade
-                </a>
-                .
+                {hasFreeCredit
+                  ? "Seu cupom cobre o valor integral do presente."
+                  : `Ao clicar em "Finalizar", você concorda com nossos `}
+                {!hasFreeCredit && (
+                  <>
+                    <a className="underline" href="#">
+                      Termos de Uso
+                    </a>{" "}
+                    e{" "}
+                    <a className="underline" href="#">
+                      Pol&iacute;ticas de Privacidade
+                    </a>
+                    .
+                  </>
+                )}
               </p>
             </div>
           </aside>
