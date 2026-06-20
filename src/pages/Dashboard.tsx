@@ -270,7 +270,7 @@ function GiftCard({
               onClick={() => onConfirmPayment(gift.id)}
               className="text-xs text-secondary hover:underline underline-offset-2 transition-all"
             >
-              Confirmar pagamento (admin)
+              Ja paguei (confirmar)
             </button>
           </div>
         )}

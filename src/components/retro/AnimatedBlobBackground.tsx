@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { DEFAULT_PALETTE } from "../../lib/genrePalettes";
 
@@ -14,13 +13,6 @@ const BLOB_PATHS = [
 ];
 
 export function AnimatedBlobBackground({ palette = DEFAULT_PALETTE, reducedMotion = false }: AnimatedBlobBackgroundProps) {
-  const [, setIndex] = useState(0);
-
-  useEffect(() => {
-    if (reducedMotion) return;
-    const interval = setInterval(() => setIndex((i) => (i + 1) % BLOB_PATHS.length), 4000);
-    return () => clearInterval(interval);
-  }, [reducedMotion]);
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">

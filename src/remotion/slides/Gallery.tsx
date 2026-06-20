@@ -34,27 +34,30 @@ export function Gallery({ fotos }: GalleryProps) {
   const photoIndex = Math.floor(effectiveFrame / PHOTO_DURATION);
   const photoFrame = effectiveFrame % PHOTO_DURATION;
 
-  const prevIndex = photoIndex > 0 ? photoIndex - 1 : fotos.length - 1;
+  const isFirstCycle = frame < fotos.length * PHOTO_DURATION && photoIndex === 0;
+  const prevIndex = isFirstCycle ? photoIndex : (photoIndex > 0 ? photoIndex - 1 : fotos.length - 1);
   const nextIndex = photoIndex;
 
-  const crossfadeProgress = Math.min(photoFrame / CROSSFADE, 1);
+  const crossfadeProgress = isFirstCycle ? 1 : Math.min(photoFrame / CROSSFADE, 1);
   const kenBurnsScale = interpolate(photoFrame, [0, PHOTO_DURATION], [1, 1.08]);
   const kenBurnsX = interpolate(photoFrame, [0, PHOTO_DURATION], [0, -1]);
   const kenBurnsY = interpolate(photoFrame, [0, PHOTO_DURATION], [0, -1]);
 
   return (
     <AbsoluteFill style={{ backgroundColor: "black" }}>
-      <Img
-        src={fotos[prevIndex]}
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          opacity: 1 - crossfadeProgress,
-        }}
-      />
+      {!isFirstCycle && (
+        <Img
+          src={fotos[prevIndex]}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            opacity: 1 - crossfadeProgress,
+          }}
+        />
+      )}
       <Img
         src={fotos[nextIndex]}
         style={{
@@ -64,7 +67,7 @@ export function Gallery({ fotos }: GalleryProps) {
           height: "100%",
           objectFit: "cover",
           transform: `scale(${kenBurnsScale}) translate(${kenBurnsX}px, ${kenBurnsY}px)`,
-          opacity: crossfadeProgress,
+          opacity: isFirstCycle ? 1 : crossfadeProgress,
         }}
       />
 

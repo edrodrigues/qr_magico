@@ -10,6 +10,7 @@ export function MusicReveal({ onReady }: MusicRevealProps) {
   const { musica, isMuted } = useStoryViewer();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const animFrameRef = useRef<number>(0);
@@ -23,12 +24,13 @@ export function MusicReveal({ onReady }: MusicRevealProps) {
   const setupAudioContext = useCallback(() => {
     if (!audioRef.current || analyserRef.current) return;
     try {
-      const audioCtx = new AudioContext();
-      const analyser = audioCtx.createAnalyser();
+      const ctx = new AudioContext();
+      const analyser = ctx.createAnalyser();
       analyser.fftSize = 256;
-      const source = audioCtx.createMediaElementSource(audioRef.current);
+      const source = ctx.createMediaElementSource(audioRef.current);
       source.connect(analyser);
-      analyser.connect(audioCtx.destination);
+      analyser.connect(ctx.destination);
+      audioCtxRef.current = ctx;
       analyserRef.current = analyser;
       sourceRef.current = source;
     } catch {
@@ -65,6 +67,12 @@ export function MusicReveal({ onReady }: MusicRevealProps) {
       audio.removeEventListener("ended", onEnded);
       audio.pause();
       audio.src = "";
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close().catch(() => {});
+        audioCtxRef.current = null;
+      }
+      analyserRef.current = null;
+      sourceRef.current = null;
     };
   }, [audioUrl, onReady]);
 

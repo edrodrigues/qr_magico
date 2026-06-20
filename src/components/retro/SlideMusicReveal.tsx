@@ -1,13 +1,10 @@
 import { lazy, Suspense } from "react";
-import { useStoryViewer } from "./StoryViewerContext";
 
 const MusicReveal = lazy(() =>
   import("./MusicReveal").then((m) => ({ default: m.MusicReveal }))
 );
 
 export function SlideMusicReveal() {
-  useStoryViewer();
-
   return (
     <Suspense
       fallback={

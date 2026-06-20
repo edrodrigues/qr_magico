@@ -53,9 +53,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) return { error: error.message, needsEmailConfirmation: false };
-    return { error: null, needsEmailConfirmation: false };
+    const needsEmailConfirmation = !!data?.user?.confirmation_sent_at;
+    return { error: null, needsEmailConfirmation };
   };
 
   const signInWithGoogle = async () => {

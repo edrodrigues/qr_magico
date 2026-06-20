@@ -188,12 +188,16 @@ serve(async (req) => {
       musicaUrl: musica?.url_audio || "",
     };
 
+    const outDir = `renders/${presenteId}`;
+    const bucketName = Deno.env.get("REMOTION_BUCKET_NAME") || "";
+
     const payload = {
       type: "start",
       composition: "Retrospectiva",
       inputProps,
       serveUrl,
       framesPerLambda: 30,
+      outName: `${outDir}/out.mp4`,
     };
 
     const response = await invokeLambda(
@@ -215,10 +219,11 @@ serve(async (req) => {
 
     console.log(`render-video started: ${presenteId}`);
 
+    const videoUrl = `https://${bucketName}.s3.${awsRegion}.amazonaws.com/${outDir}/out.mp4`;
     await supabase
       .from("presentes")
       .update({
-        video_url: `s3://${Deno.env.get("REMOTION_BUCKET_NAME") || ""}/renders/${presenteId}/out.mp4`,
+        video_url: videoUrl,
         updated_at: new Date().toISOString(),
       })
       .eq("id", presenteId);

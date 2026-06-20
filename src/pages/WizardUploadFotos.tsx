@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header, Footer } from "../components/Header";
 import { useWizard } from "../contexts/WizardContext";
@@ -21,7 +21,8 @@ export function WizardUploadFotos() {
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const path = `uploads/${Date.now()}_${file.name}`;
+      const uniqueId = crypto.randomUUID();
+      const path = `uploads/${Date.now()}_${uniqueId}_${file.name}`;
       const { data: _uploadData, error } = await supabase.storage
         .from("fotos")
         .upload(path, file);
@@ -113,6 +114,14 @@ export function WizardUploadFotos() {
       fileInputRef.current?.click();
     }
   }, [uploading, photos.length]);
+
+  useEffect(() => {
+    return () => {
+      for (const photo of photos) {
+        URL.revokeObjectURL(photo.preview);
+      }
+    };
+  }, []);
 
   const enabled = photos.length > 0;
 

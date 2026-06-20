@@ -6,7 +6,7 @@ export function SlideGallery() {
   const { fotos, presente } = useStoryViewer();
   const [photoIndex, setPhotoIndex] = useState(0);
   const photos = fotos.length > 0
-    ? fotos.sort((a, b) => a.ordem - b.ordem).map((f) => f.url)
+    ? [...fotos].sort((a, b) => a.ordem - b.ordem).map((f) => f.url)
     : presente.thumbnail_url
       ? [presente.thumbnail_url]
       : [];

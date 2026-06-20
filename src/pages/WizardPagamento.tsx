@@ -53,12 +53,12 @@ export function WizardPagamento() {
       return;
     }
 
-    // Ensure the public link is set
-    const slug = result.slug;
-    if (slug) {
-      const link = `${appUrl}/p/${slug}`;
-      await supabase.from("presentes").update({ link }).eq("slug", slug);
-    } else {
+    // Ensure the public link is set using presente_id (UUID) not slug
+    const linkSlug = result.slug;
+    if (presenteId && linkSlug) {
+      const link = `${appUrl}/p/${linkSlug}`;
+      await supabase.from("presentes").update({ link }).eq("id", presenteId);
+    } else if (presenteId) {
       const { data: presente } = await supabase
         .from("presentes")
         .select("slug")
@@ -100,6 +100,7 @@ export function WizardPagamento() {
     }
 
     const edgeUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-music`;
+    let musicOk = false;
     try {
       const response = await fetch(edgeUrl, {
         method: "POST",
@@ -113,29 +114,33 @@ export function WizardPagamento() {
         const errText = await response.text();
         console.error("generate-music returned error:", response.status, errText);
         addToast(`Erro na geração da música (${response.status})`, "error");
+      } else {
+        musicOk = true;
       }
     } catch (err) {
       console.error("Failed to call generate-music edge function:", err);
       addToast("A geração da música pode estar atrasada", "info");
     }
 
-    // Trigger render-video edge function
-    const renderUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/render-video`;
-    try {
-      const response = await fetch(renderUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-        body: JSON.stringify({ presente_id: presenteId }),
-      });
-      if (!response.ok) {
-        const errText = await response.text();
-        console.error("render-video returned error:", response.status, errText);
+    // Only trigger render-video if music generation was scheduled successfully
+    if (musicOk) {
+      const renderUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/render-video`;
+      try {
+        const response = await fetch(renderUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({ presente_id: presenteId }),
+        });
+        if (!response.ok) {
+          const errText = await response.text();
+          console.error("render-video returned error:", response.status, errText);
+        }
+      } catch (err) {
+        console.error("Failed to call render-video edge function:", err);
       }
-    } catch (err) {
-      console.error("Failed to call render-video edge function:", err);
     }
 
     resetWizard();
