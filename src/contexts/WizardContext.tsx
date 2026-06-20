@@ -32,7 +32,7 @@ interface WizardContextType {
   totalSteps: number;
   draftId: string | null;
   setDraftId: (id: string | null) => void;
-  saveDraft: (fields: Record<string, string>) => Promise<{ error: string | null; slug?: string }>;
+  saveDraft: (fields: Record<string, string>) => Promise<{ error: string | null; slug?: string; id?: string }>;
   isSaving: boolean;
   resetWizard: () => void;
 }
@@ -125,7 +125,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
           .update({ ...fields, updated_at: new Date().toISOString() })
           .eq("id", draftId);
         if (error) return { error: error.message };
-        return { error: null };
+        return { error: null, id: draftId };
       }
       let lastError: string | null = null;
       for (let attempt = 0; attempt < 3; attempt++) {
@@ -141,8 +141,10 @@ export function WizardProvider({ children }: { children: ReactNode }) {
           .select("id")
           .single();
         if (!error) {
-          if (inserted) setDraftId(inserted.id);
-          return { error: null, slug };
+          if (inserted) {
+            setDraftId(inserted.id);
+            return { error: null, slug, id: inserted.id };
+          }
         }
         if (error.code !== "23505") {
           return { error: error.message };

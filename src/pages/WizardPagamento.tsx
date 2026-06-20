@@ -35,18 +35,8 @@ export function WizardPagamento() {
 
     const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
 
-    // presenteId is the database UUID from wizard context or URL param
-    let presenteId = existingDraftId || draftId;
-
-    // Fallback: saveDraft did a fresh INSERT — fetch id from the returned slug
-    if (!presenteId && result.slug) {
-      const { data } = await supabase
-        .from("presentes")
-        .select("id")
-        .eq("slug", result.slug)
-        .single();
-      if (data) presenteId = data.id;
-    }
+    // Use the id returned by saveDraft directly, falling back to URL param or context
+    const presenteId = result.id || existingDraftId || draftId;
 
     if (!presenteId) {
       addToast("Erro ao localizar o presente", "error");
@@ -57,7 +47,8 @@ export function WizardPagamento() {
     const linkSlug = result.slug;
     if (presenteId && linkSlug) {
       const link = `${appUrl}/p/${linkSlug}`;
-      await supabase.from("presentes").update({ link }).eq("id", presenteId);
+      const { error: linkError } = await supabase.from("presentes").update({ link }).eq("id", presenteId);
+      if (linkError) console.error("link update error:", linkError);
     } else if (presenteId) {
       const { data: presente } = await supabase
         .from("presentes")
@@ -66,7 +57,8 @@ export function WizardPagamento() {
         .single();
       if (presente?.slug) {
         const link = `${appUrl}/p/${presente.slug}`;
-        await supabase.from("presentes").update({ link }).eq("id", presenteId);
+        const { error: linkError } = await supabase.from("presentes").update({ link }).eq("id", presenteId);
+        if (linkError) console.error("link update error:", linkError);
       }
     }
 
@@ -78,8 +70,8 @@ export function WizardPagamento() {
       last_attempt_at: null,
     }, { onConflict: "presente_id" });
     if (musicaError) {
-      addToast("Erro ao preparar a música", "error");
-      console.error("musicas upsert error:", { code: musicaError.code, message: musicaError.message, details: musicaError.details });
+      console.error("musicas upsert error:", { code: musicaError.code, message: musicaError.message, details: musicaError.details, presente_id: presenteId });
+      addToast(`Erro ao preparar a música (${musicaError.code})`, "error");
       return;
     }
 

@@ -430,8 +430,8 @@ export function Dashboard() {
         last_attempt_at: null,
       }, { onConflict: "presente_id" });
     if (resetErr) {
-      addToast("Erro ao reiniciar a geração", "error");
-      console.error("musicas retry upsert error:", { code: resetErr.code, message: resetErr.message, details: resetErr.details });
+      console.error("musicas retry upsert error:", { code: resetErr.code, message: resetErr.message, details: resetErr.details, presente_id: gift.id });
+      addToast(`Erro ao reiniciar a geração (${resetErr.code})`, "error");
       return;
     }
     const edgeUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
