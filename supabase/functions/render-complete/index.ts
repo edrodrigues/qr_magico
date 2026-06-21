@@ -33,9 +33,14 @@ serve(async (req) => {
 
   try {
     const body = await req.json()
-    const { presente_id, status: renderStatus, video_url } = body
 
-    if (!presente_id) {
+    // Compatível com formato do Remotion Lambda (customData.presente_id, type, output.url)
+    // e com formato legado (presente_id, status, video_url na raiz)
+    const presenteId = body.customData?.presente_id || body.presente_id
+    const renderStatus = body.type || body.status
+    const videoUrl = body.output?.url || body.video_url
+
+    if (!presenteId) {
       return new Response(JSON.stringify({ error: "Missing presente_id" }), {
         status: 400,
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
@@ -43,16 +48,16 @@ serve(async (req) => {
     }
 
     if (renderStatus === "completed" || renderStatus === "success") {
-      const proxyUrl = `${supabaseUrl}/functions/v1/proxy-video?presente_id=${presente_id}`
+      const proxyUrl = `${supabaseUrl}/functions/v1/proxy-video?presente_id=${presenteId}`
       await supabase
         .from("presentes")
         .update({
-          video_url: video_url || proxyUrl,
+          video_url: videoUrl || proxyUrl,
           status: "ready",
           updated_at: new Date().toISOString(),
         })
-        .eq("id", presente_id)
-      console.log(`render-complete: ${presente_id} → ready`)
+        .eq("id", presenteId)
+      console.log(`render-complete: ${presenteId} → ready`)
     } else {
       await supabase
         .from("presentes")
@@ -60,8 +65,8 @@ serve(async (req) => {
           status: "failed",
           updated_at: new Date().toISOString(),
         })
-        .eq("id", presente_id)
-      console.log(`render-complete: ${presente_id} → failed`)
+        .eq("id", presenteId)
+      console.log(`render-complete: ${presenteId} → failed`)
     }
 
     return new Response(JSON.stringify({ success: true }), {

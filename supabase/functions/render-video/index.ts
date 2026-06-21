@@ -230,6 +230,7 @@ serve(async (req) => {
       x264Preset: "medium",
       webhookUrl,
       webhookSecret,
+      customData: { presente_id: presenteId },
     };
 
     const payloadSize = new TextEncoder().encode(JSON.stringify(payload)).length;
