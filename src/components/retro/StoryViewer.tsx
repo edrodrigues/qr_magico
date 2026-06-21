@@ -34,60 +34,13 @@ function StoryViewerInner({ slides, renderSlide }: {
   renderSlide: (slide: SlideConfig, index: number) => React.ReactNode;
 }) {
   const {
-    currentIndex, isPaused, isMuted,
-    goNext, goPrev, pause, resume, toggleMute,
+    currentIndex, isMuted,
+    goNext, goPrev, toggleMute,
+    audioRef, initAudioAnalyser,
   } = useStoryViewer();
 
   const reducedMotion = useReducedMotion();
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const progressRef = useRef(0);
-  const [progressValues, setProgressValues] = useState<number[]>(() => slides.map(() => 0));
-
-  const currentSlide = slides[currentIndex];
-  const isManual = currentSlide?.isManual ?? false;
-  const duration = currentSlide?.duration ?? 5000;
-
-  const clearTimer = useCallback(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  }, []);
-
-  const updateProgress = useCallback((index: number, value: number) => {
-    setProgressValues((prev) => {
-      const next = [...prev];
-      next[index] = value;
-      return next;
-    });
-  }, []);
-
-  useEffect(() => {
-    if (isManual || isPaused) return;
-
-    const startTime = Date.now();
-    const interval = 50;
-
-    const tick = () => {
-      const elapsed = Date.now() - startTime;
-      const pct = Math.min(elapsed / duration, 1);
-      progressRef.current = pct;
-      updateProgress(currentIndex, pct);
-
-      if (pct >= 1) {
-        goNext();
-      } else {
-        timerRef.current = setTimeout(tick, interval);
-      }
-    };
-
-    timerRef.current = setTimeout(tick, interval);
-    return clearTimer;
-  }, [currentIndex, duration, isManual, isPaused, goNext, clearTimer, updateProgress]);
-
-  useEffect(() => {
-    setProgressValues(slides.map(() => 0));
-  }, [slides]);
+  const audioStarted = useRef(false);
 
   const tapZone = useCallback((clientX: number, width: number) => {
     const ratio = clientX / width;
@@ -102,14 +55,18 @@ function StoryViewerInner({ slides, renderSlide }: {
         if (!target) return;
         const rect = target.getBoundingClientRect();
         tapZone(event.clientX, rect.width);
+
+        if (!audioStarted.current && audioRef.current) {
+          initAudioAnalyser();
+          audioRef.current.play().catch(() => {});
+          audioStarted.current = true;
+        }
       },
       onDrag: ({ movement: [mx], distance }) => {
         if (distance[0] < 50) return;
         if (mx < -30) goNext();
         if (mx > 30) goPrev();
       },
-      onPointerDown: () => pause(),
-      onPointerUp: () => resume(),
     },
     { drag: { axis: "x", filterTaps: true } }
   );
@@ -123,6 +80,12 @@ function StoryViewerInner({ slides, renderSlide }: {
     return () => window.removeEventListener("keydown", handler);
   }, [goNext, goPrev]);
 
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.muted = isMuted;
+    }
+  }, [isMuted, audioRef]);
+
   const slideVariants = useMemo(() => ({
     initial: { opacity: 0, x: 100, scale: reducedMotion ? 1 : 0.95 },
     animate: { opacity: 1, x: 0, scale: 1 },
@@ -131,27 +94,20 @@ function StoryViewerInner({ slides, renderSlide }: {
 
   return (
     <div className="relative w-full h-full overflow-hidden select-none" {...bind()}>
-      {/* Progress bar */}
+      {/* Progress dots */}
       <div className="absolute top-0 left-0 right-0 z-30 flex gap-1 px-2 pt-2">
         {slides.map((slide, i) => (
           <div
             key={slide.id}
-            className="flex-1 h-1 rounded-full bg-white/30 overflow-hidden"
-          >
-            <motion.div
-              className="h-full bg-white rounded-full"
-              style={{
-                scaleX: i < currentIndex ? 1 : i === currentIndex ? progressValues[i] : 0,
-                transformOrigin: "left",
-              }}
-            />
-          </div>
+            className="flex-1 h-1 rounded-full overflow-hidden"
+            style={{ backgroundColor: i <= currentIndex ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.25)" }}
+          />
         ))}
       </div>
 
       {/* Mute button */}
       <button
-        onClick={toggleMute}
+        onClick={(e) => { e.stopPropagation(); toggleMute(); }}
         className="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-black/20 backdrop-blur flex items-center justify-center text-white text-sm"
         aria-label={isMuted ? "Ativar som" : "Desativar som"}
       >
@@ -159,6 +115,9 @@ function StoryViewerInner({ slides, renderSlide }: {
           {isMuted ? "volume_off" : "volume_up"}
         </span>
       </button>
+
+      {/* Background audio */}
+      <audio ref={audioRef} loop preload="auto" />
 
       {/* Slides */}
       <AnimatePresence mode="wait" custom={currentIndex}>
@@ -174,13 +133,6 @@ function StoryViewerInner({ slides, renderSlide }: {
           {renderSlide(slides[currentIndex], currentIndex)}
         </motion.div>
       </AnimatePresence>
-
-      {/* Navigation hints */}
-      {currentIndex > 0 && (
-        <div className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/10 backdrop-blur flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="material-symbols-outlined text-white text-[16px]">chevron_left</span>
-        </div>
-      )}
     </div>
   );
 }

@@ -4,17 +4,17 @@ import type { PresenteData, FotoData, MusicaData } from "../../types/retro";
 interface StoryViewerContextType {
   currentIndex: number;
   totalSlides: number;
-  isPaused: boolean;
   isMuted: boolean;
   goNext: () => void;
   goPrev: () => void;
   goTo: (index: number) => void;
   toggleMute: () => void;
-  pause: () => void;
-  resume: () => void;
   presente: PresenteData;
   fotos: FotoData[];
   musica: MusicaData | null;
+  audioRef: React.RefObject<HTMLAudioElement | null>;
+  analyserRef: React.RefObject<AnalyserNode | null>;
+  initAudioAnalyser: () => void;
 }
 
 const StoryViewerContext = createContext<StoryViewerContextType | undefined>(undefined);
@@ -35,13 +35,33 @@ export function StoryViewerProvider({
   musica,
 }: StoryViewerProviderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const isPausedRef = useRef(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  const initAudioAnalyser = useCallback(() => {
+    if (analyserRef.current || !audioRef.current) return;
+    try {
+      const ctx = new AudioContext();
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      const source = ctx.createMediaElementSource(audioRef.current);
+      source.connect(analyser);
+      analyser.connect(ctx.destination);
+      audioCtxRef.current = ctx;
+      analyserRef.current = analyser;
+    } catch {
+      // AudioContext may not be available
+    }
+  }, []);
 
   useEffect(() => {
-    isPausedRef.current = isPaused;
-  }, [isPaused]);
+    if (audioRef.current && musica?.url_audio) {
+      audioRef.current.src = musica.url_audio;
+      audioRef.current.loop = true;
+    }
+  }, [musica?.url_audio]);
 
   const goNext = useCallback(() => {
     setCurrentIndex((prev) => Math.min(prev + 1, totalSlides - 1));
@@ -59,30 +79,22 @@ export function StoryViewerProvider({
     setIsMuted((prev) => !prev);
   }, []);
 
-  const pause = useCallback(() => {
-    setIsPaused(true);
-  }, []);
-
-  const resume = useCallback(() => {
-    setIsPaused(false);
-  }, []);
-
   return (
     <StoryViewerContext.Provider
       value={{
         currentIndex,
         totalSlides,
-        isPaused,
         isMuted,
         goNext,
         goPrev,
         goTo,
         toggleMute,
-        pause,
-        resume,
         presente,
         fotos,
         musica,
+        audioRef,
+        analyserRef,
+        initAudioAnalyser,
       }}
     >
       {children}

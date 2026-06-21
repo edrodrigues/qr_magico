@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useStoryViewer } from "./StoryViewerContext";
 import { CountUp } from "./CountUp";
 import { SlideWrapper } from "./SlideWrapper";
+import { getOccasionTheme } from "../../remotion/theme";
 
 const OCCASION_LABELS: Record<string, string> = {
   aniversario: "Aniversário",
@@ -20,43 +21,90 @@ function computeDaysSince(dateStr: string): number {
 
 export function SlideOccasion() {
   const { presente } = useStoryViewer();
+  const theme = getOccasionTheme(presente.ocasiao);
   const occasionLabel = OCCASION_LABELS[presente.ocasiao] || presente.ocasiao || "Especial";
   const days = computeDaysSince(presente.data_inicio);
 
-  return (
-    <div className="w-full h-full bg-gradient-to-b from-surface to-surface-container">
-      <SlideWrapper>
-        <motion.span
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="font-label-md text-label-md text-primary uppercase tracking-widest mb-4"
-        >
-          {presente.nome_remetente ? `de ${presente.nome_remetente}` : ""}
-        </motion.span>
+  const formattedDate = presente.data_inicio
+    ? new Date(presente.data_inicio + "T12:00:00").toLocaleDateString("pt-BR", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : null;
 
+  return (
+    <div
+      className="w-full h-full flex flex-col items-center justify-center"
+      style={{
+        background: `linear-gradient(180deg, ${theme.lightBgStart} 0%, ${theme.lightBgEnd} 100%)`,
+      }}
+    >
+      <SlideWrapper>
         <motion.div
-          initial={{ clipPath: "inset(0 100% 0 0)" }}
-          animate={{ clipPath: "inset(0 0% 0 0)" }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="mb-6"
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="mb-5"
         >
-          <h1 className="font-headline-md text-headline-md md:font-display-lg md:text-display-lg text-on-surface leading-tight">
-            {occasionLabel}
-          </h1>
+          <svg
+            style={{ width: 48, height: 48 }}
+            viewBox="0 0 24 24"
+            fill={theme.primary}
+          >
+            <path d={theme.iconPath} />
+          </svg>
         </motion.div>
+
+        {presente.nome_remetente && (
+          <motion.span
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="font-label-md text-label-md text-primary uppercase tracking-widest mb-4"
+            style={{ color: theme.primary }}
+          >
+            de {presente.nome_remetente}
+          </motion.span>
+        )}
+
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="font-bold leading-tight mb-10"
+          style={{
+            color: "#2c2c2c",
+            fontSize: "clamp(2.25rem, 7vw, 3.25rem)",
+            fontFamily: "var(--font-display, serif)",
+          }}
+        >
+          {occasionLabel}
+        </motion.h1>
 
         {presente.data_inicio && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.5 }}
-            className="bg-primary-fixed/50 rounded-2xl px-8 py-6"
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="rounded-2xl px-8 py-7 text-center"
+            style={{
+              background: theme.surface,
+              backdropFilter: "blur(12px)",
+              border: `1px solid ${theme.secondary}30`,
+              boxShadow: `0 8px 32px ${theme.primary}10`,
+            }}
           >
-            <p className="font-body-md text-body-md text-on-surface-variant mb-1">
-              Desde {new Date(presente.data_inicio + "T12:00:00").toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" })}
+            <p
+              className="font-body-md text-body-md mb-2"
+              style={{ color: "#6b6b6b" }}
+            >
+              Desde {formattedDate}
             </p>
-            <p className="font-title-lg text-title-lg text-primary">
+            <p
+              className="font-bold"
+              style={{ color: theme.primary, fontSize: "1.625rem" }}
+            >
               <CountUp end={days} suffix=" dias juntos" />
             </p>
           </motion.div>

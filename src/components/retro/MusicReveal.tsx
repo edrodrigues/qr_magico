@@ -7,12 +7,8 @@ interface MusicRevealProps {
 }
 
 export function MusicReveal({ onReady }: MusicRevealProps) {
-  const { musica, isMuted } = useStoryViewer();
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { musica, isMuted, audioRef, analyserRef } = useStoryViewer();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const animFrameRef = useRef<number>(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -21,28 +17,10 @@ export function MusicReveal({ onReady }: MusicRevealProps) {
 
   const audioUrl = musica?.url_audio;
 
-  const setupAudioContext = useCallback(() => {
-    if (!audioRef.current || analyserRef.current) return;
-    try {
-      const ctx = new AudioContext();
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 256;
-      const source = ctx.createMediaElementSource(audioRef.current);
-      source.connect(analyser);
-      analyser.connect(ctx.destination);
-      audioCtxRef.current = ctx;
-      analyserRef.current = analyser;
-      sourceRef.current = source;
-    } catch {
-      // AudioContext may fail in some environments
-    }
-  }, []);
-
   useEffect(() => {
     if (!audioUrl) return;
-    const audio = new Audio(audioUrl);
-    audio.preload = "auto";
-    audioRef.current = audio;
+    const audio = audioRef.current;
+    if (!audio) return;
 
     const onLoaded = () => {
       setDuration(audio.duration);
@@ -54,44 +32,43 @@ export function MusicReveal({ onReady }: MusicRevealProps) {
       setCurrentTime(audio.currentTime);
     };
 
-    const onEnded = () => setIsPlaying(false);
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
 
-    audio.loop = true;
+    if (audio.readyState >= 1) {
+      onLoaded();
+    }
+
     audio.addEventListener("loadedmetadata", onLoaded);
     audio.addEventListener("timeupdate", onTimeUpdate);
-    audio.addEventListener("ended", onEnded);
+    audio.addEventListener("play", onPlay);
+    audio.addEventListener("pause", onPause);
+
+    setIsPlaying(!audio.paused);
 
     return () => {
       audio.removeEventListener("loadedmetadata", onLoaded);
       audio.removeEventListener("timeupdate", onTimeUpdate);
-      audio.removeEventListener("ended", onEnded);
-      audio.pause();
-      audio.src = "";
-      if (audioCtxRef.current) {
-        audioCtxRef.current.close().catch(() => {});
-        audioCtxRef.current = null;
-      }
-      analyserRef.current = null;
-      sourceRef.current = null;
+      audio.removeEventListener("play", onPlay);
+      audio.removeEventListener("pause", onPause);
     };
-  }, [audioUrl, onReady]);
+  }, [audioUrl, audioRef, onReady]);
 
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.muted = isMuted;
     }
-  }, [isMuted]);
+  }, [isMuted, audioRef]);
 
   const togglePlay = useCallback(() => {
-    if (!audioRef.current || !audioLoaded) return;
-    if (isPlaying) {
-      audioRef.current.pause();
+    const audio = audioRef.current;
+    if (!audio || !audioLoaded) return;
+    if (audio.paused) {
+      audio.play();
     } else {
-      if (!sourceRef.current) setupAudioContext();
-      audioRef.current.play();
+      audio.pause();
     }
-    setIsPlaying(!isPlaying);
-  }, [isPlaying, audioLoaded, setupAudioContext]);
+  }, [audioLoaded, audioRef]);
 
   const formatTime = (t: number) => {
     const m = Math.floor(t / 60);
@@ -99,13 +76,14 @@ export function MusicReveal({ onReady }: MusicRevealProps) {
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
-  // Visualizer loop
+  // Visualizer loop from shared analyser
   useEffect(() => {
-    if (!isPlaying || !analyserRef.current || !canvasRef.current) return;
+    const analyser = analyserRef.current;
     const canvas = canvasRef.current;
+    if (!analyser || !canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const analyser = analyserRef.current;
+
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
 
@@ -125,7 +103,7 @@ export function MusicReveal({ onReady }: MusicRevealProps) {
     draw();
 
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [isPlaying]);
+  }, [analyserRef]);
 
   if (!audioUrl) {
     return (
@@ -140,7 +118,6 @@ export function MusicReveal({ onReady }: MusicRevealProps) {
 
   return (
     <div className="w-full h-full bg-gradient-to-b from-surface-container to-surface flex flex-col items-center justify-center px-6">
-      {/* Artwork with glow */}
       <motion.div
         className="relative w-48 h-48 md:w-56 md:h-56 rounded-2xl overflow-hidden shadow-2xl mb-6"
         animate={isPlaying ? { boxShadow: "0 0 60px rgba(169,53,57,0.4), 0 0 120px rgba(169,53,57,0.2)" } : {}}
@@ -151,7 +128,6 @@ export function MusicReveal({ onReady }: MusicRevealProps) {
         </div>
       </motion.div>
 
-      {/* Waveform visualizer */}
       <canvas
         ref={canvasRef}
         width={300}
@@ -159,7 +135,6 @@ export function MusicReveal({ onReady }: MusicRevealProps) {
         className="w-full max-w-xs h-15 rounded-lg mb-4"
       />
 
-      {/* Play button + time */}
       <div className="flex items-center gap-4 mb-4">
         <button
           onClick={togglePlay}
@@ -177,7 +152,6 @@ export function MusicReveal({ onReady }: MusicRevealProps) {
         </div>
       </div>
 
-      {/* Download */}
       {audioUrl && (
         <a
           href={audioUrl}

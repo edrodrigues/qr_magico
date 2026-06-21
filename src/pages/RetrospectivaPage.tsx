@@ -31,13 +31,13 @@ export function RetrospectivaPage() {
   }, [refetch]);
 
   const slides: SlideConfig[] = useMemo(() => [
-    { id: "cover", duration: 4000 },
-    { id: "occasion", duration: 6000 },
-    { id: "story", duration: 8000 },
-    { id: "gallery", duration: 8000 },
-    { id: "music-style", duration: 4000 },
-    { id: "music-reveal", duration: 0, isManual: true },
-    { id: "share", duration: 0, isManual: true },
+    { id: "cover" },
+    { id: "occasion" },
+    { id: "story" },
+    { id: "gallery" },
+    { id: "music-style" },
+    { id: "music-reveal" },
+    { id: "share" },
   ], []);
 
   const renderSlide = useCallback((slide: SlideConfig, index: number) => {

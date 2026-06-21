@@ -7,3 +7,9 @@ verify_jwt = false
 
 [functions.proxy-video]
 verify_jwt = false
+
+[functions.get-download-url]
+verify_jwt = false
+
+[functions.render-complete]
+verify_jwt = false
