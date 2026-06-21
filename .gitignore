@@ -24,3 +24,5 @@ opencode.json
 *.njsproj
 *.sln
 *.sw?
+
+.agents

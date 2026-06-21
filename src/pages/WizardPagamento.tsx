@@ -119,12 +119,16 @@ export function WizardPagamento() {
     const body = JSON.stringify({ presente_id: presenteId });
 
     (async () => {
-      const musicRes = await fetch(`${edgeUrl}/generate-music`, { method: "POST", headers, body });
-      if (!musicRes.ok) {
-        console.error("generate-music failed:", musicRes.status);
-        return;
+      try {
+        const musicRes = await fetch(`${edgeUrl}/generate-music`, { method: "POST", headers, body });
+        if (!musicRes.ok) throw new Error(`generate-music failed: ${musicRes.status}`);
+        const videoRes = await fetch(`${edgeUrl}/render-video`, { method: "POST", headers, body });
+        if (!videoRes.ok) throw new Error(`render-video failed: ${videoRes.status}`);
+      } catch (err) {
+        console.error("generation failed:", err);
+        await supabase.from("presentes").update({ status: "failed", updated_at: new Date().toISOString() }).eq("id", presenteId);
+        addToast("Erro ao gerar o presente. Tente novamente.", "error");
       }
-      await fetch(`${edgeUrl}/render-video`, { method: "POST", headers, body });
     })();
 
     resetWizard();

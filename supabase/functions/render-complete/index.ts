@@ -48,6 +48,19 @@ serve(async (req) => {
     }
 
     if (renderStatus === "completed" || renderStatus === "success") {
+      const { data: presente } = await supabase
+        .from("presentes")
+        .select("render_request_id")
+        .eq("id", presenteId)
+        .single()
+
+      if (presente?.render_request_id && body.renderId) {
+        const receivedRenderId = String(body.renderId)
+        if (presente.render_request_id !== receivedRenderId) {
+          console.warn(`render-complete: renderId mismatch for ${presenteId}. Expected ${presente.render_request_id}, got ${receivedRenderId}`)
+        }
+      }
+
       const proxyUrl = `${supabaseUrl}/functions/v1/proxy-video?presente_id=${presenteId}`
       await supabase
         .from("presentes")

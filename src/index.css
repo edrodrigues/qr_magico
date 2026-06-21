@@ -1,82 +1,108 @@
 @import "tailwindcss";
 
 @theme {
-  --color-on-error-container: #93000a;
-  --color-warm-gray: #F2EDE9;
-  --color-on-surface-variant: #574140;
-  --color-surface-container-highest: #e9e1dc;
-  --color-surface-container-high: #efe6e2;
-  --color-primary: #a93539;
-  --color-primary-fixed-dim: #ffb3b0;
-  --color-on-primary: #ffffff;
-  --color-on-background: #1e1b18;
-  --color-coral-light: #FF8E8E;
-  --color-gold-glimmer: #F9EBC8;
-  --color-on-secondary-container: #745c00;
-  --color-secondary-container: #fed65b;
-  --color-secondary: #735c00;
-  --color-on-surface: #1e1b18;
-  --color-surface-bright: #fff8f5;
-  --color-outline: #8b7170;
-  --color-surface-container-lowest: #ffffff;
-  --color-on-primary-fixed-variant: #881c24;
-  --color-on-secondary-fixed-variant: #574500;
-  --color-inverse-on-surface: #f8efea;
-  --color-outline-variant: #debfbe;
-  --color-tertiary: #615e5b;
-  --color-error: #ba1a1a;
-  --color-background: #fff8f5;
-  --color-primary-container: #f26b6b;
-  --color-on-primary-container: #65000f;
-  --color-surface-tint: #a93539;
-  --color-on-secondary: #ffffff;
-  --color-inverse-primary: #ffb3b0;
-  --color-secondary-fixed: #ffe088;
-  --color-on-primary-fixed: #410006;
-  --color-secondary-fixed-dim: #e9c349;
-  --color-on-secondary-fixed: #241a00;
-  --color-surface-container-low: #fbf2ed;
-  --color-on-tertiary-fixed: #1d1b19;
-  --color-on-tertiary-container: #302e2c;
-  --color-inverse-surface: #34302c;
-  --color-on-tertiary-fixed-variant: #494644;
-  --color-on-tertiary: #ffffff;
-  --color-soft-cream: #FFFCFA;
-  --color-tertiary-fixed: #e7e1de;
-  --color-error-container: #ffdad6;
-  --color-tertiary-container: #999592;
-  --color-surface: #fff8f5;
-  --color-tertiary-fixed-dim: #cbc5c2;
-  --color-coral-deep: #D95353;
-  --color-on-error: #ffffff;
-  --color-surface-dim: #e1d8d4;
-  --color-surface-variant: #e9e1dc;
-  --color-primary-fixed: #ffdad8;
-  --color-surface-container: #f5ece7;
+  /* Artistic Editorial Palette */
+  --color-bg: #F8F7F5;
+  --color-fg: #1D1D1C;
+  --color-muted: #6C6B69;
+  --color-border: #CFCFCD;
+  --color-accent: #C96442;
+  --color-accent-light: #F7EAE6;
 
-  --font-display-lg: "Literata", serif;
-  --font-display-lg-mobile: "Literata", serif;
-  --font-headline-md: "Literata", serif;
-  --font-headline-md-mobile: "Literata", serif;
-  --font-title-lg: "Literata", serif;
-  --font-body-lg: "Hanken Grotesk", sans-serif;
-  --font-body-md: "Hanken Grotesk", sans-serif;
-  --font-label-md: "Hanken Grotesk", sans-serif;
-  --font-label-sm: "Hanken Grotesk", sans-serif;
+  /* Background / Surface */
+  --color-background: #F8F7F5;
+  --color-surface: #FFFFFF;
+  --color-surface-bright: #FFFFFF;
+  --color-surface-dim: #E8E7E5;
+  --color-surface-container: #F5F4F2;
+  --color-surface-container-low: #FAF9F7;
+  --color-surface-container-lowest: #FFFFFF;
+  --color-surface-container-high: #F0EFED;
+  --color-surface-container-highest: #EBEAE8;
+  --color-surface-variant: #F0EFED;
+  --color-surface-tint: #C96442;
+
+  /* Text / Foreground */
+  --color-on-background: #1D1D1C;
+  --color-on-surface: #1D1D1C;
+  --color-on-surface-variant: #6C6B69;
+
+  /* Primary / Accent */
+  --color-primary: #C96442;
+  --color-primary-container: #F7EAE6;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #4A2517;
+  --color-primary-fixed: #F7EAE6;
+  --color-primary-fixed-dim: #E8D5CC;
+  --color-on-primary-fixed: #4A2517;
+  --color-on-primary-fixed-variant: #7C4229;
+  --color-inverse-primary: #E8A08A;
+
+  /* Secondary / Muted */
+  --color-secondary: #6C6B69;
+  --color-secondary-container: #F7EAE6;
+  --color-on-secondary: #FFFFFF;
+  --color-on-secondary-container: #4A4A49;
+  --color-secondary-fixed: #F7EAE6;
+  --color-secondary-fixed-dim: #E8D5CC;
+  --color-on-secondary-fixed: #2C2C2B;
+  --color-on-secondary-fixed-variant: #4A4A49;
+
+  /* Tertiary / Neutrals */
+  --color-tertiary: #5A5A59;
+  --color-tertiary-container: #B0B0AE;
+  --color-on-tertiary: #FFFFFF;
+  --color-on-tertiary-container: #2C2C2B;
+  --color-tertiary-fixed: #E8E7E5;
+  --color-tertiary-fixed-dim: #CDCCCB;
+  --color-on-tertiary-fixed: #1A1A19;
+  --color-on-tertiary-fixed-variant: #464645;
+
+  /* Outline / Border */
+  --color-outline: #CFCFCD;
+  --color-outline-variant: #CFCFCD;
+
+  /* Error */
+  --color-error: #C94444;
+  --color-error-container: #FDE8E8;
+  --color-on-error: #FFFFFF;
+  --color-on-error-container: #8C2222;
+
+  /* Inverse */
+  --color-inverse-surface: #2C2C2B;
+  --color-inverse-on-surface: #F0EFED;
+
+  /* Legacy named colors mapped to palette */
+  --color-warm-gray: #F2EDE9;
+  --color-soft-cream: #F8F7F5;
+  --color-coral-light: #E8A08A;
+  --color-coral-deep: #B8553A;
+  --color-gold-glimmer: #F7EAE6;
+
+  --font-display-lg: "Newsreader", Georgia, serif;
+  --font-display-lg-mobile: "Newsreader", Georgia, serif;
+  --font-headline-md: "Newsreader", Georgia, serif;
+  --font-headline-md-mobile: "Newsreader", Georgia, serif;
+  --font-title-lg: "Newsreader", Georgia, serif;
+  --font-body-lg: "Plus Jakarta Sans", sans-serif;
+  --font-body-md: "Plus Jakarta Sans", sans-serif;
+  --font-label-md: "Plus Jakarta Sans", sans-serif;
+  --font-label-sm: "Plus Jakarta Sans", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 
   --text-display-lg: 48px;
   --text-display-lg--line-height: 56px;
-  --text-display-lg--font-weight: 700;
+  --text-display-lg--font-weight: 400;
   --text-display-lg--letter-spacing: -0.02em;
   --text-display-lg-mobile: 36px;
   --text-display-lg-mobile--line-height: 44px;
-  --text-display-lg-mobile--font-weight: 700;
+  --text-display-lg-mobile--font-weight: 400;
   --text-headline-md: 32px;
   --text-headline-md--line-height: 40px;
-  --text-headline-md--font-weight: 600;
+  --text-headline-md--font-weight: 400;
   --text-headline-md-mobile: 24px;
   --text-headline-md-mobile--line-height: 32px;
-  --text-headline-md-mobile--font-weight: 600;
+  --text-headline-md-mobile--font-weight: 400;
   --text-title-lg: 20px;
   --text-title-lg--line-height: 28px;
   --text-title-lg--font-weight: 500;
@@ -94,9 +120,9 @@
   --text-label-sm--line-height: 16px;
   --text-label-sm--font-weight: 500;
 
-  --radius-default: 0.25rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
+  --radius-default: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
   --radius-full: 9999px;
 
   --spacing-margin-desktop: 40px;
@@ -109,7 +135,7 @@
 
 @layer base {
   body {
-    font-family: "Hanken Grotesk", sans-serif;
+    font-family: "Plus Jakarta Sans", sans-serif;
     background-color: var(--color-background);
     color: var(--color-on-surface);
     -webkit-font-smoothing: antialiased;
@@ -137,8 +163,8 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(169, 53, 57, 0.1); }
-  50% { box-shadow: 0 0 40px rgba(169, 53, 57, 0.25); }
+  0%, 100% { box-shadow: 0 0 20px rgba(201, 100, 66, 0.1); }
+  50% { box-shadow: 0 0 40px rgba(201, 100, 66, 0.25); }
 }
 
 @keyframes shimmer-particle {
@@ -232,7 +258,7 @@
 }
 
 @utility pricing-glow {
-  box-shadow: 0 0 30px rgba(169, 53, 57, 0.15), 0 0 60px rgba(249, 235, 200, 0.1);
+  box-shadow: 0 0 30px rgba(201, 100, 66, 0.15), 0 0 60px rgba(247, 234, 230, 0.1);
 }
 
 @keyframes slide-up {
@@ -267,7 +293,7 @@
 
 @utility gradient-border-card {
   position: relative;
-  background: var(--color-surface-bright);
+  background: var(--color-surface);
   border-radius: var(--radius-xl);
 }
 .gradient-border-card::before {
@@ -276,7 +302,7 @@
   inset: 0;
   border-radius: var(--radius-xl);
   padding: 1px;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary-container) 50%, var(--color-primary-fixed-dim) 100%);
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-light) 50%, var(--color-muted) 100%);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -292,7 +318,7 @@
 .progress-bar-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary-container));
+  background: linear-gradient(90deg, var(--color-accent), var(--color-accent-light));
   transition: width 0.5s ease;
 }
 

@@ -1,8 +1,8 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0"
 
-const ELEVENLABS_API_URL = "https://api.elevenlabs.io/v1/music"
-const FETCH_TIMEOUT_MS = 120_000
+const ELEVENLABS_API_URL = Deno.env.get("ELEVENLABS_API_URL") || "https://api.elevenlabs.io/v1/music"
+const FETCH_TIMEOUT_MS = parseInt(Deno.env.get("FETCH_TIMEOUT_MS") || "120000", 10)
 
 interface PresenteRow {
   id: string
@@ -63,7 +63,7 @@ async function callElevenLabs(
   const body: Record<string, unknown> = {
     prompt,
     music_length_ms: 60000,
-    model_id: "music_v1",
+    model_id: Deno.env.get("ELEVENLABS_MODEL_ID") || "music_v1",
   }
   if (instrumental) {
     body.force_instrumental = true

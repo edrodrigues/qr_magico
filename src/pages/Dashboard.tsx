@@ -701,14 +701,15 @@ export function Dashboard() {
     };
     const body = JSON.stringify({ presente_id: gift.id });
     (async () => {
-      const musicRes = await fetch(`${edgeUrl}/generate-music`, { method: "POST", headers, body });
-      if (!musicRes.ok) {
-        console.error("retry generate-music failed:", musicRes.status);
-        return;
-      }
-      const videoRes = await fetch(`${edgeUrl}/render-video`, { method: "POST", headers, body });
-      if (!videoRes.ok) {
-        console.error("retry render-video error:", videoRes.status);
+      try {
+        const musicRes = await fetch(`${edgeUrl}/generate-music`, { method: "POST", headers, body });
+        if (!musicRes.ok) throw new Error(`generate-music failed: ${musicRes.status}`);
+        const videoRes = await fetch(`${edgeUrl}/render-video`, { method: "POST", headers, body });
+        if (!videoRes.ok) throw new Error(`render-video failed: ${videoRes.status}`);
+      } catch (err) {
+        console.error("retry generation failed:", err);
+        await supabase.from("presentes").update({ status: "failed", updated_at: new Date().toISOString() }).eq("id", gift.id);
+        addToast("Erro ao gerar o presente. Tente novamente.", "error");
       }
     })();
     refetch();
@@ -790,7 +791,7 @@ export function Dashboard() {
             label="Pagamento"
             value={stats.payment}
             icon="hourglass_empty"
-            color="#a93539"
+            color="#C96442"
           />
           <StatCard label="Total" value={stats.total} icon="redeem" color="#615e5b" />
         </div>

@@ -32,6 +32,32 @@ async function getSignatureKey(
   return await hmac(kService, "aws4_request");
 }
 
+async function invokeLambdaWithRetry(
+  region: string,
+  functionName: string,
+  payload: Record<string, unknown>,
+  accessKeyId: string,
+  secretAccessKey: string,
+  retries = 3,
+): Promise<Response> {
+  let lastError: Error | null = null;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const response = await invokeLambda(region, functionName, payload, accessKeyId, secretAccessKey);
+      if (response.ok || attempt === retries) return response;
+      const errText = await response.text();
+      lastError = new Error(`Lambda invocation failed: ${response.status} ${errText}`);
+      console.warn(`Lambda retry ${attempt}/${retries} for ${functionName}: ${response.status}`);
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      if (attempt === retries) throw lastError;
+      console.warn(`Lambda retry ${attempt}/${retries} error:`, lastError.message);
+    }
+    await new Promise((r) => setTimeout(r, Math.pow(3, attempt - 1) * 1000));
+  }
+  throw lastError || new Error("Lambda invocation failed after retries");
+}
+
 async function invokeLambda(
   region: string,
   functionName: string,
@@ -169,9 +195,12 @@ serve(async (req) => {
         : "none",
     );
 
+    const MUSIC_POLL_INTERVAL_MS = parseInt(Deno.env.get("MUSIC_POLL_INTERVAL_MS") || "3000", 10);
+    const MUSIC_POLL_MAX_ATTEMPTS = parseInt(Deno.env.get("MUSIC_POLL_MAX_ATTEMPTS") || "20", 10);
+
     let musicaUrl: string | null = null;
     try {
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < MUSIC_POLL_MAX_ATTEMPTS; i++) {
         const { data: musica } = await supabase
           .from("musicas")
           .select("url_audio")
@@ -180,7 +209,7 @@ serve(async (req) => {
         musicaUrl = musica?.url_audio ?? null;
         if (musicaUrl) break;
         console.log(`Waiting for music URL (attempt ${i + 1}/20) for ${presenteId}`);
-        await new Promise((r) => setTimeout(r, 3000));
+        await new Promise((r) => setTimeout(r, MUSIC_POLL_INTERVAL_MS));
       }
       console.log(`Music URL ${musicaUrl ? "found" : "not found after 60s"} for ${presenteId}`);
     } catch (e) {
@@ -199,6 +228,8 @@ serve(async (req) => {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       });
     }
+
+    const framesPerLambda = parseInt(Deno.env.get("FRAMES_PER_LAMBDA") || "30", 10);
 
     const inputProps = {
       nome_homenageado: presente.nome_homenageado,
@@ -223,7 +254,7 @@ serve(async (req) => {
       composition: "Retrospectiva",
       inputProps,
       serveUrl,
-      framesPerLambda: 30,
+      framesPerLambda,
       outName: `${outDir}/out.mp4`,
       codec: "h264",
       videoBitrate: "8M",
@@ -238,7 +269,7 @@ serve(async (req) => {
       `Invoking Lambda for ${presenteId}: payload=${(payloadSize / 1024).toFixed(1)}KB, ${fotosUrls.length} photos`,
     );
 
-    const response = await invokeLambda(
+    const response = await invokeLambdaWithRetry(
       awsRegion,
       functionName,
       payload,
@@ -266,6 +297,7 @@ serve(async (req) => {
       .from("presentes")
       .update({
         render_request_id: lambdaRequestId,
+        status: "generating",
         updated_at: new Date().toISOString(),
       })
       .eq("id", presenteId);

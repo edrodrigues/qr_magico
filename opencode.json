@@ -24,6 +24,14 @@
       "env": {
         "AWS_REGION": "us-east-1"
       }
+    },
+    "open-design": {
+      "type": "local",
+      "command": ["od", "mcp", "--daemon-url", "od://app"],
+      "enabled": true,
+      "env": {
+        "OD_DATA_DIR": "~/.open-design"
+      }
     }
   }
 }

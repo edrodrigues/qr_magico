@@ -140,14 +140,16 @@ serve(async (req) => {
     }
 
     const key = `renders/${presente.id}/out.mp4`;
-    const headUrl = `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
-    const headResp = await fetch(headUrl, { method: "HEAD" });
 
-    if (headResp.status === 404 || headResp.status === 403) {
-      return new Response(JSON.stringify({ error: "Video not available" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-      });
+    if (!presente.video_url) {
+      const headUrl = `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
+      const headResp = await fetch(headUrl, { method: "HEAD" });
+      if (headResp.status === 404 || headResp.status === 403) {
+        return new Response(JSON.stringify({ error: "Video not available" }), {
+          status: 404,
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        });
+      }
     }
 
     if (!presente.video_url) {
