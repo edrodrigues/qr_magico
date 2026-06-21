@@ -5,12 +5,15 @@ interface StoryViewerContextType {
   currentIndex: number;
   totalSlides: number;
   isMuted: boolean;
+  isPaused: boolean;
   needsInteraction: boolean;
   setNeedsInteraction: (v: boolean) => void;
   goNext: () => void;
   goPrev: () => void;
   goTo: (index: number) => void;
   toggleMute: () => void;
+  pause: () => void;
+  resume: () => void;
   presente: PresenteData;
   fotos: FotoData[];
   musica: MusicaData | null;
@@ -38,6 +41,7 @@ export function StoryViewerProvider({
 }: StoryViewerProviderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [needsInteraction, setNeedsInteraction] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -85,18 +89,29 @@ export function StoryViewerProvider({
     setIsMuted((prev) => !prev);
   }, []);
 
+  const pause = useCallback(() => {
+    setIsPaused(true);
+  }, []);
+
+  const resume = useCallback(() => {
+    setIsPaused(false);
+  }, []);
+
   return (
     <StoryViewerContext.Provider
       value={{
         currentIndex,
         totalSlides,
         isMuted,
+        isPaused,
         needsInteraction,
         setNeedsInteraction,
         goNext,
         goPrev,
         goTo,
         toggleMute,
+        pause,
+        resume,
         presente,
         fotos,
         musica,

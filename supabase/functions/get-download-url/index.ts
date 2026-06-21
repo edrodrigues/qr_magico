@@ -177,9 +177,25 @@ serve(async (req) => {
       });
     }
 
-    const headUrl = `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
-    const headResp = await fetch(headUrl, { method: "HEAD" });
-    if (headResp.status === 404 || headResp.status === 403) {
+    // HEAD request anônimo falha para buckets S3 privados (sempre retorna 403).
+    // Usamos uma GET presigned + Range: 0-0 para verificar existência do arquivo.
+    const checkUrl = await generatePresignedGetUrl(
+      bucket, key, region, accessKeyId, secretAccessKey, 60,
+    );
+    const checkResp = await fetch(checkUrl, {
+      method: "GET",
+      headers: { "Range": "bytes=0-0" },
+    });
+
+    if (checkResp.status !== 206 && checkResp.status !== 200) {
+      if (presente.status === "ready") {
+        await supabase
+          .from("presentes")
+          .update({ status: "failed", updated_at: new Date().toISOString() })
+          .eq("id", presenteId)
+          .catch(() => {});
+      }
+
       return new Response(JSON.stringify({
         error: "Video not yet rendered",
         status: "pending",
