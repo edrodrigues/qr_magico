@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useMemo, useState } from "react";
+import { useEffect, useCallback, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useGesture } from "@use-gesture/react";
 import { StoryViewerProvider, useStoryViewer } from "./StoryViewerContext";
@@ -34,13 +34,12 @@ function StoryViewerInner({ slides, renderSlide }: {
   renderSlide: (slide: SlideConfig, index: number) => React.ReactNode;
 }) {
   const {
-    currentIndex, isMuted,
+    currentIndex, isMuted, needsInteraction, setNeedsInteraction,
     goNext, goPrev, toggleMute,
-    audioRef, initAudioAnalyser,
+    audioRef, analyserRef, initAudioAnalyser, musica,
   } = useStoryViewer();
 
   const reducedMotion = useReducedMotion();
-  const audioStarted = useRef(false);
 
   const tapZone = useCallback((clientX: number, width: number) => {
     const ratio = clientX / width;
@@ -56,10 +55,8 @@ function StoryViewerInner({ slides, renderSlide }: {
         const rect = target.getBoundingClientRect();
         tapZone(event.clientX, rect.width);
 
-        if (!audioStarted.current && audioRef.current) {
+        if (!analyserRef.current && audioRef.current) {
           initAudioAnalyser();
-          audioRef.current.play().catch(() => {});
-          audioStarted.current = true;
         }
       },
       onDrag: ({ movement: [mx], distance }) => {
@@ -117,7 +114,42 @@ function StoryViewerInner({ slides, renderSlide }: {
       </button>
 
       {/* Background audio */}
-      <audio ref={audioRef} loop preload="auto" />
+      <audio ref={audioRef} loop preload="auto" autoPlay />
+
+      {/* Tap to start overlay */}
+      {needsInteraction && currentIndex === 0 && musica?.url_audio && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 z-40 flex items-center justify-center"
+          style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
+          onClick={(e) => {
+            e.stopPropagation();
+            initAudioAnalyser();
+            audioRef.current?.play().catch(() => {});
+            setNeedsInteraction(false);
+          }}
+        >
+          <motion.div
+            initial={{ scale: 0.9, y: 10 }}
+            animate={{ scale: 1, y: 0 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 20 }}
+            className="flex flex-col items-center gap-4 px-8 py-10 rounded-2xl"
+            style={{ background: "rgba(255,255,255,0.12)" }}
+          >
+            <div className="w-16 h-16 rounded-full flex items-center justify-center"
+              style={{ background: "rgba(255,255,255,0.15)" }}
+            >
+              <span className="material-symbols-outlined text-white text-4xl">music_note</span>
+            </div>
+            <p className="text-white text-lg font-medium text-center leading-relaxed">
+              Toque para ouvir a música
+            </p>
+            <span className="text-white/50 text-sm">Toque em qualquer lugar</span>
+          </motion.div>
+        </motion.div>
+      )}
 
       {/* Slides */}
       <AnimatePresence mode="wait" custom={currentIndex}>

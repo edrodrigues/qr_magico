@@ -40,12 +40,6 @@ export function WizardPagamento() {
   const handlePagar = async () => {
     const result = await saveDraft({
       status: "generating",
-      nome_homenageado: wizardData.name,
-      ocasiao: wizardData.occasion,
-      descricao_relacao: wizardData.story,
-      estilo_musical: wizardData.musicStyle || "gerando",
-      nome_remetente: wizardData.remetente,
-      data_inicio: wizardData.startDate,
     });
 
     if (result.error) {
