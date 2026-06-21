@@ -1,21 +1,22 @@
 import { AbsoluteFill, useCurrentFrame, interpolate } from "remotion";
+import type { OccasionTheme } from "../theme";
 
 interface OccasionProps {
   nome_remetente: string;
   occasionLabel: string;
   data_inicio: string;
+  daysSince: number;
+  theme: OccasionTheme;
 }
 
-function computeDaysSince(dateStr: string): number {
-  if (!dateStr) return 0;
-  const start = new Date(dateStr + "T12:00:00");
-  const now = new Date();
-  return Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-}
-
-export function Occasion({ nome_remetente, occasionLabel, data_inicio }: OccasionProps) {
+export function Occasion({
+  nome_remetente,
+  occasionLabel,
+  data_inicio,
+  daysSince,
+  theme,
+}: OccasionProps) {
   const frame = useCurrentFrame();
-  const days = computeDaysSince(data_inicio);
 
   const remetenteOpacity = interpolate(frame, [0, 20], [0, 1]);
   const remetenteY = interpolate(frame, [0, 20], [20, 0]);
@@ -23,29 +24,55 @@ export function Occasion({ nome_remetente, occasionLabel, data_inicio }: Occasio
   const titleY = interpolate(frame, [15, 45], [20, 0]);
   const cardOpacity = interpolate(frame, [40, 70], [0, 1]);
   const cardY = interpolate(frame, [40, 70], [20, 0]);
+  const iconOpacity = interpolate(frame, [0, 25], [0, 1]);
+  const iconScale = interpolate(frame, [0, 25], [0.5, 1], {
+    extrapolateRight: "clamp",
+  });
+
+  const formattedDate = data_inicio
+    ? new Date(data_inicio + "T12:00:00").toLocaleDateString("pt-BR", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : null;
 
   return (
     <AbsoluteFill
       style={{
-        background: "linear-gradient(180deg, #faf8f5 0%, #f5f0ea 100%)",
+        background: `linear-gradient(180deg, ${theme.lightBgStart} 0%, ${theme.lightBgEnd} 100%)`,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         fontFamily: "var(--font-display)",
-        padding: "48px 64px",
+        padding: "40px 36px",
       }}
     >
+      <svg
+        style={{
+          width: 48,
+          height: 48,
+          marginBottom: 20,
+          opacity: iconOpacity,
+          transform: `scale(${iconScale})`,
+        }}
+        viewBox="0 0 24 24"
+        fill={theme.primary}
+      >
+        <path d={theme.iconPath} />
+      </svg>
+
       {nome_remetente && (
         <p
           style={{
-            color: "#8a7a6a",
-            fontSize: 18,
+            color: theme.primary,
+            fontSize: 20,
             fontWeight: 600,
             letterSpacing: 3,
             textTransform: "uppercase",
             opacity: remetenteOpacity,
             transform: `translateY(${remetenteY}px)`,
-            marginBottom: 12,
+            marginBottom: 16,
           }}
         >
           de {nome_remetente}
@@ -55,12 +82,13 @@ export function Occasion({ nome_remetente, occasionLabel, data_inicio }: Occasio
       <h1
         style={{
           color: "#2c2c2c",
-          fontSize: 56,
+          fontSize: 52,
           fontWeight: 700,
           lineHeight: 1.1,
+          textAlign: "center",
           opacity: titleOpacity,
           transform: `translateY(${titleY}px)`,
-          marginBottom: 32,
+          marginBottom: 40,
         }}
       >
         {occasionLabel}
@@ -69,30 +97,29 @@ export function Occasion({ nome_remetente, occasionLabel, data_inicio }: Occasio
       {data_inicio && (
         <div
           style={{
-            backgroundColor: "rgba(138, 122, 106, 0.08)",
-            borderRadius: 16,
-            padding: "24px 48px",
+            background: theme.surface,
+            borderRadius: 20,
+            padding: "28px 40px",
             textAlign: "center",
             opacity: cardOpacity,
             transform: `translateY(${cardY}px)`,
+            backdropFilter: "blur(12px)",
+            border: `1px solid ${theme.secondary}30`,
+            boxShadow: `0 8px 32px ${theme.primary}10`,
           }}
         >
           <p
             style={{
               color: "#6b6b6b",
-              fontSize: 18,
+              fontSize: 20,
               fontFamily: "var(--font-body)",
               marginBottom: 8,
             }}
           >
-            Desde {new Date(data_inicio + "T12:00:00").toLocaleDateString("pt-BR", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
+            Desde {formattedDate}
           </p>
-          <p style={{ color: "#8a7a6a", fontSize: 24, fontWeight: 700 }}>
-            {days} dias juntos
+          <p style={{ color: theme.primary, fontSize: 26, fontWeight: 700 }}>
+            {daysSince} dias juntos
           </p>
         </div>
       )}

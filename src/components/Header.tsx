@@ -198,6 +198,10 @@ export function Footer() {
         <div className="flex flex-col items-center md:items-start gap-2">
           <span className="font-headline-md-mobile text-headline-md-mobile text-primary">Momento Mágico</span>
           <p className="font-body-md text-body-md text-on-surface-variant opacity-80">© 2026 Momento Mágico. Tecnologia com Alma.</p>
+          <p className="font-body-md text-body-md text-on-surface-variant opacity-60">
+            <a href="https://futurereadylabs.com.br/" target="_blank" rel="noopener noreferrer" className="hover:text-secondary transition-colors">Um produto da Future Ready Labs</a>
+            &nbsp;— CNPJ: 60.094.706/0001-91
+          </p>
         </div>
         <div className="flex flex-wrap justify-center gap-6">
           <a className="font-label-sm text-label-sm text-on-surface-variant hover:text-secondary transition-colors" href="#" aria-label="Termos de Uso">Termos de Uso</a>

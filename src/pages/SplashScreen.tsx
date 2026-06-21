@@ -98,6 +98,10 @@ export function SplashScreen() {
         <p className="font-label-sm text-label-sm text-on-surface-variant/40">
           &copy; 2024 Momento Mágico. Tecnologia com Alma.
         </p>
+        <p className="font-label-sm text-label-sm text-on-surface-variant/30 mt-1">
+          <a href="https://futurereadylabs.com.br/" target="_blank" rel="noopener noreferrer" className="hover:text-secondary/60 transition-colors">Um produto da Future Ready Labs</a>
+          &nbsp;— CNPJ: 60.094.706/0001-91
+        </p>
       </footer>
     </div>
   );

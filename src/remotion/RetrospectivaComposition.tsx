@@ -1,4 +1,4 @@
-import { AbsoluteFill, Sequence, Audio } from "remotion";
+import { AbsoluteFill, Sequence, Audio, interpolate, useCurrentFrame } from "remotion";
 import { Cover } from "./slides/Cover";
 import { Occasion } from "./slides/Occasion";
 import { Story } from "./slides/Story";
@@ -6,6 +6,8 @@ import { Gallery } from "./slides/Gallery";
 import { MusicStyle } from "./slides/MusicStyle";
 import { Credits } from "./slides/Credits";
 import { LogoEnd } from "./slides/LogoEnd";
+import { getOccasionTheme } from "./theme";
+import type { OccasionTheme } from "./theme";
 
 export interface RetroInputProps {
   nome_homenageado: string;
@@ -35,6 +37,30 @@ const STYLE_LABELS: Record<string, string> = {
   sertanejo: "Sertanejo",
 };
 
+function computeDaysSince(dateStr: string): number {
+  if (!dateStr) return 0;
+  const start = new Date(dateStr + "T12:00:00");
+  const now = new Date();
+  return Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function FadeTransition({ durationInFrames }: { durationInFrames: number }) {
+  const frame = useCurrentFrame();
+  const opacity = interpolate(frame, [0, durationInFrames], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  return (
+    <AbsoluteFill
+      style={{
+        backgroundColor: "#faf8f5",
+        opacity: 1 - opacity,
+        zIndex: 999,
+      }}
+    />
+  );
+}
+
 export function RetrospectivaComposition({
   nome_homenageado,
   nome_remetente,
@@ -49,48 +75,81 @@ export function RetrospectivaComposition({
   const occasionLabel = OCCASION_LABELS[ocasiao] || ocasiao || "Especial";
   const styleLabel = STYLE_LABELS[estilo_musical] || estilo_musical || "Especial";
   const allPhotos = fotos.length > 0 ? fotos : thumbnail_url ? [thumbnail_url] : [];
+  const theme: OccasionTheme = getOccasionTheme(ocasiao);
+  const daysSince = computeDaysSince(data_inicio);
 
   return (
-    <AbsoluteFill style={{ backgroundColor: "#faf8f5" }}>
+    <AbsoluteFill
+      style={{
+        backgroundColor: "#faf8f5",
+      }}
+    >
       {musicaUrl && <Audio src={musicaUrl} />}
 
-      {/* Cover: frames 0-149 (5s) */}
       <Sequence from={0} durationInFrames={150} name="Cover">
-        <Cover nome_homenageado={nome_homenageado} />
+        <Cover nome_homenageado={nome_homenageado} theme={theme} />
       </Sequence>
 
-      {/* Occasion: frames 150-299 (5s) */}
+      <Sequence from={145} durationInFrames={5} name="Fade1">
+        <FadeTransition durationInFrames={5} />
+      </Sequence>
+
       <Sequence from={150} durationInFrames={150} name="Occasion">
         <Occasion
           nome_remetente={nome_remetente}
           occasionLabel={occasionLabel}
           data_inicio={data_inicio}
+          daysSince={daysSince}
+          theme={theme}
         />
       </Sequence>
 
-      {/* Story: frames 300-539 (8s) */}
-      <Sequence from={300} durationInFrames={240} name="Story">
-        <Story descricao_relacao={descricao_relacao} />
+      <Sequence from={295} durationInFrames={5} name="Fade2">
+        <FadeTransition durationInFrames={5} />
       </Sequence>
 
-      {/* Gallery: frames 540-1079 (18s) */}
-      <Sequence from={540} durationInFrames={540} name="Gallery">
-        <Gallery fotos={allPhotos} />
+      <Sequence from={300} durationInFrames={300} name="Story">
+        <Story descricao_relacao={descricao_relacao} theme={theme} />
       </Sequence>
 
-      {/* MusicStyle: frames 1080-1199 (4s) */}
-      <Sequence from={1080} durationInFrames={120} name="MusicStyle">
-        <MusicStyle styleLabel={styleLabel} estilo_musical={estilo_musical} />
+      <Sequence from={595} durationInFrames={5} name="Fade3">
+        <FadeTransition durationInFrames={5} />
       </Sequence>
 
-      {/* Credits: frames 1200-1319 (4s) */}
-      <Sequence from={1200} durationInFrames={120} name="Credits">
-        <Credits />
+      <Sequence from={600} durationInFrames={600} name="Gallery">
+        <Gallery fotos={allPhotos} theme={theme} />
       </Sequence>
 
-      {/* LogoEnd: frames 1320-1409 (3s) */}
-      <Sequence from={1320} durationInFrames={90} name="LogoEnd">
-        <LogoEnd />
+      <Sequence from={1195} durationInFrames={5} name="Fade4">
+        <FadeTransition durationInFrames={5} />
+      </Sequence>
+
+      <Sequence from={1200} durationInFrames={120} name="MusicStyle">
+        <MusicStyle
+          styleLabel={styleLabel}
+          estilo_musical={estilo_musical}
+          theme={theme}
+        />
+      </Sequence>
+
+      <Sequence from={1315} durationInFrames={5} name="Fade5">
+        <FadeTransition durationInFrames={5} />
+      </Sequence>
+
+      <Sequence from={1320} durationInFrames={120} name="Credits">
+        <Credits
+          theme={theme}
+          nome_homenageado={nome_homenageado}
+          nome_remetente={nome_remetente}
+        />
+      </Sequence>
+
+      <Sequence from={1435} durationInFrames={5} name="Fade6">
+        <FadeTransition durationInFrames={5} />
+      </Sequence>
+
+      <Sequence from={1440} durationInFrames={90} name="LogoEnd">
+        <LogoEnd theme={theme} />
       </Sequence>
     </AbsoluteFill>
   );

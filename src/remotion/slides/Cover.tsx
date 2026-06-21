@@ -1,28 +1,42 @@
 import { AbsoluteFill, useCurrentFrame, interpolate, spring } from "remotion";
+import type { OccasionTheme } from "../theme";
 
 interface CoverProps {
   nome_homenageado: string;
+  theme: OccasionTheme;
 }
 
-export function Cover({ nome_homenageado }: CoverProps) {
+const PARTICLES = [
+  { x: 15, y: 20, size: 3, delay: 0 },
+  { x: 78, y: 15, size: 2, delay: 20 },
+  { x: 50, y: 85, size: 4, delay: 40 },
+  { x: 85, y: 70, size: 2, delay: 10 },
+  { x: 20, y: 75, size: 3, delay: 50 },
+  { x: 65, y: 8, size: 2, delay: 30 },
+  { x: 8, y: 60, size: 3, delay: 60 },
+  { x: 92, y: 40, size: 2, delay: 15 },
+  { x: 40, y: 10, size: 2, delay: 45 },
+  { x: 70, y: 88, size: 3, delay: 25 },
+];
+
+export function Cover({ nome_homenageado, theme }: CoverProps) {
   const frame = useCurrentFrame();
 
   const titleOpacity = interpolate(frame, [0, 20], [0, 1]);
   const titleY = interpolate(frame, [0, 20], [20, 0]);
-  const nameScale = spring({
-    frame: frame - 30,
-    fps: 30,
-    config: { damping: 16, stiffness: 100 },
-  });
-  const nameOpacity = interpolate(frame, [30, 50], [0, 1]);
   const glowOpacity = interpolate(frame, [0, 150], [0.12, 0.2], {
     extrapolateRight: "clamp",
+  });
+  const iconScale = spring({
+    frame: Math.min(frame, 30),
+    fps: 30,
+    config: { damping: 12, stiffness: 120 },
   });
 
   return (
     <AbsoluteFill
       style={{
-        background: "linear-gradient(135deg, #2a2a2a 0%, #4a4a4a 100%)",
+        background: `linear-gradient(135deg, ${theme.darkBgStart} 0%, ${theme.darkBgEnd} 100%)`,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -35,33 +49,81 @@ export function Cover({ nome_homenageado }: CoverProps) {
           width: "100%",
           height: "100%",
         }}
-        viewBox="-100 -100 200 200"
+        viewBox="-150 -150 300 300"
         preserveAspectRatio="xMidYMid slice"
       >
         <defs>
           <radialGradient id="coverGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#8a7a6a" stopOpacity={glowOpacity} />
-            <stop offset="100%" stopColor="#2a2a2a" stopOpacity={0} />
+            <stop offset="0%" stopColor={theme.secondary} stopOpacity={glowOpacity} />
+            <stop offset="100%" stopColor={theme.darkBgStart} stopOpacity={0} />
           </radialGradient>
         </defs>
-        <ellipse cx="0" cy="0" rx="80" ry="80" fill="url(#coverGlow)" />
-        <ellipse cx="-40" cy="-30" rx="40" ry="40" fill="rgba(138,122,106,0.05)" />
-        <ellipse cx="50" cy="40" rx="30" ry="30" fill="rgba(138,122,106,0.04)" />
+        <ellipse cx="0" cy="0" rx="120" ry="120" fill="url(#coverGlow)" />
+        <ellipse cx="-60" cy="-50" rx="50" ry="50" fill={`${theme.secondary}08`} />
+        <ellipse cx="70" cy="60" rx="40" ry="40" fill={`${theme.secondary}06`} />
       </svg>
 
-      <div style={{ position: "relative", zIndex: 10, textAlign: "center", padding: "0 48px" }}>
-        <svg style={{ width: 48, height: 48, margin: "0 auto 20px" }} viewBox="0 0 24 24" fill="white">
-          <path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z" />
+      {PARTICLES.map((p, i) => {
+        const particleOpacity = interpolate(
+          frame,
+          [p.delay, p.delay + 15, p.delay + 60, p.delay + 90],
+          [0, 0.8, 0.6, 0],
+          { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+        );
+        const particleScale = interpolate(
+          frame,
+          [p.delay, p.delay + 40],
+          [0.3, 1],
+          { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+        );
+        return (
+          <div
+            key={i}
+            style={{
+              position: "absolute",
+              left: `${p.x}%`,
+              top: `${p.y}%`,
+              width: p.size,
+              height: p.size,
+              borderRadius: "50%",
+              backgroundColor: theme.secondary,
+              opacity: particleOpacity,
+              transform: `scale(${particleScale})`,
+              boxShadow: `0 0 ${p.size * 2}px ${theme.secondary}`,
+            }}
+          />
+        );
+      })}
+
+      <div
+        style={{
+          position: "relative",
+          zIndex: 10,
+          textAlign: "center",
+          padding: "0 40px",
+        }}
+      >
+        <svg
+          style={{
+            width: 56,
+            height: 56,
+            margin: "0 auto 24px",
+            transform: `scale(${iconScale})`,
+          }}
+          viewBox="0 0 24 24"
+          fill={theme.primary}
+        >
+          <path d={theme.iconPath} />
         </svg>
 
         <p
           style={{
             color: "rgba(255,255,255,0.7)",
-            fontSize: 22,
+            fontSize: 28,
             fontWeight: 500,
             opacity: titleOpacity,
             transform: `translateY(${titleY}px)`,
-            marginBottom: 8,
+            marginBottom: 12,
           }}
         >
           Uma surpresa para
@@ -70,14 +132,38 @@ export function Cover({ nome_homenageado }: CoverProps) {
         <h1
           style={{
             color: "white",
-            fontSize: 56,
+            fontSize: 68,
             fontWeight: 700,
-            opacity: nameOpacity,
-            transform: `scale(${nameScale})`,
             lineHeight: 1.1,
           }}
         >
-          {nome_homenageado}
+          {nome_homenageado.split("").map((char, i) => {
+            const charDelay = 30 + i * 2;
+            const charOpacity = interpolate(
+              frame,
+              [charDelay, charDelay + 10],
+              [0, 1],
+              { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+            );
+            const charY = interpolate(
+              frame,
+              [charDelay, charDelay + 10],
+              [20, 0],
+              { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+            );
+            return (
+              <span
+                key={i}
+                style={{
+                  display: "inline-block",
+                  opacity: charOpacity,
+                  transform: `translateY(${charY}px)`,
+                }}
+              >
+                {char === " " ? "\u00A0" : char}
+              </span>
+            );
+          })}
         </h1>
       </div>
     </AbsoluteFill>

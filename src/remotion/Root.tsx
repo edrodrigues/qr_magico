@@ -7,10 +7,10 @@ export const RemotionRoot: React.FC = () => {
     <Composition
       id="Retrospectiva"
       component={RetrospectivaComposition as unknown as React.ComponentType<Record<string, unknown>>}
-      durationInFrames={1410}
+      durationInFrames={1530}
       fps={30}
-      width={1920}
-      height={1080}
+      width={1080}
+      height={1920}
       defaultProps={{
         nome_homenageado: "Nome",
         nome_remetente: "Remetente",
