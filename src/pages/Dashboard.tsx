@@ -694,6 +694,15 @@ export function Dashboard() {
       addToast(`Erro ao reiniciar a geração (${resetErr.code})`, "error");
       return;
     }
+    const { error: presenteErr } = await supabase
+      .from("presentes")
+      .update({ status: "generating", updated_at: new Date().toISOString() })
+      .eq("id", gift.id);
+    if (presenteErr) {
+      console.error("presente status update error:", presenteErr);
+      addToast("Erro ao reiniciar a geração", "error");
+      return;
+    }
     const edgeUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
     const headers = {
       "Content-Type": "application/json",
