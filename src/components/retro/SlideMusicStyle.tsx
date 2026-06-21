@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import { useStoryViewer } from "./StoryViewerContext";
 import { getPalette } from "../../lib/genrePalettes";
-import { getOccasionTheme } from "../../remotion/theme";
 import { SlideWrapper } from "./SlideWrapper";
 
 const STYLE_LABELS: Record<string, string> = {
@@ -16,7 +15,6 @@ const BAR_COUNT = 9;
 
 export function SlideMusicStyle() {
   const { presente } = useStoryViewer();
-  const theme = getOccasionTheme(presente.ocasiao);
   const styleLabel = STYLE_LABELS[presente.estilo_musical] || presente.estilo_musical || "Especial";
   const palette = getPalette(presente.estilo_musical);
   const color = palette[1] || palette[0];

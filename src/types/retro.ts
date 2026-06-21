@@ -47,6 +47,6 @@ export type SlideId =
 
 export interface SlideConfig {
   id: SlideId;
-  duration: number;
+  duration?: number;
   isManual?: boolean;
 }
