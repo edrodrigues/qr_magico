@@ -703,7 +703,11 @@ export function Dashboard() {
     (async () => {
       try {
         const musicRes = await fetch(`${edgeUrl}/generate-music`, { method: "POST", headers, body });
-        if (!musicRes.ok) throw new Error(`generate-music failed: ${musicRes.status}`);
+        if (!musicRes.ok) {
+          const errBody = await musicRes.text();
+          console.error("generate-music error body:", { status: musicRes.status, body: errBody });
+          throw new Error(`generate-music failed: ${musicRes.status}`);
+        }
         const videoRes = await fetch(`${edgeUrl}/render-video`, { method: "POST", headers, body });
         if (!videoRes.ok) throw new Error(`render-video failed: ${videoRes.status}`);
       } catch (err) {
