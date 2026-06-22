@@ -60,7 +60,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    await supabase.auth.signInWithOAuth({ provider: "google" });
+    const redirectTo = import.meta.env.VITE_APP_URL || window.location.origin;
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo },
+    });
   };
 
   const signOut = async () => {
