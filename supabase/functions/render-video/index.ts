@@ -238,7 +238,7 @@ serve(async (req) => {
       });
     }
 
-    const framesPerLambda = parseInt(Deno.env.get("FRAMES_PER_LAMBDA") || "120", 10);
+    const framesPerLambda = parseInt(Deno.env.get("FRAMES_PER_LAMBDA") || "200", 10);
 
     const inputProps = {
       nome_homenageado: presente.nome_homenageado,

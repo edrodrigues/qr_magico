@@ -291,8 +291,9 @@ function GiftCard({
             </p>
             <div className="flex gap-3 mt-4">
               <button
+                disabled
                 onClick={() => onRetry?.(gift)}
-                className="font-label-md text-label-md text-primary px-4 py-2 rounded-lg hover:bg-primary-fixed transition-all"
+                className="font-label-md text-label-md text-outline px-4 py-2 rounded-lg cursor-not-allowed transition-all"
               >
                 Tentar novamente
               </button>

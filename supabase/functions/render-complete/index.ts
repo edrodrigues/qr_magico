@@ -47,7 +47,7 @@ serve(async (req) => {
       })
     }
 
-    if (renderStatus === "completed" || renderStatus === "success") {
+    if (renderStatus === "completed" || renderStatus === "success" || renderStatus === "done") {
       const { data: presente } = await supabase
         .from("presentes")
         .select("render_request_id")
