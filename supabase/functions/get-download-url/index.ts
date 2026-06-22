@@ -163,11 +163,11 @@ serve(async (req) => {
       });
     }
 
-    const key = `renders/${presenteId}/out.mp4`;
-
     if (presente.video_url) {
+      const parsedUrl = new URL(presente.video_url);
+      const actualKey = parsedUrl.pathname.startsWith("/") ? parsedUrl.pathname.slice(1) : parsedUrl.pathname;
       const downloadUrl = await generatePresignedGetUrl(
-        bucket, key, region, accessKeyId, secretAccessKey, 3600,
+        bucket, actualKey, region, accessKeyId, secretAccessKey, 3600,
       );
       return new Response(JSON.stringify({
         status: "ready",
@@ -177,6 +177,10 @@ serve(async (req) => {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       });
     }
+
+    const key = presente.render_request_id
+      ? `renders/${presente.render_request_id}/out.mp4`
+      : `renders/${presenteId}/out.mp4`;
 
     // HEAD request anônimo falha para buckets S3 privados (sempre retorna 403).
     // Usamos uma GET presigned + Range: 0-0 para verificar existência do arquivo.

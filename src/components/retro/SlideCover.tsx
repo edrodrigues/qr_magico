@@ -110,7 +110,7 @@ export function SlideCover({ isActive }: SlideCoverProps) {
           className="font-bold leading-tight"
           style={{
             color: "white",
-            fontSize: "clamp(2.5rem, 8vw, 4.25rem)",
+            fontSize: "clamp(2rem, 6vw, 3.5rem)",
             fontFamily: "var(--font-display, serif)",
           }}
         >

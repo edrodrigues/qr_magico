@@ -1,13 +1,22 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0"
 
+async function hexSign(key: string, data: string): Promise<string> {
+  const k = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(key),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+  )
+  const sig = await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(data))
+  return Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, "0")).join("")
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, {
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Headers": "Content-Type, X-Remotion-Signature",
       },
     })
   }
@@ -18,9 +27,18 @@ serve(async (req) => {
 
   const webhookSecret = Deno.env.get("RENDER_WEBHOOK_SECRET")
   if (webhookSecret) {
-    const authHeader = req.headers.get("Authorization")
-    if (!authHeader || authHeader !== `Bearer ${webhookSecret}`) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+    const signature = req.headers.get("X-Remotion-Signature")
+    if (!signature) {
+      return new Response(JSON.stringify({ error: "Missing X-Remotion-Signature" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      })
+    }
+    const rawBody = await req.clone().text()
+    const expected = await hexSign(webhookSecret, rawBody)
+    if (signature !== expected) {
+      console.warn(`render-complete: invalid signature. Got ${signature.slice(0, 16)}..., expected ${expected.slice(0, 16)}...`)
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
         status: 401,
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       })

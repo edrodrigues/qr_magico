@@ -252,9 +252,6 @@ serve(async (req) => {
       musicaUrl,
     };
 
-    const outDir = `renders/${presenteId}`;
-    const bucketName = Deno.env.get("REMOTION_BUCKET_NAME") || "";
-
     const webhookUrl = `${supabaseUrl}/functions/v1/render-complete`;
     const webhookSecret = Deno.env.get("RENDER_WEBHOOK_SECRET") || "";
 
@@ -282,7 +279,7 @@ serve(async (req) => {
       privacy: "public",
       logLevel: "info",
       frameRange: null,
-      outName: `${outDir}/out.mp4`,
+      outName: `out.mp4`,
       timeoutInMilliseconds: 300000,
       chromiumOptions: {},
       scale: 1,
