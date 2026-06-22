@@ -238,7 +238,7 @@ serve(async (req) => {
       });
     }
 
-    const framesPerLambda = parseInt(Deno.env.get("FRAMES_PER_LAMBDA") || "30", 10);
+    const framesPerLambda = parseInt(Deno.env.get("FRAMES_PER_LAMBDA") || "120", 10);
 
     const inputProps = {
       nome_homenageado: presente.nome_homenageado,
@@ -278,7 +278,7 @@ serve(async (req) => {
       x264Preset: "medium",
       gopSize: null,
       jpegQuality: 80,
-      maxRetries: 1,
+      maxRetries: 3,
       privacy: "public",
       logLevel: "info",
       frameRange: null,
