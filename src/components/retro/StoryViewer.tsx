@@ -113,9 +113,6 @@ function StoryViewerInner({ slides, renderSlide }: {
         const rect = target.getBoundingClientRect();
         tapZone(event.clientX, rect.width);
 
-        if (audioRef.current?.paused) {
-          audioRef.current.play().catch(() => {});
-        }
         if (!analyserRef.current && audioRef.current) {
           initAudioAnalyser();
         }

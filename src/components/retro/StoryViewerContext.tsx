@@ -90,7 +90,10 @@ export function StoryViewerProvider({
 
   const resume = useCallback(() => {
     setIsPaused(false);
-  }, []);
+    if (audioRef.current?.paused) {
+      audioRef.current.play().catch(() => {});
+    }
+  }, [audioRef]);
 
   return (
     <StoryViewerContext.Provider
