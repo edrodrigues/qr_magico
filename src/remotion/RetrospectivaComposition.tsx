@@ -7,7 +7,7 @@ import { MusicStyle } from "./slides/MusicStyle";
 import { Credits } from "./slides/Credits";
 import { LogoEnd } from "./slides/LogoEnd";
 import { FinalHold } from "./slides/FinalHold";
-import { getOccasionTheme, getGenreTheme } from "./theme";
+import { getGenreTheme } from "./theme";
 import { getPalette } from "../lib/genrePalettes";
 import type { OccasionTheme } from "./theme";
 

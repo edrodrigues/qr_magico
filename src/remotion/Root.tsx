@@ -1,4 +1,5 @@
-import { Composition, getAudioDurationInSeconds } from "remotion";
+import { Composition } from "remotion";
+import { getAudioDurationInSeconds } from "@remotion/media-utils";
 import { RetrospectivaComposition } from "./RetrospectivaComposition";
 import "./assets/fonts.css";
 
@@ -29,7 +30,7 @@ export const RemotionRoot: React.FC = () => {
           return { durationInFrames: DEFAULT_DURATION };
         }
         try {
-          const audioDurationSeconds = await getAudioDurationInSeconds(props.musicaUrl);
+          const audioDurationSeconds = await getAudioDurationInSeconds(props.musicaUrl as string);
           const audioFrames = Math.round(audioDurationSeconds * 30);
           return {
             durationInFrames: Math.max(DEFAULT_DURATION, audioFrames),

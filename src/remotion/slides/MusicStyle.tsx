@@ -10,7 +10,7 @@ interface MusicStyleProps {
 
 const BAR_COUNT = 9;
 
-export function MusicStyle({ styleLabel, estilo_musical, theme }: MusicStyleProps) {
+export function MusicStyle({ styleLabel, estilo_musical }: MusicStyleProps) {
   const frame = useCurrentFrame();
   const palette = getPalette(estilo_musical);
   const color = palette[1] || palette[0];
