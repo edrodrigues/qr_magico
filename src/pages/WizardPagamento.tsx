@@ -14,7 +14,7 @@ export function WizardPagamento() {
   const [searchParams] = useSearchParams();
   const { data: wizardData, draftId, saveDraft, setDraftId, isSaving, resetWizard } = useWizard();
   const [method, setMethod] = useState<PaymentMethod>("pix");
-  const [hasFreeCredit, setHasFreeCredit] = useState(false);
+  const [saldo, setSaldo] = useState<number | null>(null);
   const { addToast } = useToast();
 
   const existingDraftId = searchParams.get("draftId");
@@ -22,13 +22,9 @@ export function WizardPagamento() {
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("cupons_uso")
-      .select("id", { count: "exact", head: true })
-      .eq("usuario_id", user.id)
-      .then(({ count }) => {
-        setHasFreeCredit(count !== null && count > 0);
-      });
+    supabase.rpc("obter_saldo_creditos").then(({ data }) => {
+      setSaldo(data as number);
+    });
   }, [user]);
 
   useEffect(() => {
@@ -38,6 +34,14 @@ export function WizardPagamento() {
   }, [existingDraftId, setDraftId]);
 
   const handlePagar = async () => {
+    if (saldo !== null && saldo > 0) {
+      const { error: consumeError } = await supabase.rpc("consumir_credito");
+      if (consumeError) {
+        addToast("Erro ao consumir crédito. Saldo insuficiente.", "error");
+        return;
+      }
+    }
+
     const result = await saveDraft({
       status: "generating",
     });
@@ -143,15 +147,15 @@ export function WizardPagamento() {
             Finalizar presente
           </h1>
           <p className="font-body-lg text-body-lg text-on-surface-variant">
-            {hasFreeCredit
-              ? "Seu cupom está ativo! Gere seu Momento Mágico gratuitamente."
+            {saldo !== null && saldo > 0
+              ? "Você tem créditos disponíveis! Gere seu Momento Mágico gratuitamente."
               : "Escolha a melhor forma de pagamento para voc&ecirc;."}
           </p>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter-desktop">
           <div className="lg:col-span-7 flex flex-col gap-8">
-            {hasFreeCredit ? (
+            {saldo !== null && saldo > 0 ? (
               <div className="glass-panel p-8 rounded-2xl border border-primary/30 flex flex-col items-center text-center">
                 <span className="material-symbols-outlined text-primary text-[64px] mb-4">
                   redeem
@@ -160,8 +164,8 @@ export function WizardPagamento() {
                   Crédito disponível!
                 </h2>
                 <p className="font-body-md text-body-md text-on-surface-variant mb-6 max-w-sm">
-                  Seu cupom foi resgatado com sucesso. Clique no botão abaixo para gerar seu
-                  Momento Mágico gratuitamente, sem custos.
+                  Você tem créditos disponíveis. Clique no botão abaixo para gerar seu
+                  Momento Mágico.
                 </p>
                 <button
                   onClick={handlePagar}
@@ -366,14 +370,14 @@ export function WizardPagamento() {
                       </p>
                     </div>
                   </div>
-                  <p className="font-label-md text-label-md">{hasFreeCredit ? "Grátis" : "R$ 19,90"}</p>
+                  <p className="font-label-md text-label-md">{saldo !== null && saldo > 0 ? "Grátis" : "R$ 19,90"}</p>
                 </div>
                 <div className="border-t border-outline-variant/20 pt-4 flex justify-between">
                   <span className="font-body-md text-body-md text-on-surface-variant">
                     Subtotal
                   </span>
                   <span className="font-body-md text-body-md text-on-surface">
-                    {hasFreeCredit ? "Grátis" : "R$ 19,90"}
+                    {saldo !== null && saldo > 0 ? "Grátis" : "R$ 19,90"}
                   </span>
                 </div>
               </div>
@@ -383,7 +387,7 @@ export function WizardPagamento() {
                     Total a pagar
                   </p>
                   <p className="font-headline-md-mobile text-headline-md-mobile text-primary font-bold">
-                    {hasFreeCredit ? "Grátis" : "R$ 19,90"}
+                    {saldo !== null && saldo > 0 ? "Grátis" : "R$ 19,90"}
                   </p>
                 </div>
               </div>
@@ -392,13 +396,13 @@ export function WizardPagamento() {
                 disabled={isSaving}
                 className="w-full bg-primary text-on-primary py-5 rounded-full font-headline-md-mobile text-headline-md-mobile shadow-lg shadow-primary/20 hover:bg-coral-deep transition-all transform active:scale-95 mb-4 disabled:opacity-50"
               >
-                {isSaving ? "Gerando..." : hasFreeCredit ? "Gerar Grátis" : "Finalizar e Gerar Presente"}
+                {isSaving ? "Gerando..." : saldo !== null && saldo > 0 ? "Gerar Grátis" : "Finalizar e Gerar Presente"}
               </button>
               <p className="text-center text-xs text-on-surface-variant leading-relaxed">
-                {hasFreeCredit
-                  ? "Seu cupom cobre o valor integral do presente."
+                {saldo !== null && saldo > 0
+                  ? "Seus créditos cobrem o valor integral do presente."
                   : `Ao clicar em "Finalizar", você concorda com nossos `}
-                {!hasFreeCredit && (
+                {!(saldo !== null && saldo > 0) && (
                   <>
                     <a className="underline" href="#">
                       Termos de Uso

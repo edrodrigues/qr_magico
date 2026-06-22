@@ -16,6 +16,12 @@ type Transacao = {
   created_at: string;
 };
 
+type CupomResgatado = {
+  id: string;
+  codigo: string;
+  usado_em: string;
+};
+
 const PRECO_UNITARIO = 19.9;
 
 function formatarMoeda(valor: number) {
@@ -41,30 +47,17 @@ export function Creditos() {
   const { user } = useAuth();
   const { addToast } = useToast();
   const [codigo, setCodigo] = useState("");
-  const [hasCouponCredit, setHasCouponCredit] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [redeeming, setRedeeming] = useState(false);
 
   const [quantidade, setQuantidade] = useState(1);
   const [saldo, setSaldo] = useState<number | null>(null);
   const [transacoes, setTransacoes] = useState<Transacao[]>([]);
+  const [cuponsResgatados, setCuponsResgatados] = useState<CupomResgatado[]>([]);
   const [loadingSaldo, setLoadingSaldo] = useState(true);
 
   const [showModal, setShowModal] = useState(false);
   const [method, setMethod] = useState<PaymentMethod>("pix");
   const [buying, setBuying] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("cupons_uso")
-      .select("id", { count: "exact", head: true })
-      .eq("usuario_id", user.id)
-      .then(({ count, error }) => {
-        if (!error) setHasCouponCredit(count !== null && count > 0);
-        setLoading(false);
-      });
-  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -76,9 +69,21 @@ export function Creditos() {
         .eq("usuario_id", user.id)
         .order("created_at", { ascending: false })
         .limit(5),
-    ]).then(([saldoRes, transacoesRes]) => {
+      supabase
+        .from("cupons_uso")
+        .select("id, usado_em, cupom:cupons(codigo)")
+        .eq("usuario_id", user.id)
+        .order("usado_em", { ascending: false }),
+    ]).then(([saldoRes, transacoesRes, cuponsRes]) => {
       if (!saldoRes.error) setSaldo(saldoRes.data as number);
       if (!transacoesRes.error) setTransacoes(transacoesRes.data as Transacao[]);
+      if (!cuponsRes.error) {
+        setCuponsResgatados(
+          (cuponsRes.data as unknown as { id: string; usado_em: string; cupom: { codigo: string } }[]).map(
+            (r) => ({ id: r.id, codigo: r.cupom.codigo, usado_em: r.usado_em })
+          )
+        );
+      }
       setLoadingSaldo(false);
     });
   }, [user]);
@@ -98,9 +103,22 @@ export function Creditos() {
     if (error || data?.error) {
       addToast(data?.error || "Erro ao resgatar cupom.", "error");
     } else {
-      addToast("Cupom resgatado! Você tem acesso gratuito.", "success");
-      setHasCouponCredit(true);
+      addToast("Cupom resgatado! 1 crédito concedido.", "success");
       setCodigo("");
+      const { data: novoSaldo } = await supabase.rpc("obter_saldo_creditos");
+      if (typeof novoSaldo === "number") setSaldo(novoSaldo);
+      const { data: novosCupons } = await supabase
+        .from("cupons_uso")
+        .select("id, usado_em, cupom:cupons(codigo)")
+        .eq("usuario_id", user!.id)
+        .order("usado_em", { ascending: false });
+      if (novosCupons) {
+        setCuponsResgatados(
+          (novosCupons as unknown as { id: string; usado_em: string; cupom: { codigo: string } }[]).map(
+            (r) => ({ id: r.id, codigo: r.cupom.codigo, usado_em: r.usado_em })
+          )
+        );
+      }
     }
     setRedeeming(false);
   };
@@ -139,7 +157,7 @@ export function Creditos() {
     user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Visitante";
 
   const total = PRECO_UNITARIO * quantidade;
-  const podeCriarPresente = hasCouponCredit || (saldo !== null && saldo > 0);
+  const podeCriarPresente = saldo !== null && saldo > 0;
 
   return (
     <div className="bg-background min-h-screen">
@@ -165,7 +183,7 @@ export function Creditos() {
           </div>
         </header>
 
-        {loading && loadingSaldo ? (
+        {loadingSaldo ? (
           <div className="space-y-4 animate-reveal">
             <div className="skeleton h-48 w-full rounded-xl" />
             <div className="skeleton h-32 w-full rounded-xl" />
@@ -178,7 +196,7 @@ export function Creditos() {
                   Resgatar Cupom
                 </h2>
                 <p className="font-body-md text-body-md text-on-surface-variant mb-6">
-                  Insira um código de cupom para liberar a geração gratuita de Momentos Mágicos.
+                    Insira um código de cupom para ganhar 1 crédito e criar seu Momento Mágico.
                 </p>
 
                 <div className="flex gap-3">
@@ -187,12 +205,12 @@ export function Creditos() {
                     value={codigo}
                     onChange={(e) => setCodigo(e.target.value.toUpperCase())}
                     placeholder="Digite o código do cupom"
-                    disabled={hasCouponCredit}
+                    disabled={false}
                     className="flex-1 px-4 py-3 rounded-lg bg-surface border border-outline-variant/40 font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all uppercase tracking-widest disabled:opacity-50"
                   />
                   <button
                     onClick={handleRedeem}
-                    disabled={redeeming || hasCouponCredit || !codigo.trim()}
+                    disabled={redeeming || !codigo.trim()}
                     className="bg-primary text-on-primary px-6 py-3 rounded-lg font-label-md text-label-md hover:brightness-110 transition-all disabled:opacity-50 flex items-center gap-2 flex-shrink-0"
                   >
                     {redeeming ? (
@@ -315,9 +333,7 @@ export function Creditos() {
                         Crédito disponível!
                       </h3>
                       <p className="font-body-md text-body-md text-on-primary-fixed-variant mb-4">
-                        {hasCouponCredit
-                          ? "Você tem acesso gratuito via cupom. Crie seu Momento Mágico agora!"
-                          : `Você tem ${saldo} crédito${saldo !== 1 ? "s" : ""} disponível. Crie seu Momento Mágico agora!`}
+                        Você tem {saldo} crédito{saldo !== 1 ? "s" : ""} disponível. Crie seu Momento Mágico agora!
                       </p>
                       <Link
                         to="/wizard/ocasiao-nome"
@@ -341,9 +357,9 @@ export function Creditos() {
                   <div className="flex items-center gap-3 p-4 rounded-lg bg-surface-variant">
                     <span className={cn(
                       "material-symbols-outlined text-[28px]",
-                      (saldo !== null && saldo > 0) || hasCouponCredit ? "text-primary" : "text-outline"
+                      saldo !== null && saldo > 0 ? "text-primary" : "text-outline"
                     )}>
-                      {(saldo !== null && saldo > 0) || hasCouponCredit
+                      {saldo !== null && saldo > 0
                         ? "check_circle"
                         : "hourglass_empty"}
                     </span>
@@ -351,13 +367,11 @@ export function Creditos() {
                       <p className="font-label-md text-label-md text-on-surface">
                         {loadingSaldo
                           ? "Carregando..."
-                          : hasCouponCredit
-                            ? "Acesso gratuito ativo"
-                            : saldo !== null && saldo > 0
-                              ? `${saldo} crédito${saldo !== 1 ? "s" : ""} disponível`
-                              : "Nenhum crédito disponível"}
+                          : saldo !== null && saldo > 0
+                            ? `${saldo} crédito${saldo !== 1 ? "s" : ""} disponível`
+                            : "Nenhum crédito disponível"}
                       </p>
-                      {!hasCouponCredit && saldo !== null && (
+                      {saldo !== null && (
                         <p className="text-xs text-on-surface-variant">
                           {saldo > 0
                             ? "Pronto para criar"
@@ -369,15 +383,15 @@ export function Creditos() {
                 </div>
 
                 <div>
-                  <h3 className="font-title-md text-title-md text-on-surface mb-3">
-                    Como funciona?
-                  </h3>
-                  <ul className="space-y-3">
-                    {[
-                      { icon: "shopping_cart", text: "Escolha a quantidade e compre créditos." },
-                      { icon: "check_circle", text: "Os créditos são liberados na hora." },
-                      { icon: "auto_awesome", text: "Crie Momentos Mágicos usando seus créditos." },
-                    ].map((item, i) => (
+                    <h3 className="font-title-md text-title-md text-on-surface mb-3">
+                      Como funciona?
+                    </h3>
+                    <ul className="space-y-3">
+                      {[
+                        { icon: "shopping_cart", text: "Compre créditos ou resgate um cupom." },
+                        { icon: "check_circle", text: "Os créditos são liberados na hora." },
+                        { icon: "auto_awesome", text: "Cada crédito gera 1 Momento Mágico." },
+                      ].map((item, i) => (
                       <li key={i} className="flex gap-3 items-start">
                         <span className="material-symbols-outlined text-primary text-[20px] flex-shrink-0">
                           {item.icon}
@@ -389,6 +403,42 @@ export function Creditos() {
                     ))}
                   </ul>
                 </div>
+
+                {cuponsResgatados.length > 0 && (
+                  <div className="border-t border-outline-variant/30 pt-6">
+                    <p className="font-label-sm text-label-sm text-on-surface-variant mb-3">
+                      Cupons resgatados
+                    </p>
+                    <div className="space-y-2">
+                      {cuponsResgatados.map((c) => (
+                        <div
+                          key={c.id}
+                          className="flex items-center justify-between p-3 rounded-lg bg-surface-variant/50"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="material-symbols-outlined text-[18px] text-amber-600 flex-shrink-0">
+                              card_giftcard
+                            </span>
+                            <span className="font-label-md text-label-md text-on-surface font-bold tracking-wider">
+                              {c.codigo}
+                            </span>
+                          </div>
+                          <div className="text-right flex-shrink-0 ml-3">
+                            <span className={cn(
+                              "font-label-md text-label-md",
+                              saldo !== null && saldo > 0 ? "text-green-700" : "text-on-surface-variant"
+                            )}>
+                              {saldo !== null && saldo > 0 ? "Disponível" : "Utilizado"}
+                            </span>
+                            <p className="text-[10px] text-on-surface-variant">
+                              {formatarData(c.usado_em)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {transacoes.length > 0 && (
                   <div className="border-t border-outline-variant/30 pt-6">
