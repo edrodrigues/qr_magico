@@ -9,6 +9,7 @@ interface StoryViewerContextType {
   musica: MusicaData | null;
   audioRef: React.RefObject<HTMLAudioElement | null>;
   analyserRef: React.RefObject<AnalyserNode | null>;
+  audioCtxRef: React.RefObject<AudioContext | null>;
   initAudioAnalyser: () => void;
 }
 
@@ -76,6 +77,7 @@ export function StoryViewerProvider({
         musica,
         audioRef,
         analyserRef,
+        audioCtxRef,
         initAudioAnalyser,
       }}
     >

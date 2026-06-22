@@ -6,8 +6,12 @@ import { Gallery } from "./slides/Gallery";
 import { MusicStyle } from "./slides/MusicStyle";
 import { Credits } from "./slides/Credits";
 import { LogoEnd } from "./slides/LogoEnd";
-import { getOccasionTheme } from "./theme";
+import { FinalHold } from "./slides/FinalHold";
+import { getOccasionTheme, getGenreTheme } from "./theme";
+import { getPalette } from "../lib/genrePalettes";
 import type { OccasionTheme } from "./theme";
+
+const CONTENT_DURATION = 1530;
 
 export interface RetroInputProps {
   nome_homenageado: string;
@@ -19,6 +23,7 @@ export interface RetroInputProps {
   fotos: string[];
   thumbnail_url: string;
   musicaUrl: string | null;
+  audioDurationInSeconds?: number;
 }
 
 const OCCASION_LABELS: Record<string, string> = {
@@ -71,12 +76,17 @@ export function RetrospectivaComposition({
   fotos,
   thumbnail_url,
   musicaUrl,
+  audioDurationInSeconds = 0,
 }: RetroInputProps) {
   const occasionLabel = OCCASION_LABELS[ocasiao] || ocasiao || "Especial";
   const styleLabel = STYLE_LABELS[estilo_musical] || estilo_musical || "Especial";
   const allPhotos = fotos.length > 0 ? fotos : thumbnail_url ? [thumbnail_url] : [];
-  const theme: OccasionTheme = getOccasionTheme(ocasiao);
+  const palette = getPalette(estilo_musical);
+  const theme: OccasionTheme = getGenreTheme(palette, ocasiao);
   const daysSince = computeDaysSince(data_inicio);
+  const audioFrames = Math.round(audioDurationInSeconds * 30);
+  const totalFrames = Math.max(CONTENT_DURATION, audioFrames);
+  const extraHoldFrames = totalFrames - CONTENT_DURATION;
 
   return (
     <AbsoluteFill
@@ -151,6 +161,12 @@ export function RetrospectivaComposition({
       <Sequence from={1440} durationInFrames={90} name="LogoEnd">
         <LogoEnd theme={theme} />
       </Sequence>
+
+      {extraHoldFrames > 0 && (
+        <Sequence from={CONTENT_DURATION} durationInFrames={extraHoldFrames} name="FinalHold">
+          <FinalHold theme={theme} />
+        </Sequence>
+      )}
     </AbsoluteFill>
   );
 }

@@ -2,25 +2,23 @@ import { useState, useCallback } from "react";
 import { useStoryViewer } from "./StoryViewerContext";
 
 interface SlideVideoCTAProps {
+  slideIndex: number;
   videoUrl: string;
   thumbnail?: string;
 }
 
-export function SlideVideoCTA({ videoUrl, thumbnail }: SlideVideoCTAProps) {
+export function SlideVideoCTA({ slideIndex, videoUrl, thumbnail }: SlideVideoCTAProps) {
   const { presente } = useStoryViewer();
   const [showPlayer, setShowPlayer] = useState(false);
 
   const handleContinue = useCallback(() => {
     const container = document.querySelector("[data-scroll-container]");
     if (!container) return;
-    const current = container.querySelector('[data-slide-index="6"]');
-    if (current) {
-      const next = current.nextElementSibling as HTMLElement;
-      if (next) {
-        next.scrollIntoView({ behavior: "smooth" });
-      }
+    const next = container.querySelector(`[data-slide-index="${slideIndex + 1}"]`) as HTMLElement;
+    if (next) {
+      next.scrollIntoView({ behavior: "smooth" });
     }
-  }, []);
+  }, [slideIndex]);
 
   if (showPlayer) {
     return (

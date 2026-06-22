@@ -5,9 +5,6 @@ import { useRetroData } from "../hooks/useRetroData";
 import { ScrollStoryViewer } from "../components/retro/ScrollStoryViewer";
 import { SlideCover } from "../components/retro/SlideCover";
 import { SlideOccasion } from "../components/retro/SlideOccasion";
-import { SlideStory } from "../components/retro/SlideStory";
-import { SlideGallery } from "../components/retro/SlideGallery";
-import { SlideMusicStyle } from "../components/retro/SlideMusicStyle";
 import { SlideMusicReveal } from "../components/retro/SlideMusicReveal";
 import { SlideVideoCTA } from "../components/retro/SlideVideoCTA";
 import { SlideShare } from "../components/retro/SlideShare";
@@ -30,21 +27,18 @@ export function RetrospectivaPage() {
     refetch();
   }, [refetch]);
 
-  // Build slides array conditionally including video-cta
+  // Build slides array — video is 3rd when present
   const slides: SlideConfig[] = useMemo(() => {
     const base: SlideConfig[] = [
       { id: "cover", duration: 5000, isManual: true },
       { id: "occasion", duration: 6000 },
-      { id: "story", duration: 8000 },
-      { id: "gallery", duration: 10000 },
-      { id: "music-style", duration: 5000 },
-      { id: "music-reveal", duration: 0, isManual: true },
     ];
 
     if (data?.presente?.video_url) {
       base.push({ id: "video-cta", duration: 0, isManual: true });
     }
 
+    base.push({ id: "music-reveal", duration: 0, isManual: true });
     base.push({ id: "share", duration: 0, isManual: true });
 
     return base;
@@ -56,17 +50,12 @@ export function RetrospectivaPage() {
         return <SlideCover isActive={isActive} />;
       case "occasion":
         return <SlideOccasion isActive={isActive} />;
-      case "story":
-        return <SlideStory isActive={isActive} />;
-      case "gallery":
-        return <SlideGallery isActive={isActive} />;
-      case "music-style":
-        return <SlideMusicStyle isActive={isActive} />;
       case "music-reveal":
         return <SlideMusicReveal isActive={isActive} />;
       case "video-cta":
         return (
           <SlideVideoCTA
+            slideIndex={index}
             videoUrl={data?.presente?.video_url ?? ""}
             thumbnail={data?.presente?.thumbnail_url ?? data?.fotos?.[0]?.url ?? ""}
           />

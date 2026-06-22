@@ -134,6 +134,7 @@ function ScrollStoryViewerInner({ slides, renderSlide }: {
           <div
             key={slide.id}
             data-slide-index={i}
+            data-slide-id={slide.id}
             className="h-dvh w-full shrink-0 snap-start"
           >
             {renderSlide(slide, i, i === activeIndex)}
@@ -143,7 +144,7 @@ function ScrollStoryViewerInner({ slides, renderSlide }: {
 
       {/* Progress dots */}
       <ScrollProgress
-        total={slides.length}
+        slides={slides}
         active={activeIndex}
         onDotClick={scrollToSlide}
       />

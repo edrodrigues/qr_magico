@@ -289,7 +289,7 @@ serve(async (req) => {
       everyNthFrame: 1,
       numberOfGifLoops: null,
       concurrencyPerLambda: 1,
-      downloadBehavior: { type: "play-in-browser" },
+      downloadBehavior: { type: "download" },
       muted: false,
       overwrite: true,
       audioBitrate: null,

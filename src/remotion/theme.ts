@@ -73,6 +73,37 @@ export const OCCASION_THEMES: Record<string, OccasionTheme> = {
   },
 };
 
+function darkenHex(hex: string, amount: number): string {
+  const num = parseInt(hex.replace("#", ""), 16);
+  const r = Math.max(0, (num >> 16) - amount);
+  const g = Math.max(0, ((num >> 8) & 0xff) - amount);
+  const b = Math.max(0, (num & 0xff) - amount);
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
+}
+
+function lightenHex(hex: string, amount: number): string {
+  const num = parseInt(hex.replace("#", ""), 16);
+  const r = Math.min(255, (num >> 16) + amount);
+  const g = Math.min(255, ((num >> 8) & 0xff) + amount);
+  const b = Math.min(255, (num & 0xff) + amount);
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
+}
+
+export function getGenreTheme(palette: string[], ocasiao: string): OccasionTheme {
+  const [c0, c1, c2] = palette;
+  const occasionTheme = OCCASION_THEMES[ocasiao] || OCCASION_THEMES.outro;
+  return {
+    primary: c0,
+    secondary: c1,
+    darkBgStart: darkenHex(c0, 30),
+    darkBgEnd: c0,
+    lightBgStart: c2,
+    lightBgEnd: lightenHex(c2, 8),
+    surface: `${c0}14`,
+    iconPath: occasionTheme.iconPath,
+  };
+}
+
 export function getOccasionTheme(ocasiao: string): OccasionTheme {
   return OCCASION_THEMES[ocasiao] || OCCASION_THEMES.outro;
 }

@@ -8,6 +8,7 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import { Header, Footer } from "../components/Header";
 import { supabase } from "../lib/supabase";
 import { getOccasionTheme } from "../remotion/theme";
+import { jsPDF } from "jspdf";
 
 type TabId = "all" | "ready" | "drafts" | "payment";
 
@@ -623,7 +624,6 @@ export function Dashboard() {
         color: { dark: "#000000", light: "#FFFFFF" },
       });
 
-      const { jsPDF } = await import("jspdf");
       const doc = new jsPDF({ format: "a5", unit: "mm" });
       const pw = doc.internal.pageSize.getWidth();
       const ph = doc.internal.pageSize.getHeight();

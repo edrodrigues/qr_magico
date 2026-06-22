@@ -1,13 +1,6 @@
 import { AbsoluteFill, useCurrentFrame, interpolate } from "remotion";
 import type { OccasionTheme } from "../theme";
-
-const GENRE_COLORS: Record<string, string[]> = {
-  mpb: ["#2d6b4f", "#6da98c"],
-  pop: ["#c44078", "#e889b0"],
-  piano: ["#3d5f8a", "#7da0cc"],
-  lofi: ["#8a7340", "#c4a86a"],
-  sertanejo: ["#7a5a30", "#b89860"],
-};
+import { getPalette } from "../../lib/genrePalettes";
 
 interface MusicStyleProps {
   styleLabel: string;
@@ -19,7 +12,7 @@ const BAR_COUNT = 9;
 
 export function MusicStyle({ styleLabel, estilo_musical, theme }: MusicStyleProps) {
   const frame = useCurrentFrame();
-  const palette = GENRE_COLORS[estilo_musical] || [theme.primary, theme.secondary];
+  const palette = getPalette(estilo_musical);
   const color = palette[1] || palette[0];
 
   const titleOpacity = interpolate(frame, [20, 50], [0, 1]);

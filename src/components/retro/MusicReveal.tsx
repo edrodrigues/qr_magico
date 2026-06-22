@@ -8,7 +8,7 @@ interface MusicRevealProps {
 }
 
 export function MusicReveal({ onReady, isActive }: MusicRevealProps) {
-  const { musica, audioRef, analyserRef, initAudioAnalyser } = useStoryViewer();
+  const { musica, audioRef, analyserRef, audioCtxRef, initAudioAnalyser } = useStoryViewer();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animFrameRef = useRef<number>(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -65,11 +65,12 @@ export function MusicReveal({ onReady, isActive }: MusicRevealProps) {
     const audio = audioRef.current;
     if (!audio || !audioLoaded) return;
     if (audio.paused) {
+      audioCtxRef.current?.resume();
       audio.play();
     } else {
       audio.pause();
     }
-  }, [audioLoaded, audioRef]);
+  }, [audioLoaded, audioRef, audioCtxRef]);
 
   const formatTime = (t: number) => {
     const m = Math.floor(t / 60);

@@ -61,6 +61,7 @@ async function generatePresignedGetUrl(
     "X-Amz-Date": amzDate,
     "X-Amz-Expires": String(expiresInSeconds),
     "X-Amz-SignedHeaders": signedHeaders,
+    "response-content-disposition": "attachment",
   };
 
   const canonicalQueryString = Object.keys(params)

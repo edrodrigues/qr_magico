@@ -1,29 +1,28 @@
+import type { SlideConfig } from "../../types/retro";
+
 interface ScrollProgressProps {
-  total: number;
+  slides: SlideConfig[];
   active: number;
   onDotClick: (index: number) => void;
 }
 
-const DOT_NAMES = [
-  "Capa",
-  "Ocasião",
-  "História",
-  "Fotos",
-  "Estilo",
-  "Música",
-  "Vídeo",
-  "Compartilhar",
-];
+const DOT_NAME_MAP: Record<string, string> = {
+  cover: "Capa",
+  occasion: "Ocasião",
+  "video-cta": "Vídeo",
+  "music-reveal": "Música",
+  share: "Compartilhar",
+};
 
-export function ScrollProgress({ total, active, onDotClick }: ScrollProgressProps) {
+export function ScrollProgress({ slides, active, onDotClick }: ScrollProgressProps) {
   return (
     <div className="fixed right-3 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-3">
-      {Array.from({ length: total }).map((_, i) => (
+      {slides.map((slide, i) => (
         <button
-          key={i}
+          key={slide.id}
           onClick={() => onDotClick(i)}
           className="group relative flex items-center justify-center"
-          aria-label={`Slide ${i + 1}: ${DOT_NAMES[i] || ""}`}
+          aria-label={`Slide ${i + 1}: ${DOT_NAME_MAP[slide.id] || ""}`}
         >
           <div
             className={`rounded-full transition-all duration-300 ${
@@ -42,7 +41,7 @@ export function ScrollProgress({ total, active, onDotClick }: ScrollProgressProp
               color: "white",
             }}
           >
-            {DOT_NAMES[i] || `Slide ${i + 1}`}
+            {DOT_NAME_MAP[slide.id] || `Slide ${i + 1}`}
           </span>
         </button>
       ))}
