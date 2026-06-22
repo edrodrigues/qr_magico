@@ -613,9 +613,7 @@ export function Dashboard() {
 
       const theme = getOccasionTheme(p.ocasiao);
       const [pr, pg, pb] = hexToRgb(theme.primary);
-      const [sr, sg, sb] = hexToRgb(theme.secondary);
       const [lr, lg, lb] = hexToRgb(theme.lightBgStart);
-      const [dr, dg, db] = hexToRgb(theme.darkBgStart);
 
       const QRCode = (await import("qrcode")).default;
       const qrDataUrl = await QRCode.toDataURL(p.link || "", {
