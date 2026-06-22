@@ -4,7 +4,11 @@ const MusicReveal = lazy(() =>
   import("./MusicReveal").then((m) => ({ default: m.MusicReveal }))
 );
 
-export function SlideMusicReveal() {
+interface SlideMusicRevealProps {
+  isActive?: boolean;
+}
+
+export function SlideMusicReveal({ isActive }: SlideMusicRevealProps) {
   return (
     <Suspense
       fallback={
@@ -16,7 +20,7 @@ export function SlideMusicReveal() {
         </div>
       }
     >
-      <MusicReveal />
+      <MusicReveal isActive={isActive} />
     </Suspense>
   );
 }

@@ -1,8 +1,13 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useStoryViewer } from "./StoryViewerContext";
 import { CountUp } from "./CountUp";
 import { SlideWrapper } from "./SlideWrapper";
 import { getOccasionTheme } from "../../remotion/theme";
+
+interface SlideOccasionProps {
+  isActive?: boolean;
+}
 
 const OCCASION_LABELS: Record<string, string> = {
   aniversario: "Aniversário",
@@ -19,11 +24,18 @@ function computeDaysSince(dateStr: string): number {
   return Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-export function SlideOccasion() {
+export function SlideOccasion({ isActive }: SlideOccasionProps) {
   const { presente } = useStoryViewer();
   const theme = getOccasionTheme(presente.ocasiao);
   const occasionLabel = OCCASION_LABELS[presente.ocasiao] || presente.ocasiao || "Especial";
   const days = computeDaysSince(presente.data_inicio);
+  const [hasBeenActive, setHasBeenActive] = useState(false);
+
+  useEffect(() => {
+    if (isActive && !hasBeenActive) {
+      setHasBeenActive(true);
+    }
+  }, [isActive, hasBeenActive]);
 
   const formattedDate = presente.data_inicio
     ? new Date(presente.data_inicio + "T12:00:00").toLocaleDateString("pt-BR", {
@@ -42,8 +54,7 @@ export function SlideOccasion() {
     >
       <SlideWrapper>
         <motion.div
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
+          animate={hasBeenActive ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.5 }}
           transition={{ duration: 0.5 }}
           className="mb-5"
         >
@@ -58,8 +69,7 @@ export function SlideOccasion() {
 
         {presente.nome_remetente && (
           <motion.span
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={hasBeenActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ duration: 0.5 }}
             className="font-label-md text-label-md text-primary uppercase tracking-widest mb-4"
             style={{ color: theme.primary }}
@@ -69,8 +79,7 @@ export function SlideOccasion() {
         )}
 
         <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          animate={hasBeenActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           transition={{ delay: 0.2, duration: 0.5 }}
           className="font-bold leading-tight mb-10"
           style={{
@@ -84,8 +93,7 @@ export function SlideOccasion() {
 
         {presente.data_inicio && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={hasBeenActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ delay: 0.4, duration: 0.5 }}
             className="rounded-2xl px-8 py-7 text-center"
             style={{
@@ -105,7 +113,11 @@ export function SlideOccasion() {
               className="font-bold"
               style={{ color: theme.primary, fontSize: "1.625rem" }}
             >
-              <CountUp end={days} suffix=" dias juntos" />
+              {hasBeenActive ? (
+                <CountUp end={days} suffix=" dias juntos" />
+              ) : (
+                `0 dias juntos`
+              )}
             </p>
           </motion.div>
         )}

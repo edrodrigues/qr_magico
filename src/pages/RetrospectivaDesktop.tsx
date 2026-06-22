@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from "react";
-import { StoryViewer } from "../components/retro/StoryViewer";
+import { ScrollStoryViewer } from "../components/retro/ScrollStoryViewer";
 import { SlideCover } from "../components/retro/SlideCover";
 import { SlideOccasion } from "../components/retro/SlideOccasion";
 import { SlideStory } from "../components/retro/SlideStory";
@@ -41,7 +41,7 @@ const MOCK_MUSICA: MusicaData = {
 
 export function RetrospectivaDesktop() {
   const slides: SlideConfig[] = useMemo(() => [
-    { id: "cover", duration: 4000 },
+    { id: "cover", duration: 5000, isManual: true },
     { id: "occasion", duration: 6000 },
     { id: "story", duration: 8000 },
     { id: "gallery", duration: 8000 },
@@ -50,15 +50,15 @@ export function RetrospectivaDesktop() {
     { id: "share", duration: 0, isManual: true },
   ], []);
 
-  const renderSlide = useCallback((slide: SlideConfig) => {
+  const renderSlide = useCallback((slide: SlideConfig, _index: number, isActive: boolean) => {
     switch (slide.id) {
-      case "cover": return <SlideCover />;
-      case "occasion": return <SlideOccasion />;
-      case "story": return <SlideStory />;
-      case "gallery": return <SlideGallery />;
-      case "music-style": return <SlideMusicStyle />;
-      case "music-reveal": return <SlideMusicReveal />;
-      case "share": return <SlideShare />;
+      case "cover": return <SlideCover isActive={isActive} />;
+      case "occasion": return <SlideOccasion isActive={isActive} />;
+      case "story": return <SlideStory isActive={isActive} />;
+      case "gallery": return <SlideGallery isActive={isActive} />;
+      case "music-style": return <SlideMusicStyle isActive={isActive} />;
+      case "music-reveal": return <SlideMusicReveal isActive={isActive} />;
+      case "share": return <SlideShare isActive={isActive} />;
       default: return null;
     }
   }, []);
@@ -66,7 +66,7 @@ export function RetrospectivaDesktop() {
   return (
     <div className="w-screen h-screen bg-black/90 flex items-center justify-center overflow-hidden">
       <div className="relative w-full h-full md:h-[90vh] md:w-auto md:aspect-[9/16] md:max-h-[90vh] shadow-2xl">
-        <StoryViewer
+        <ScrollStoryViewer
           slides={slides}
           presente={MOCK_PRESENTE}
           fotos={MOCK_FOTOS}

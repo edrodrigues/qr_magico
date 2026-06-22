@@ -7,6 +7,7 @@ import { useToast } from "../components/Toast";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { Header, Footer } from "../components/Header";
 import { supabase } from "../lib/supabase";
+import { getOccasionTheme } from "../remotion/theme";
 
 type TabId = "all" | "ready" | "drafts" | "payment";
 
@@ -106,6 +107,40 @@ function GiftCard({
   downloadingPdfId?: string | null;
   style: { animationDelay: string };
 }) {
+  const [qrLoading, setQrLoading] = useState(true);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (gift.status !== "ready" || !gift.link) return;
+    let cancelled = false;
+    setQrLoading(true);
+    (async () => {
+      const QRCode = (await import("qrcode")).default;
+      if (cancelled) return;
+      const url = await QRCode.toDataURL(gift.link!, {
+        width: 400,
+        margin: 2,
+        color: { dark: "#000000", light: "#FFFFFF" },
+      });
+      if (cancelled) return;
+      setQrDataUrl(url);
+      setQrLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [gift.status, gift.link]);
+
+  const handleDownloadQr = () => {
+    if (!qrDataUrl) return;
+    const anchor = document.createElement("a");
+    anchor.href = qrDataUrl;
+    anchor.download = `qr-code-${gift.name}.png`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+  };
+
   return (
     <div
       className={cn(
@@ -117,17 +152,35 @@ function GiftCard({
     >
       {gift.status === "ready" && (
         <div className="flex flex-col sm:flex-row gap-5">
-          <div className="relative w-full sm:w-28 h-28 flex-shrink-0 rounded-xl overflow-hidden bg-warm-gray shadow-md">
-            <img
-              className="w-full h-full object-cover"
-              src={gift.thumbnailUrl}
-              alt=""
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/15 to-transparent" />
-            <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2.5 py-0.5 rounded-full text-[10px] font-bold text-primary tracking-wider shadow-sm">
-              Premium
-            </div>
+          <div className="relative w-full sm:w-28 h-28 flex-shrink-0 rounded-xl overflow-hidden bg-white shadow-md">
+            {qrLoading ? (
+              <div className="w-full h-full flex items-center justify-center bg-warm-gray">
+                <span className="material-symbols-outlined text-[36px] text-outline-variant animate-pulse">
+                  qr_code_2
+                </span>
+              </div>
+            ) : qrDataUrl ? (
+              <>
+                <img
+                  src={qrDataUrl}
+                  alt="QR Code do presente"
+                  className="w-full h-full object-contain"
+                />
+                <button
+                  onClick={handleDownloadQr}
+                  className="absolute bottom-1 right-1 w-7 h-7 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-lg text-on-surface-variant hover:text-primary hover:bg-white shadow-sm transition-all active:scale-90"
+                  title="Baixar QR Code (PNG)"
+                >
+                  <span className="material-symbols-outlined text-[16px]">download</span>
+                </button>
+              </>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-warm-gray">
+                <span className="material-symbols-outlined text-[36px] text-outline-variant">
+                  qr_code_2
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="flex-1 min-w-0">
@@ -535,6 +588,11 @@ export function Dashboard() {
     }
   };
 
+  function hexToRgb(hex: string): [number, number, number] {
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : [0, 0, 0];
+  }
+
   const handleDownloadPdf = async (gift: Gift) => {
     if (!session) {
       addToast("Sessão expirada. Faça login novamente.", "error");
@@ -553,6 +611,12 @@ export function Dashboard() {
         return;
       }
 
+      const theme = getOccasionTheme(p.ocasiao);
+      const [pr, pg, pb] = hexToRgb(theme.primary);
+      const [sr, sg, sb] = hexToRgb(theme.secondary);
+      const [lr, lg, lb] = hexToRgb(theme.lightBgStart);
+      const [dr, dg, db] = hexToRgb(theme.darkBgStart);
+
       const QRCode = (await import("qrcode")).default;
       const qrDataUrl = await QRCode.toDataURL(p.link || "", {
         width: 400,
@@ -565,14 +629,14 @@ export function Dashboard() {
       const pw = doc.internal.pageSize.getWidth();
       const ph = doc.internal.pageSize.getHeight();
 
-      doc.setFillColor(255, 252, 250);
+      doc.setFillColor(lr, lg, lb);
       doc.rect(0, 0, pw, ph, "F");
 
-      doc.setDrawColor(169, 53, 57);
+      doc.setDrawColor(pr, pg, pb);
       doc.setLineWidth(0.5);
       doc.rect(8, 8, pw - 16, ph - 16);
 
-      doc.setTextColor(169, 53, 57);
+      doc.setTextColor(pr, pg, pb);
       doc.setFontSize(22);
       doc.text("Momento M\u00e1gico", pw / 2, 26, { align: "center" });
 
@@ -580,7 +644,6 @@ export function Dashboard() {
       doc.addImage(qrDataUrl, "PNG", (pw - qs) / 2, 35, qs, qs);
 
       let y = 95;
-      doc.setTextColor(60, 60, 60);
       doc.setFontSize(10);
 
       const dados: [string, string][] = [
@@ -592,8 +655,10 @@ export function Dashboard() {
       ];
       dados.forEach(([label, val]) => {
         if (val) {
+          doc.setTextColor(pr, pg, pb);
           doc.setFont("Helvetica", "bold");
           doc.text(`${label}:`, 20, y);
+          doc.setTextColor(dr, dg, db);
           doc.setFont("Helvetica", "normal");
           doc.text(val, 48, y);
           y += 7;
@@ -602,17 +667,17 @@ export function Dashboard() {
 
       if (p.descricao_relacao) {
         y += 2;
-        doc.setDrawColor(200, 200, 200);
+        doc.setDrawColor(sr, sg, sb);
         doc.setLineWidth(0.3);
         doc.rect(18, y - 1, pw - 36, 26);
-        doc.setTextColor(100, 100, 100);
+        doc.setTextColor(sr, sg, sb);
         doc.setFontSize(8);
         const lines = doc.splitTextToSize(p.descricao_relacao, pw - 44);
         doc.text(lines.slice(0, 5), 24, y + 4);
         y += 32;
       }
 
-      doc.setTextColor(115, 92, 0);
+      doc.setTextColor(sr, sg, sb);
       doc.setFontSize(8);
       doc.text("Escaneie o QR Code para ver o presente especial!", pw / 2, y + 5, { align: "center" });
       doc.text("qrmagico.vercel.app", pw / 2, y + 11, { align: "center" });

@@ -1,7 +1,12 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useStoryViewer } from "./StoryViewerContext";
 import { SlideWrapper } from "./SlideWrapper";
 import { getOccasionTheme } from "../../remotion/theme";
+
+interface SlideCoverProps {
+  isActive?: boolean;
+}
 
 const PARTICLES = [
   { x: 15, y: 20, size: 3 },
@@ -16,9 +21,16 @@ const PARTICLES = [
   { x: 70, y: 88, size: 3 },
 ];
 
-export function SlideCover() {
+export function SlideCover({ isActive }: SlideCoverProps) {
   const { presente } = useStoryViewer();
   const theme = getOccasionTheme(presente.ocasiao);
+  const [hasBeenActive, setHasBeenActive] = useState(false);
+
+  useEffect(() => {
+    if (isActive && !hasBeenActive) {
+      setHasBeenActive(true);
+    }
+  }, [isActive, hasBeenActive]);
 
   return (
     <div
@@ -27,7 +39,6 @@ export function SlideCover() {
         background: `linear-gradient(135deg, ${theme.darkBgStart} 0%, ${theme.darkBgEnd} 100%)`,
       }}
     >
-      {/* SVG glow background */}
       <svg
         className="absolute w-full h-full"
         viewBox="-150 -150 300 300"
@@ -45,7 +56,6 @@ export function SlideCover() {
         <ellipse cx="70" cy="60" rx="40" ry="40" fill={`${theme.secondary}06`} />
       </svg>
 
-      {/* Floating particles */}
       {PARTICLES.map((p, i) => (
         <motion.div
           key={i}
@@ -58,8 +68,11 @@ export function SlideCover() {
             backgroundColor: theme.secondary,
             boxShadow: `0 0 ${p.size * 2}px ${theme.secondary}`,
           }}
-          initial={{ opacity: 0, scale: 0.3 }}
-          animate={{ opacity: [0, 0.8, 0.6, 0], scale: [0.3, 1, 1, 0.3] }}
+          animate={
+            hasBeenActive
+              ? { opacity: [0, 0.8, 0.6, 0], scale: [0.3, 1, 1, 0.3] }
+              : { opacity: 0, scale: 0.3 }
+          }
           transition={{
             duration: 4,
             delay: i * 0.3,
@@ -71,8 +84,7 @@ export function SlideCover() {
 
       <SlideWrapper className="relative z-10 text-white">
         <motion.div
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
+          animate={hasBeenActive ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.5 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="mb-6"
         >
@@ -86,8 +98,7 @@ export function SlideCover() {
         </motion.div>
 
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          animate={hasBeenActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           transition={{ delay: 0.3, duration: 0.5 }}
           className="text-white/70 text-[1.75rem] font-medium mb-3 leading-tight"
           style={{ fontFamily: "var(--font-display, serif)" }}
@@ -107,8 +118,7 @@ export function SlideCover() {
             <motion.span
               key={i}
               className="inline-block"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              animate={hasBeenActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ delay: 0.6 + i * 0.03, duration: 0.3 }}
             >
               {char === " " ? "\u00A0" : char}

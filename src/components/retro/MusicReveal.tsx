@@ -4,10 +4,11 @@ import { useStoryViewer } from "./StoryViewerContext";
 
 interface MusicRevealProps {
   onReady?: () => void;
+  isActive?: boolean;
 }
 
-export function MusicReveal({ onReady }: MusicRevealProps) {
-  const { musica, isMuted, audioRef, analyserRef } = useStoryViewer();
+export function MusicReveal({ onReady, isActive }: MusicRevealProps) {
+  const { musica, audioRef, analyserRef, initAudioAnalyser } = useStoryViewer();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animFrameRef = useRef<number>(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -55,10 +56,10 @@ export function MusicReveal({ onReady }: MusicRevealProps) {
   }, [audioUrl, audioRef, onReady]);
 
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.muted = isMuted;
+    if (isActive && !analyserRef.current && audioRef.current) {
+      initAudioAnalyser();
     }
-  }, [isMuted, audioRef]);
+  }, [isActive, analyserRef, audioRef, initAudioAnalyser]);
 
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;
@@ -120,7 +121,7 @@ export function MusicReveal({ onReady }: MusicRevealProps) {
     <div className="w-full h-full bg-gradient-to-b from-surface-container to-surface flex flex-col items-center justify-center px-6">
       <motion.div
         className="relative w-48 h-48 md:w-56 md:h-56 rounded-2xl overflow-hidden shadow-2xl mb-6"
-        animate={isPlaying ? { boxShadow: "0 0 60px rgba(169,53,57,0.4), 0 0 120px rgba(169,53,57,0.2)" } : {}}
+        animate={isPlaying && isActive ? { boxShadow: "0 0 60px rgba(169,53,57,0.4), 0 0 120px rgba(169,53,57,0.2)" } : {}}
         transition={{ duration: 0.3 }}
       >
         <div className="w-full h-full bg-gradient-to-br from-primary/30 to-gold-glimmer/30 flex items-center justify-center">

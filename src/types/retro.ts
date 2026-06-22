@@ -43,6 +43,7 @@ export type SlideId =
   | 'gallery'
   | 'music-style'
   | 'music-reveal'
+  | 'video-cta'
   | 'share';
 
 export interface SlideConfig {

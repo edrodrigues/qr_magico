@@ -1,12 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStoryViewer } from "./StoryViewerContext";
 import { getOccasionTheme } from "../../remotion/theme";
 
-export function SlideGallery() {
+interface SlideGalleryProps {
+  isActive?: boolean;
+}
+
+export function SlideGallery({ isActive }: SlideGalleryProps) {
   const { fotos, presente } = useStoryViewer();
   const theme = getOccasionTheme(presente.ocasiao);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const photos = fotos.length > 0
     ? [...fotos].sort((a, b) => a.ordem - b.ordem).map((f) => f.url)
     : presente.thumbnail_url
@@ -14,12 +20,14 @@ export function SlideGallery() {
       : [];
 
   useEffect(() => {
-    if (photos.length <= 1) return;
-    const interval = setInterval(() => {
+    if (!isActive || photos.length <= 1) return;
+    timerRef.current = setInterval(() => {
       setPhotoIndex((prev) => (prev + 1) % photos.length);
     }, 8000);
-    return () => clearInterval(interval);
-  }, [photos.length]);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isActive, photos.length]);
 
   if (photos.length === 0) {
     return (
@@ -43,7 +51,6 @@ export function SlideGallery() {
 
   return (
     <div className="relative w-full h-full bg-black overflow-hidden">
-      {/* Colored overlay (Remotion-style) */}
       <div
         className="absolute inset-0 z-10 pointer-events-none"
         style={{
@@ -66,7 +73,7 @@ export function SlideGallery() {
             alt=""
             className="w-full h-full object-cover"
             style={{
-              animation: "kenBurns 10s ease-in-out infinite alternate",
+              animation: isActive ? "kenBurns 10s ease-in-out infinite alternate" : "none",
             }}
           />
         </motion.div>

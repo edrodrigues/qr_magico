@@ -2,7 +2,10 @@ import { useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { useStoryViewer } from "./StoryViewerContext";
 import { SlideWrapper } from "./SlideWrapper";
-import type confetti from "canvas-confetti";
+
+interface SlideShareProps {
+  isActive?: boolean;
+}
 
 async function triggerConfetti(reducedMotion: boolean) {
   if (reducedMotion) return;
@@ -22,7 +25,7 @@ async function triggerConfetti(reducedMotion: boolean) {
   }
 }
 
-export function SlideShare() {
+export function SlideShare({ isActive }: SlideShareProps) {
   const { presente, fotos } = useStoryViewer();
   const reducedMotion = typeof window !== "undefined"
     ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -30,11 +33,11 @@ export function SlideShare() {
   const confettiFired = useRef(false);
 
   useEffect(() => {
-    if (!confettiFired.current) {
+    if (isActive && !confettiFired.current) {
       confettiFired.current = true;
       triggerConfetti(reducedMotion);
     }
-  }, [reducedMotion]);
+  }, [isActive, reducedMotion]);
 
   const photoUrl = fotos.length > 0 ? fotos[0].url : presente.thumbnail_url;
   const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
@@ -62,8 +65,7 @@ export function SlideShare() {
     <div className="w-full h-full bg-gradient-to-b from-surface-container to-surface">
       <SlideWrapper>
         <motion.div
-          initial={{ opacity: 0, scale: 0.8, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
+          animate={isActive ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.8, y: 20 }}
           transition={{ type: "spring", stiffness: 200, damping: 20 }}
           className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-xl mb-6 w-full max-w-xs"
         >
@@ -85,8 +87,7 @@ export function SlideShare() {
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           transition={{ delay: 0.3, duration: 0.4 }}
           className="flex flex-col gap-3 w-full max-w-xs"
         >
@@ -108,8 +109,7 @@ export function SlideShare() {
         </motion.div>
 
         <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          animate={isActive ? { opacity: 1 } : { opacity: 0 }}
           transition={{ delay: 0.6, duration: 0.4 }}
           className="mt-8 font-label-sm text-label-sm text-on-surface-variant"
         >

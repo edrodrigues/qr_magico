@@ -322,6 +322,20 @@
   transition: width 0.5s ease;
 }
 
+@utility snap-y-mandatory {
+  scroll-snap-type: y mandatory;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.snap-y-mandatory::-webkit-scrollbar {
+  display: none;
+}
+
+@utility snap-start {
+  scroll-snap-align: start;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .reveal {
     opacity: 1;

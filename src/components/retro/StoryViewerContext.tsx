@@ -2,16 +2,8 @@ import { createContext, useContext, useState, useCallback, useRef, useEffect, ty
 import type { PresenteData, FotoData, MusicaData } from "../../types/retro";
 
 interface StoryViewerContextType {
-  currentIndex: number;
-  totalSlides: number;
   isMuted: boolean;
-  isPaused: boolean;
-  goNext: () => void;
-  goPrev: () => void;
-  goTo: (index: number) => void;
   toggleMute: () => void;
-  pause: () => void;
-  resume: () => void;
   presente: PresenteData;
   fotos: FotoData[];
   musica: MusicaData | null;
@@ -24,7 +16,6 @@ const StoryViewerContext = createContext<StoryViewerContextType | undefined>(und
 
 interface StoryViewerProviderProps {
   children: ReactNode;
-  totalSlides: number;
   presente: PresenteData;
   fotos: FotoData[];
   musica: MusicaData | null;
@@ -32,14 +23,11 @@ interface StoryViewerProviderProps {
 
 export function StoryViewerProvider({
   children,
-  totalSlides,
   presente,
   fotos,
   musica,
 }: StoryViewerProviderProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -68,46 +56,21 @@ export function StoryViewerProvider({
     }
   }, [musica?.url_audio]);
 
-  const goNext = useCallback(() => {
-    setCurrentIndex((prev) => Math.min(prev + 1, totalSlides - 1));
-  }, [totalSlides]);
-
-  const goPrev = useCallback(() => {
-    setCurrentIndex((prev) => Math.max(prev - 1, 0));
-  }, []);
-
-  const goTo = useCallback((index: number) => {
-    setCurrentIndex(Math.max(0, Math.min(index, totalSlides - 1)));
-  }, [totalSlides]);
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.muted = isMuted;
+    }
+  }, [isMuted, audioRef]);
 
   const toggleMute = useCallback(() => {
     setIsMuted((prev) => !prev);
   }, []);
 
-  const pause = useCallback(() => {
-    setIsPaused(true);
-  }, []);
-
-  const resume = useCallback(() => {
-    setIsPaused(false);
-    if (audioRef.current?.paused) {
-      audioRef.current.play().catch(() => {});
-    }
-  }, [audioRef]);
-
   return (
     <StoryViewerContext.Provider
       value={{
-        currentIndex,
-        totalSlides,
         isMuted,
-        isPaused,
-        goNext,
-        goPrev,
-        goTo,
         toggleMute,
-        pause,
-        resume,
         presente,
         fotos,
         musica,
