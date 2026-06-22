@@ -45,7 +45,7 @@ export function Story({ descricao_relacao, theme }: StoryProps) {
 
       <h3
         style={{
-          color: theme.primary,
+          color: "#2c2c2c",
           fontSize: 20,
           fontWeight: 600,
           letterSpacing: 3,

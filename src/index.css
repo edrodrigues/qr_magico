@@ -4,7 +4,7 @@
   /* Artistic Editorial Palette */
   --color-bg: #F8F7F5;
   --color-fg: #1D1D1C;
-  --color-muted: #6C6B69;
+  --color-muted: #565655;
   --color-border: #CFCFCD;
   --color-accent: #C96442;
   --color-accent-light: #F7EAE6;
@@ -25,7 +25,7 @@
   /* Text / Foreground */
   --color-on-background: #1D1D1C;
   --color-on-surface: #1D1D1C;
-  --color-on-surface-variant: #6C6B69;
+  --color-on-surface-variant: #565655;
 
   /* Primary / Accent */
   --color-primary: #C96442;

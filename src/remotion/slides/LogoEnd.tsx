@@ -107,7 +107,7 @@ export function LogoEnd({ theme }: LogoEndProps) {
 
       <p
         style={{
-          color: "rgba(255,255,255,0.45)",
+          color: "rgba(255,255,255,0.6)",
           fontSize: 18,
           fontWeight: 300,
           fontFamily: "var(--font-body)",

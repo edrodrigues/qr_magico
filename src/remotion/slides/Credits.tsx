@@ -78,7 +78,7 @@ export function Credits({ theme, nome_homenageado, nome_remetente }: CreditsProp
 
         <p
           style={{
-            color: "rgba(255,255,255,0.4)",
+            color: "rgba(255,255,255,0.6)",
             fontSize: 16,
             fontFamily: "var(--font-body)",
             opacity: subtitleOpacity,

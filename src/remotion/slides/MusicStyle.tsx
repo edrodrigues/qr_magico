@@ -83,7 +83,7 @@ export function MusicStyle({ styleLabel, estilo_musical, theme }: MusicStyleProp
 
       <p
         style={{
-          color: "#6b6b6b",
+          color: "#555555",
           fontSize: 22,
           fontFamily: "var(--font-body)",
           textAlign: "center",

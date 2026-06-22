@@ -71,8 +71,8 @@ export function SlideOccasion({ isActive }: SlideOccasionProps) {
           <motion.span
             animate={hasBeenActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ duration: 0.5 }}
-            className="font-label-md text-label-md text-primary uppercase tracking-widest mb-4"
-            style={{ color: theme.primary }}
+            className="font-label-md text-label-md uppercase tracking-widest mb-4"
+            style={{ color: "#2c2c2c" }}
           >
             de {presente.nome_remetente}
           </motion.span>
@@ -105,13 +105,13 @@ export function SlideOccasion({ isActive }: SlideOccasionProps) {
           >
             <p
               className="font-body-md text-body-md mb-2"
-              style={{ color: "#6b6b6b" }}
+              style={{ color: "#555555" }}
             >
               Desde {formattedDate}
             </p>
             <p
               className="font-bold"
-              style={{ color: theme.primary, fontSize: "1.625rem" }}
+              style={{ color: "#2c2c2c", fontSize: "1.625rem" }}
             >
               {hasBeenActive ? (
                 <CountUp end={days} suffix=" dias juntos" />

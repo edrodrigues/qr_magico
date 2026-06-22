@@ -45,7 +45,7 @@ export function SlideStory({ isActive }: SlideStoryProps) {
           animate={hasBeenActive ? { opacity: 1 } : { opacity: 0 }}
           transition={{ duration: 0.4 }}
           className="font-label-md text-label-md uppercase tracking-widest mb-6"
-          style={{ color: theme.primary }}
+          style={{ color: "#2c2c2c" }}
         >
           A História de Vocês
         </motion.h3>

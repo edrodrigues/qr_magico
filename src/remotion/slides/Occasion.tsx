@@ -65,7 +65,7 @@ export function Occasion({
       {nome_remetente && (
         <p
           style={{
-            color: theme.primary,
+            color: "#2c2c2c",
             fontSize: 20,
             fontWeight: 600,
             letterSpacing: 3,
@@ -110,7 +110,7 @@ export function Occasion({
         >
           <p
             style={{
-              color: "#6b6b6b",
+              color: "#555555",
               fontSize: 20,
               fontFamily: "var(--font-body)",
               marginBottom: 8,

@@ -189,11 +189,12 @@ serve(async (req) => {
 
     if (checkResp.status !== 206 && checkResp.status !== 200) {
       if (presente.status === "ready") {
-        await supabase
-          .from("presentes")
-          .update({ status: "failed", updated_at: new Date().toISOString() })
-          .eq("id", presenteId)
-          .catch(() => {});
+        try {
+          await supabase
+            .from("presentes")
+            .update({ status: "failed", updated_at: new Date().toISOString() })
+            .eq("id", presenteId);
+        } catch {}
       }
 
       return new Response(JSON.stringify({

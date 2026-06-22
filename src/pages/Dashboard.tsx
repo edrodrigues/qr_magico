@@ -655,10 +655,9 @@ export function Dashboard() {
       ];
       dados.forEach(([label, val]) => {
         if (val) {
-          doc.setTextColor(pr, pg, pb);
+          doc.setTextColor(29, 29, 28);
           doc.setFont("Helvetica", "bold");
           doc.text(`${label}:`, 20, y);
-          doc.setTextColor(dr, dg, db);
           doc.setFont("Helvetica", "normal");
           doc.text(val, 48, y);
           y += 7;
@@ -667,17 +666,17 @@ export function Dashboard() {
 
       if (p.descricao_relacao) {
         y += 2;
-        doc.setDrawColor(sr, sg, sb);
+        doc.setDrawColor(86, 86, 85);
         doc.setLineWidth(0.3);
         doc.rect(18, y - 1, pw - 36, 26);
-        doc.setTextColor(sr, sg, sb);
+        doc.setTextColor(86, 86, 85);
         doc.setFontSize(8);
         const lines = doc.splitTextToSize(p.descricao_relacao, pw - 44);
         doc.text(lines.slice(0, 5), 24, y + 4);
         y += 32;
       }
 
-      doc.setTextColor(sr, sg, sb);
+      doc.setTextColor(86, 86, 85);
       doc.setFontSize(8);
       doc.text("Escaneie o QR Code para ver o presente especial!", pw / 2, y + 5, { align: "center" });
       doc.text("qrmagico.vercel.app", pw / 2, y + 11, { align: "center" });

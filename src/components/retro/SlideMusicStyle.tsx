@@ -87,7 +87,7 @@ export function SlideMusicStyle({ isActive }: SlideMusicStyleProps) {
           transition={{ delay: 0.6, duration: 0.5 }}
           className="text-center max-w-xs"
           style={{
-            color: "#6b6b6b",
+            color: "#555555",
             fontSize: "1.125rem",
             fontFamily: "var(--font-body, sans-serif)",
           }}
