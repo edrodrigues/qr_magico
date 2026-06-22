@@ -250,6 +250,7 @@ serve(async (req) => {
     const webhookSecret = Deno.env.get("RENDER_WEBHOOK_SECRET") || "";
 
     const payload = {
+      version: "4.0.481",
       type: "start",
       composition: "Retrospectiva",
       inputProps,
