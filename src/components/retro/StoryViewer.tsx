@@ -36,7 +36,7 @@ function StoryViewerInner({ slides, renderSlide }: {
   const {
     currentIndex, isMuted, isPaused,
     goNext, goPrev, toggleMute, pause, resume,
-    audioRef, analyserRef, initAudioAnalyser, musica,
+    audioRef, analyserRef, initAudioAnalyser,
   } = useStoryViewer();
 
   const reducedMotion = useReducedMotion();
