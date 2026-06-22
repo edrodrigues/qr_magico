@@ -58,6 +58,15 @@ async function invokeLambdaWithRetry(
   throw lastError || new Error("Lambda invocation failed after retries");
 }
 
+function serializeInputProps(data: Record<string, unknown>): string {
+  return JSON.stringify(data, (_, value) => {
+    if (typeof value === "object" && value !== null && value instanceof Date) {
+      return { __remotion_date: value.toISOString() };
+    }
+    return value;
+  });
+}
+
 async function invokeLambda(
   region: string,
   functionName: string,
@@ -102,7 +111,7 @@ async function invokeLambda(
       "X-Amz-Date": amzDate,
       "X-Amz-Target": "Invoke",
       "Authorization": authorizationHeader,
-      "X-Amz-Invocation-Type": "Event",
+      "X-Amz-Invocation-Type": "RequestResponse",
     },
     body,
   });
@@ -249,20 +258,67 @@ serve(async (req) => {
     const webhookUrl = `${supabaseUrl}/functions/v1/render-complete`;
     const webhookSecret = Deno.env.get("RENDER_WEBHOOK_SECRET") || "";
 
+    const serializedProps = serializeInputProps(inputProps);
+
     const payload = {
-      version: "4.0.481",
       type: "start",
-      composition: "Retrospectiva",
-      inputProps,
-      serveUrl,
+      version: "4.0.481",
+      rendererFunctionName: null,
       framesPerLambda,
-      outName: `${outDir}/out.mp4`,
+      concurrency: null,
+      composition: "Retrospectiva",
+      serveUrl,
+      inputProps: { type: "payload", payload: serializedProps },
       codec: "h264",
-      videoBitrate: "8M",
+      imageFormat: "jpeg",
+      crf: null,
+      envVariables: {},
+      pixelFormat: null,
+      proResProfile: null,
       x264Preset: "medium",
-      webhookUrl,
-      webhookSecret,
-      customData: { presente_id: presenteId },
+      gopSize: null,
+      jpegQuality: 80,
+      maxRetries: 1,
+      privacy: "public",
+      logLevel: "info",
+      frameRange: null,
+      outName: `${outDir}/out.mp4`,
+      timeoutInMilliseconds: 300000,
+      chromiumOptions: {},
+      scale: 1,
+      everyNthFrame: 1,
+      numberOfGifLoops: null,
+      concurrencyPerLambda: 1,
+      downloadBehavior: { type: "play-in-browser" },
+      muted: false,
+      overwrite: true,
+      audioBitrate: null,
+      videoBitrate: "8M",
+      encodingBufferSize: null,
+      encodingMaxRate: null,
+      webhook: {
+        url: webhookUrl,
+        secret: webhookSecret || undefined,
+        customData: { presente_id: presenteId },
+      },
+      forceHeight: null,
+      forceWidth: null,
+      forceFps: null,
+      forceDurationInFrames: null,
+      bucketName: null,
+      audioCodec: null,
+      offthreadVideoCacheSizeInBytes: null,
+      deleteAfter: null,
+      colorSpace: null,
+      preferLossless: false,
+      forcePathStyle: false,
+      metadata: null,
+      licenseKey: null,
+      offthreadVideoThreads: null,
+      mediaCacheSizeInBytes: null,
+      storageClass: null,
+      isProduction: null,
+      sampleRate: 48000,
     };
 
     const payloadSize = new TextEncoder().encode(JSON.stringify(payload)).length;
@@ -278,38 +334,45 @@ serve(async (req) => {
       awsSecretAccessKey,
     );
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error(`Lambda invocation failed for ${presenteId}: ${response.status} ${errText}`);
+    const bodyText = await response.text();
+    let lambdaResponse: Record<string, unknown>;
+    try {
+      lambdaResponse = JSON.parse(bodyText);
+    } catch {
+      lambdaResponse = {};
+    }
+
+    if (!response.ok || response.headers.get("x-amz-function-error")) {
+      const errMsg = (lambdaResponse?.errorMessage as string) || bodyText;
+      console.error(`Lambda invocation failed for ${presenteId}: ${errMsg}`);
       await supabase
         .from("presentes")
         .update({ status: "failed", updated_at: new Date().toISOString() })
         .eq("id", presenteId);
-      return new Response(JSON.stringify({ error: "Lambda invocation failed" }), {
+      return new Response(JSON.stringify({ error: errMsg }), {
         status: 500,
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       });
     }
 
-    const lambdaRequestId = response.headers.get("x-amzn-RequestId") || "";
-    console.log(`Lambda invoked successfully for ${presenteId}: requestId=${lambdaRequestId}`);
+    const renderId = (lambdaResponse?.renderId as string) || "";
+    const resultBucket = (lambdaResponse?.bucketName as string) || "";
+    console.log(`Lambda start handler succeeded for ${presenteId}: renderId=${renderId}, bucket=${resultBucket}`);
 
     const { error: updateErr } = await supabase
       .from("presentes")
       .update({
-        render_request_id: lambdaRequestId,
+        render_request_id: renderId,
         status: "generating",
         updated_at: new Date().toISOString(),
       })
       .eq("id", presenteId);
 
     if (updateErr) {
-      console.error(`Failed to update presente ${presenteId} after Lambda invocation:`, updateErr);
-    } else {
-      console.log(`Presente ${presenteId} updated: render_request_id set, status remains generating`);
+      console.error(`Failed to update presente ${presenteId}:`, updateErr);
     }
 
-    return new Response(JSON.stringify({ success: true, presenteId, requestId: lambdaRequestId }), {
+    return new Response(JSON.stringify({ success: true, presenteId, renderId }), {
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
