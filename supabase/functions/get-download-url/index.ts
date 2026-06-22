@@ -232,20 +232,21 @@ serve(async (req) => {
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
   } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    const stack = err instanceof Error ? err.stack : undefined;
     const errorDetails = {
-      message: err instanceof Error ? err.message : "Unknown error",
-      stack: err instanceof Error ? err.stack : undefined,
+      error: message,
+      stack: stack?.split("\n").slice(0, 4).join("\\n"),
       env: {
-        hasSupabaseUrl: !!Deno.env.get("SUPABASE_URL"),
-        hasServiceKey: !!Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
         hasBucket: !!Deno.env.get("REMOTION_BUCKET_NAME"),
+        bucketName: Deno.env.get("REMOTION_BUCKET_NAME") || "(not set)",
         hasAwsKey: !!Deno.env.get("AWS_ACCESS_KEY_ID"),
         hasAwsSecret: !!Deno.env.get("AWS_SECRET_ACCESS_KEY"),
         region: Deno.env.get("AWS_REGION") || "us-east-1",
       },
     };
     console.error("get-download-url error:", JSON.stringify(errorDetails));
-    return new Response(JSON.stringify({ error: errorDetails.message }), {
+    return new Response(JSON.stringify(errorDetails), {
       status: 500,
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });

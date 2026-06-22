@@ -6,8 +6,6 @@ interface StoryViewerContextType {
   totalSlides: number;
   isMuted: boolean;
   isPaused: boolean;
-  needsInteraction: boolean;
-  setNeedsInteraction: (v: boolean) => void;
   goNext: () => void;
   goPrev: () => void;
   goTo: (index: number) => void;
@@ -42,7 +40,6 @@ export function StoryViewerProvider({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [needsInteraction, setNeedsInteraction] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -67,9 +64,7 @@ export function StoryViewerProvider({
     if (audioRef.current && musica?.url_audio) {
       audioRef.current.src = musica.url_audio;
       audioRef.current.loop = true;
-      audioRef.current.play()
-        .then(() => setNeedsInteraction(false))
-        .catch(() => setNeedsInteraction(true));
+      audioRef.current.play().catch(() => {});
     }
   }, [musica?.url_audio]);
 
@@ -104,8 +99,6 @@ export function StoryViewerProvider({
         totalSlides,
         isMuted,
         isPaused,
-        needsInteraction,
-        setNeedsInteraction,
         goNext,
         goPrev,
         goTo,

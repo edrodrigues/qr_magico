@@ -31,7 +31,7 @@ export function RetrospectivaPage() {
   }, [refetch]);
 
   const slides: SlideConfig[] = useMemo(() => [
-    { id: "cover", duration: 5000 },
+    { id: "cover", duration: 5000, isManual: true },
     { id: "occasion", duration: 6000 },
     { id: "story", duration: 8000 },
     { id: "gallery", duration: 10000 },
