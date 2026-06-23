@@ -1,6 +1,27 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0"
 
+async function triggerWithRetry(
+  url: string,
+  headers: Record<string, string>,
+  body: string,
+  maxRetries = 3,
+): Promise<boolean> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const res = await fetch(url, { method: "POST", headers, body })
+      if (res.ok) return true
+      console.error(`triggerWithRetry: attempt ${attempt}/${maxRetries} returned ${res.status} for ${url}`)
+    } catch (e) {
+      console.error(`triggerWithRetry: attempt ${attempt}/${maxRetries} threw for ${url}:`, e)
+    }
+    if (attempt < maxRetries) {
+      await new Promise((r) => setTimeout(r, attempt * 2000))
+    }
+  }
+  return false
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, {
@@ -102,17 +123,39 @@ serve(async (req) => {
       }
       const body = JSON.stringify({ presente_id: pagamento.presente_id })
 
-      fetch(`${supabaseUrl}/functions/v1/generate-music`, {
-        method: "POST",
-        headers: edgeHeaders,
+      const musicOk = await triggerWithRetry(
+        `${supabaseUrl}/functions/v1/generate-music`,
+        edgeHeaders,
         body,
-      }).catch((e) => console.error("webhook: generate-music trigger failed", e))
+      )
+      if (!musicOk) {
+        console.error("webhook: all generate-music retries exhausted")
+        await supabase
+          .from("presentes")
+          .update({
+            status: "failed",
+            error_message: "Geração de música falhou após múltiplas tentativas",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", pagamento.presente_id)
+      }
 
-      fetch(`${supabaseUrl}/functions/v1/render-video`, {
-        method: "POST",
-        headers: edgeHeaders,
+      const videoOk = await triggerWithRetry(
+        `${supabaseUrl}/functions/v1/render-video`,
+        edgeHeaders,
         body,
-      }).catch((e) => console.error("webhook: render-video trigger failed", e))
+      )
+      if (!videoOk && musicOk) {
+        console.error("webhook: all render-video retries exhausted")
+        await supabase
+          .from("presentes")
+          .update({
+            status: "failed",
+            error_message: "Renderização de vídeo falhou após múltiplas tentativas",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", pagamento.presente_id)
+      }
     }
 
     if (pagamento.tipo === "creditos") {

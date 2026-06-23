@@ -20,10 +20,12 @@ export function PaymentSuccess() {
     const orderNsu = searchParams.get("order_nsu");
     const slug = searchParams.get("slug");
     const transactionNsu = searchParams.get("transaction_nsu");
-
     const presenteId = searchParams.get("presente_id");
 
-    const checkPayment = async () => {
+    let pollingAttempts = 0;
+    const MAX_POLL_ATTEMPTS = 20;
+
+    const checkPayment = async (): Promise<boolean> => {
       try {
         if (transactionNsu || slug) {
           const checkRes = await fetch(`${EDGE_URL}/check-infinitepay-payment`, {
@@ -43,7 +45,7 @@ export function PaymentSuccess() {
             const data = await checkRes.json();
             if (data.paid) {
               setStatus("paid");
-              return;
+              return true;
             }
           }
         }
@@ -57,34 +59,48 @@ export function PaymentSuccess() {
 
           if (presente?.status === "generating" || presente?.status === "ready") {
             setStatus("paid");
-            return;
+            return true;
           }
 
           if (presente?.status === "failed") {
             setStatus("failed");
-            return;
+            return true;
           }
         }
 
         setStatus("pending");
+        return false;
       } catch (err) {
         console.error("checkPayment error:", err);
         setStatus("pending");
+        return false;
+      }
+    };
+
+    const poll = async () => {
+      pollingAttempts++;
+      const resolved = await checkPayment();
+      if (resolved) {
+        clearInterval(pollingInterval);
+      } else if (pollingAttempts >= MAX_POLL_ATTEMPTS) {
+        clearInterval(pollingInterval);
+        navigate("/dashboard");
       }
     };
 
     checkPayment();
-  }, [session, searchParams]);
 
-  const redirectCountdown = () => {
-    setTimeout(() => navigate("/dashboard"), 5000);
-  };
+    const pollingInterval = setInterval(poll, 3000);
+
+    return () => clearInterval(pollingInterval);
+  }, [session, searchParams, navigate]);
 
   useEffect(() => {
     if (status === "paid") {
-      redirectCountdown();
+      const timer = setTimeout(() => navigate("/dashboard"), 5000);
+      return () => clearTimeout(timer);
     }
-  }, [status]);
+  }, [status, navigate]);
 
   return (
     <div className="bg-soft-cream text-on-surface font-body-md min-h-screen">
