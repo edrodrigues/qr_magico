@@ -259,7 +259,7 @@ serve(async (req) => {
 
     const payload = {
       type: "start",
-      version: "4.0.481",
+      version: "4.0.482",
       rendererFunctionName: null,
       framesPerLambda,
       concurrency: null,
