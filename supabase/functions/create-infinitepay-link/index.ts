@@ -87,7 +87,16 @@ serve(async (req) => {
       webhook_url: webhookUrl,
     }
 
-    const customerName = customer?.name?.trim() || customer?.email?.split("@")[0] || ""
+    let customerName = customer?.name?.trim()
+    if (!customerName || customerName.length < 3) {
+      customerName = customer?.email?.split("@")[0]?.trim() || ""
+    }
+    if (customerName.length < 3) {
+      return new Response(JSON.stringify({ error: "Customer name must be at least 3 characters" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      })
+    }
     if (customerName) {
       payload.customer = {
         name: customerName,

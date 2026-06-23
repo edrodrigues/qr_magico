@@ -84,7 +84,7 @@ export function WizardPagamento() {
           presente_id: presenteId,
           valor_centavos: PRECO_UNITARIO_CENTAVOS,
           customer: {
-            name: user?.user_metadata?.full_name || wizardData.remetente || "",
+            name: wizardData.remetente || user?.user_metadata?.full_name || "",
             email: user?.email || "",
           },
         }),

@@ -220,6 +220,10 @@ export function WizardRevisaoFinal() {
                         <span className="material-symbols-outlined text-[16px] text-secondary mt-0.5">qr_code</span>
                         <span className="font-label-sm text-label-sm">QR Code com URL de acesso vital&iacute;cia para aplica&ccedil;&atilde;o em brindes</span>
                       </div>
+                      <div className="flex items-start gap-2 text-on-surface-variant">
+                        <span className="material-symbols-outlined text-[16px] text-secondary mt-0.5">smart_display</span>
+                        <span className="font-label-sm text-label-sm">V&iacute;deo animado para baixar e compartilhar no Instagram ou TikTok</span>
+                      </div>
                     </div>
                     <div className="pt-4 border-t border-outline-variant">
                       <div className="flex justify-between items-end">

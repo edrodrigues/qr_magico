@@ -17,7 +17,7 @@ export function WizardOcasiaoNome() {
   const { name, remetente, occasion } = data;
 
   const handleNext = async () => {
-    if (!name.trim() || !remetente.trim() || !occasion || isSaving) return;
+    if (!name.trim() || remetente.trim().length < 3 || !occasion || isSaving) return;
     const result = await saveDraft({
       nome_homenageado: name.trim(),
       nome_remetente: remetente.trim(),
@@ -114,11 +114,11 @@ export function WizardOcasiaoNome() {
               <div className="pt-8 flex justify-center">
                 <button
                   type="button"
-                  disabled={!name.trim() || !remetente.trim() || !occasion || isSaving}
+                  disabled={!name.trim() || remetente.trim().length < 3 || !occasion || isSaving}
                   onClick={handleNext}
                   className={cn(
                     "group relative px-12 py-4 rounded-full font-label-md text-label-md transition-all duration-300 overflow-hidden",
-                    name.trim() && remetente.trim() && occasion && !isSaving
+                    name.trim() && remetente.trim().length >= 3 && occasion && !isSaving
                       ? "bg-primary text-on-primary hover:scale-105 active:scale-95 shadow-lg hover:shadow-primary/20"
                       : "bg-surface-container-highest text-on-surface-variant cursor-not-allowed opacity-50"
                   )}
@@ -131,7 +131,7 @@ export function WizardOcasiaoNome() {
                       </span>
                     )}
                   </span>
-                  {name.trim() && remetente.trim() && occasion && !isSaving && (
+                  {name.trim() && remetente.trim().length >= 3 && occasion && !isSaving && (
                     <div className="absolute inset-0 bg-gradient-to-r from-primary via-coral-deep to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   )}
                 </button>
