@@ -107,7 +107,7 @@ export function WizardRevisaoFinal() {
                   )}
                   <div className="flex flex-col border-b border-outline-variant/30 pb-4">
                     <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">
-                      Ocasiao Especial
+                      Ocasião Especial
                     </span>
                     <span className="font-body-lg text-body-lg font-semibold text-on-surface">
                       {OCCASION_LABELS[data.occasion] || data.occasion || "—"}

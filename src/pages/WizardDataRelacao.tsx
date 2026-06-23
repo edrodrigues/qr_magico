@@ -70,7 +70,7 @@ export function WizardDataRelacao() {
                 )}
                 disabled={!startDate || isSaving}
               >
-                {isSaving ? "Salvando..." : "Pr&oacute;ximo"}
+                {isSaving ? "Salvando..." : "Próximo"}
               </button>
             </div>
           </div>

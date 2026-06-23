@@ -300,7 +300,7 @@ export function WizardUploadFotos() {
                   : "bg-surface-container-highest text-on-surface-variant cursor-not-allowed opacity-50"
               )}
             >
-              Pr&oacute;ximo
+              Próximo
             </button>
           </div>
         </div>
