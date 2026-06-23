@@ -204,9 +204,9 @@ export function Footer() {
           </p>
         </div>
         <div className="flex flex-wrap justify-center gap-6">
-          <a className="font-label-sm text-label-sm text-on-surface-variant hover:text-secondary transition-colors" href="#" aria-label="Termos de Uso">Termos de Uso</a>
-          <a className="font-label-sm text-label-sm text-on-surface-variant hover:text-secondary transition-colors" href="#" aria-label="Política de Privacidade">Privacidade</a>
-          <a className="font-label-sm text-label-sm text-on-surface-variant hover:text-secondary transition-colors" href="#" aria-label="Central de Suporte">Suporte</a>
+          <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-secondary transition-colors" to="/termos-de-uso" aria-label="Termos de Uso">Termos de Uso</Link>
+          <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-secondary transition-colors" to="/privacidade" aria-label="Política de Privacidade">Privacidade</Link>
+          <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-secondary transition-colors" to="/suporte" aria-label="Central de Suporte">Suporte</Link>
         </div>
       </div>
     </footer>

@@ -22,6 +22,9 @@ import { Admin } from "./pages/Admin";
 import { RetrospectivaDesktop } from "./pages/RetrospectivaDesktop";
 import { RetrospectivaPage } from "./pages/RetrospectivaPage";
 import { AuthPage } from "./pages/AuthPage";
+import { TermosDeUso } from "./pages/TermosDeUso";
+import { Privacidade } from "./pages/Privacidade";
+import { Suporte } from "./pages/Suporte";
 
 export default function App() {
   return (
@@ -48,6 +51,9 @@ export default function App() {
             <Route path="/dashboard/creditos" element={<ProtectedRoute><Creditos /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
             <Route path="/retrospectiva" element={<RetrospectivaDesktop />} />
+            <Route path="/termos-de-uso" element={<TermosDeUso />} />
+            <Route path="/privacidade" element={<Privacidade />} />
+            <Route path="/suporte" element={<Suporte />} />
             <Route path="/p/:slug" element={<RetrospectivaPage />} />
             <Route path="*" element={<Navigate to={window.location.pathname.toLowerCase()} replace />} />
           </Routes>
