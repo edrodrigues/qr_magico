@@ -7,9 +7,10 @@ import { cn } from "../lib/utils";
 
 export function WizardUploadFotos() {
   const navigate = useNavigate();
-  const { data, setPhotos } = useWizard();
+  const { data, setPhotos, draftId, isSaving } = useWizard();
   const { photos } = data;
   const [uploading, setUploading] = useState(false);
+  const [savingPhotos, setSavingPhotos] = useState(false);
   const [progress, setProgress] = useState(0);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -105,7 +106,9 @@ export function WizardUploadFotos() {
 
   const removePhoto = useCallback((index: number) => {
     const updated = [...photos];
-    URL.revokeObjectURL(updated[index].preview);
+    if (updated[index].file) {
+      URL.revokeObjectURL(updated[index].preview);
+    }
     updated.splice(index, 1);
     setPhotos(updated);
   }, [photos, setPhotos]);
@@ -119,10 +122,30 @@ export function WizardUploadFotos() {
   useEffect(() => {
     return () => {
       for (const photo of photos) {
-        URL.revokeObjectURL(photo.preview);
+        if (photo.file) {
+          URL.revokeObjectURL(photo.preview);
+        }
       }
     };
   }, []);
+
+  const handleNext = useCallback(async () => {
+    if (photos.length === 0) return;
+    const photosWithUrl = photos.filter((p) => p.storageUrl);
+    if (draftId && photosWithUrl.length > 0) {
+      setSavingPhotos(true);
+      await supabase.from("fotos").delete().eq("presente_id", draftId);
+      const inserts = photosWithUrl.map((photo, index) => ({
+        presente_id: draftId,
+        url: photo.storageUrl!,
+        ordem: index,
+      }));
+      const { error } = await supabase.from("fotos").insert(inserts);
+      if (error) console.error("Erro ao salvar fotos:", error.message);
+      setSavingPhotos(false);
+    }
+    navigate("/wizard/revisao-final");
+  }, [photos, draftId, navigate]);
 
   const enabled = photos.length > 0;
 
@@ -291,16 +314,16 @@ export function WizardUploadFotos() {
               Voltar
             </button>
             <button
-              disabled={!enabled}
-              onClick={() => navigate("/wizard/revisao-final")}
+              disabled={!enabled || savingPhotos}
+              onClick={handleNext}
               className={cn(
                 "w-full sm:w-auto px-12 py-3 rounded-full font-label-md text-label-md transition-all",
-                enabled
+                enabled && !savingPhotos
                   ? "bg-primary text-on-primary hover:opacity-90 scale-95 active:scale-90"
                   : "bg-surface-container-highest text-on-surface-variant cursor-not-allowed opacity-50"
               )}
             >
-              Próximo
+              {savingPhotos ? "Salvando..." : "Próximo"}
             </button>
           </div>
         </div>

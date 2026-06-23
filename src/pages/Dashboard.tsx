@@ -439,7 +439,7 @@ function GiftCard({
               <div />
               <div className="flex gap-3">
                 <Link
-                  to="/wizard/ocasiao-nome"
+                  to={`/wizard/ocasiao-nome?draftId=${gift.id}`}
                   className="bg-primary text-on-primary px-5 py-2.5 rounded-lg font-label-md text-label-md hover:brightness-110 transition-all flex items-center gap-2"
                 >
                   <span className="material-symbols-outlined text-[18px]">edit</span>
@@ -1056,10 +1056,10 @@ export function Dashboard() {
                       Que tal finalizar agora e surpreender alguém especial?
                     </p>
                     <Link
-                      to="/wizard/ocasiao-nome"
+                      to="/dashboard?tab=drafts"
                       className="inline-block mt-3 text-sm font-bold text-secondary hover:underline decoration-2 underline-offset-4"
                     >
-                      Continuar editando →
+                      Ver rascunhos →
                     </Link>
                   </div>
                 </div>

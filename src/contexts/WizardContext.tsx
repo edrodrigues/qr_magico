@@ -1,10 +1,10 @@
-import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from "react";
-import { useLocation } from "react-router-dom";
+import { createContext, useContext, useState, useCallback, useMemo, useEffect, type ReactNode } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthContext";
 
 interface PhotoFile {
-  file: File;
+  file?: File;
   preview: string;
   storageUrl?: string;
 }
@@ -34,6 +34,7 @@ interface WizardContextType {
   setDraftId: (id: string | null) => void;
   saveDraft: (fields: Record<string, string>) => Promise<{ error: string | null; slug?: string; id?: string }>;
   isSaving: boolean;
+  isLoadingDraft: boolean;
   resetWizard: () => void;
 }
 
@@ -73,10 +74,64 @@ const STEP_FROM_PATH: Record<string, number> = {
 export function WizardProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [data, setData] = useState<WizardData>(EMPTY_DATA);
   const [draftId, setDraftId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingDraft, setIsLoadingDraft] = useState(false);
   const currentStep = useMemo(() => STEP_FROM_PATH[location.pathname] ?? 1, [location.pathname]);
+
+  const urlDraftId = searchParams.get("draftId");
+
+  useEffect(() => {
+    if (!urlDraftId || !user) return;
+    let cancelled = false;
+    setIsLoadingDraft(true);
+    setDraftId(urlDraftId);
+
+    (async () => {
+      const { data: presente, error } = await supabase
+        .from("presentes")
+        .select("*")
+        .eq("id", urlDraftId)
+        .single();
+
+      if (cancelled || error || !presente) {
+        if (!cancelled) setIsLoadingDraft(false);
+        return;
+      }
+
+      const loadedData: Partial<WizardData> = {
+        name: presente.nome_homenageado || "",
+        remetente: presente.nome_remetente || "",
+        occasion: presente.ocasiao || "",
+        startDate: presente.data_inicio || "",
+        story: presente.descricao_relacao || "",
+        musicStyle: presente.estilo_musical || "",
+      };
+
+      const { data: fotos } = await supabase
+        .from("fotos")
+        .select("url, ordem")
+        .eq("presente_id", urlDraftId)
+        .order("ordem", { ascending: true });
+
+      if (!cancelled) {
+        if (fotos && fotos.length > 0) {
+          loadedData.photos = fotos.map((f) => ({
+            preview: f.url,
+            storageUrl: f.url,
+          }));
+        }
+        setData((prev) => ({ ...prev, ...loadedData }));
+        setIsLoadingDraft(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [urlDraftId, user]);
 
   const setName = useCallback((name: string) => {
     setData((prev) => ({ ...prev, name }));
@@ -184,6 +239,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
         setDraftId,
         saveDraft,
         isSaving,
+        isLoadingDraft,
         resetWizard,
       }}
     >

@@ -132,20 +132,6 @@ export function WizardPagamento() {
       return;
     }
 
-    if (wizardData.photos.length > 0) {
-      const photoInserts = wizardData.photos
-        .filter((photo) => photo.storageUrl)
-        .map((photo, index) => ({
-          presente_id: presenteId,
-          url: photo.storageUrl!,
-          ordem: index,
-        }));
-      if (photoInserts.length > 0) {
-        const { error: fotoError } = await supabase.from("fotos").insert(photoInserts);
-        if (fotoError) console.error("fotos insert error:", fotoError);
-      }
-    }
-
     const headers = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${session?.access_token}`,
