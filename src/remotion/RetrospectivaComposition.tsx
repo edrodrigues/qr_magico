@@ -78,15 +78,32 @@ export function RetrospectivaComposition({
   musicaUrl,
   audioDurationInSeconds = 0,
 }: RetroInputProps) {
+  const safeFotos = Array.isArray(fotos) ? fotos : [];
+  const safeThumbnailUrl = typeof thumbnail_url === "string" ? thumbnail_url : "";
+  const allPhotos = safeFotos.length > 0 ? safeFotos : safeThumbnailUrl ? [safeThumbnailUrl] : [];
+
+  if (typeof window !== "undefined" || typeof process !== "undefined") {
+    console.log("[RetrospectivaComposition] Props:", {
+      nome_homenageado,
+      ocasiao,
+      estilo_musical,
+      photosCount: allPhotos.length,
+      hasMusicaUrl: !!musicaUrl,
+      audioDurationInSeconds,
+    });
+  }
+
   const occasionLabel = OCCASION_LABELS[ocasiao] || ocasiao || "Especial";
   const styleLabel = STYLE_LABELS[estilo_musical] || estilo_musical || "Especial";
-  const allPhotos = fotos.length > 0 ? fotos : thumbnail_url ? [thumbnail_url] : [];
   const palette = getPalette(estilo_musical);
   const theme: OccasionTheme = getGenreTheme(palette, ocasiao);
   const daysSince = computeDaysSince(data_inicio);
-  const audioFrames = Math.round(audioDurationInSeconds * 30);
+  const safeAudioDuration = Number.isFinite(audioDurationInSeconds) && audioDurationInSeconds > 0
+    ? audioDurationInSeconds
+    : 0;
+  const audioFrames = Math.round(safeAudioDuration * 30);
   const totalFrames = Math.max(CONTENT_DURATION, audioFrames);
-  const extraHoldFrames = totalFrames - CONTENT_DURATION;
+  const extraHoldFrames = Math.max(0, totalFrames - CONTENT_DURATION);
 
   return (
     <AbsoluteFill

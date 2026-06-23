@@ -7,13 +7,16 @@ interface StoryProps {
 }
 
 function splitSentences(text: string): string[] {
+  if (!text || typeof text !== "string") return [];
   const sentences = text.split(/[.!?]+/).filter((s) => s.trim().length > 0);
   return sentences.slice(0, 3).map((s) => s.trim() + ".");
 }
 
 export function Story({ descricao_relacao, theme }: StoryProps) {
   const frame = useCurrentFrame();
-  const sentences = splitSentences(descricao_relacao);
+  const safeDescricao = typeof descricao_relacao === "string" ? descricao_relacao : "";
+  const sentences = splitSentences(safeDescricao);
+  const safeSentences = sentences.length > 0 ? sentences : ["Uma história especial."];
 
   const titleOpacity = interpolate(frame, [0, 15], [0, 1]);
   const titleY = interpolate(frame, [0, 15], [-10, 0]);
@@ -65,7 +68,7 @@ export function Story({ descricao_relacao, theme }: StoryProps) {
           position: "relative",
         }}
       >
-        {sentences.map((sentence, si) => {
+        {safeSentences.map((sentence, si) => {
           const wordDelay = 15 + si * 8;
           const wordStagger = 2;
           const words = sentence.split(" ");
@@ -81,7 +84,7 @@ export function Story({ descricao_relacao, theme }: StoryProps) {
                 marginBottom: 12,
               }}
             >
-              {words.map((word, wi) => {
+              {words.length > 0 ? words.map((word, wi) => {
                 const wordStart = wordDelay + wi * wordStagger;
                 const wordOpacity = interpolate(
                   frame,
@@ -108,7 +111,7 @@ export function Story({ descricao_relacao, theme }: StoryProps) {
                     {word}
                   </span>
                 );
-              })}
+              }) : <span>{sentence}</span>}
             </p>
           );
         })}

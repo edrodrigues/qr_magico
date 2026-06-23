@@ -18,8 +18,9 @@ const KEN_BURNS_DIRS = [
 
 export function Gallery({ fotos, theme }: GalleryProps) {
   const frame = useCurrentFrame();
+  const safeFotos = Array.isArray(fotos) ? fotos : [];
 
-  if (fotos.length === 0) {
+  if (safeFotos.length === 0) {
     return (
       <AbsoluteFill
         style={{
@@ -42,7 +43,7 @@ export function Gallery({ fotos, theme }: GalleryProps) {
     );
   }
 
-  if (fotos.length === 1) {
+  if (safeFotos.length === 1) {
     const kenBurnsScale = interpolate(frame, [0, 600], [1, 1.04]);
     const kenBurnsX = interpolate(frame, [0, 600], [0, -2]);
     const kenBurnsY = interpolate(frame, [0, 600], [0, -1]);
@@ -56,7 +57,7 @@ export function Gallery({ fotos, theme }: GalleryProps) {
           }}
         />
         <Img
-          src={fotos[0]}
+          src={safeFotos[0]}
           onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
             (e.target as HTMLImageElement).style.display = "none";
           }}
@@ -83,18 +84,19 @@ export function Gallery({ fotos, theme }: GalleryProps) {
     );
   }
 
-  const totalDuration = fotos.length * PHOTO_DURATION;
-  const effectiveFrame = frame % totalDuration;
+  const totalDuration = safeFotos.length * PHOTO_DURATION;
+  const safeTotalDuration = totalDuration > 0 ? totalDuration : PHOTO_DURATION;
+  const effectiveFrame = frame % safeTotalDuration;
   const photoIndex = Math.floor(effectiveFrame / PHOTO_DURATION);
   const photoFrame = effectiveFrame % PHOTO_DURATION;
 
-  const isFirstCycle = frame < fotos.length * PHOTO_DURATION && photoIndex === 0;
+  const isFirstCycle = frame < safeTotalDuration && photoIndex === 0;
   const prevIndex = isFirstCycle
     ? photoIndex
     : photoIndex > 0
       ? photoIndex - 1
-      : fotos.length - 1;
-  const nextIndex = photoIndex;
+      : safeFotos.length - 1;
+  const nextIndex = Math.min(photoIndex, safeFotos.length - 1);
 
   const crossfadeProgress = isFirstCycle
     ? 1
@@ -117,7 +119,7 @@ export function Gallery({ fotos, theme }: GalleryProps) {
             }}
           />
           <Img
-            src={fotos[prevIndex]}
+            src={safeFotos[prevIndex]}
             onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
               (e.target as HTMLImageElement).style.display = "none";
             }}
@@ -141,7 +143,7 @@ export function Gallery({ fotos, theme }: GalleryProps) {
           }}
         />
         <Img
-          src={fotos[nextIndex]}
+          src={safeFotos[nextIndex]}
           onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
             (e.target as HTMLImageElement).style.display = "none";
           }}
@@ -183,7 +185,7 @@ export function Gallery({ fotos, theme }: GalleryProps) {
         <span
           style={{ color: "rgba(255,255,255,0.9)", fontSize: 20, fontWeight: 500 }}
         >
-          {photoIndex + 1}/{fotos.length}
+          {photoIndex + 1}/{safeFotos.length}
         </span>
       </div>
     </AbsoluteFill>
