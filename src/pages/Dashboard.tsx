@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { cn } from "../lib/utils";
 import { useAuth } from "../contexts/AuthContext";
@@ -717,16 +717,18 @@ export function Dashboard() {
 
   const hasProcessing = useMemo(() => gifts.some((g) => g.status === "generating"), [gifts]);
 
+  const pollingRef = useRef({ refetch, checkVideoStatus, gifts });
+  pollingRef.current = { refetch, checkVideoStatus, gifts };
+
   useEffect(() => {
     if (!hasProcessing) return;
     const interval = setInterval(() => {
-      refetch();
-      gifts.filter((g) => g.status === "generating").forEach(checkVideoStatus);
+      const { refetch: rf, checkVideoStatus: cvs, gifts: gs } = pollingRef.current;
+      rf();
+      gs.filter((g) => g.status === "generating").forEach(cvs);
     }, 15000);
-    return () => {
-      clearInterval(interval);
-    };
-  }, [hasProcessing, refetch, gifts, checkVideoStatus]);
+    return () => clearInterval(interval);
+  }, [hasProcessing]);
 
   const handleTabChange = (tabId: TabId) => {
     setActiveTab(tabId);
@@ -773,20 +775,24 @@ export function Dashboard() {
     };
     const body = JSON.stringify({ presente_id: gift.id });
     (async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000);
       try {
-        const musicRes = await fetch(`${edgeUrl}/generate-music`, { method: "POST", headers, body });
+        const musicRes = await fetch(`${edgeUrl}/generate-music`, { method: "POST", headers, body, signal: controller.signal });
         if (!musicRes.ok) {
           const errBody = await musicRes.text();
           console.error("generate-music error body:", { status: musicRes.status, body: errBody });
           throw new Error(`generate-music failed: ${musicRes.status}`);
         }
-        const videoRes = await fetch(`${edgeUrl}/render-video`, { method: "POST", headers, body });
+        const videoRes = await fetch(`${edgeUrl}/render-video`, { method: "POST", headers, body, signal: controller.signal });
         if (!videoRes.ok) throw new Error(`render-video failed: ${videoRes.status}`);
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Unknown error";
         console.error("retry generation failed:", msg);
         await supabase.from("presentes").update({ status: "failed", error_message: msg, updated_at: new Date().toISOString() }).eq("id", gift.id);
         addToast("Erro ao gerar o presente. Tente novamente.", "error");
+      } finally {
+        clearTimeout(timeoutId);
       }
     })();
     refetch();

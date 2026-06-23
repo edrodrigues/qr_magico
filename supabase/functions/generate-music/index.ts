@@ -273,8 +273,8 @@ serve(async (req) => {
       await supabase
         .from("presentes")
         .update({
-          status: newStatus === "failed" ? "failed" : undefined,
-          error_message: newStatus === "failed" ? errMsg : undefined,
+          status: "failed",
+          error_message: errMsg,
           updated_at: new Date().toISOString(),
         })
         .eq("id", presenteId)
