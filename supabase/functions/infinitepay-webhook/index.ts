@@ -68,10 +68,12 @@ serve(async (req) => {
       .eq("id", pagamento.id)
 
     if (pagamento.tipo === "presente" && pagamento.presente_id) {
+      const presenteId = pagamento.presente_id
+
       await supabase
         .from("presentes")
         .update({ status: "generating", updated_at: new Date().toISOString() })
-        .eq("id", pagamento.presente_id)
+        .eq("id", presenteId)
 
       const { data: saldoAtual } = await supabase
         .from("creditos_saldo")
@@ -93,6 +95,16 @@ serve(async (req) => {
         { onConflict: "usuario_id" },
       )
 
+      // Create musicas row first so auto-recovery can detect stuck generations
+      await supabase.from("musicas").upsert({
+        presente_id: presenteId,
+        status: "generating",
+        attempts: 0,
+        last_attempt_at: null,
+      }, { onConflict: "presente_id" }).catch((e) => {
+        console.error("failed to create musicas row:", e)
+      })
+
       const { data: userData } = await supabase.auth.admin.getUserById(pagamento.usuario_id)
       const user = userData?.user
 
@@ -100,7 +112,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${supabaseServiceKey}`,
       }
-      const body = JSON.stringify({ presente_id: pagamento.presente_id })
+      const body = JSON.stringify({ presente_id: presenteId })
 
       // Fire-and-forget: do not block webhook response while generation runs
       const bgGen = async () => {
@@ -115,17 +127,31 @@ serve(async (req) => {
               status: "failed",
               error_message: "Geração de música falhou",
               updated_at: new Date().toISOString(),
-            }).eq("id", pagamento.presente_id)
+            }).eq("id", presenteId)
             return
           }
           const videoRes = await fetch(`${supabaseUrl}/functions/v1/render-video`, {
             method: "POST", headers: edgeHeaders, body,
           })
           if (!videoRes.ok) {
-            console.error(`background: render-video returned ${videoRes.status}`)
+            const errText = await videoRes.text()
+            console.error(`background: render-video returned ${videoRes.status}: ${errText}`)
+            await supabase.from("presentes").update({
+              status: "failed",
+              error_message: "Renderização de vídeo falhou",
+              updated_at: new Date().toISOString(),
+            }).eq("id", presenteId)
           }
         } catch (e) {
-          console.error("background generation error:", e)
+          const errMsg = e instanceof Error ? e.message : "Erro desconhecido na geração"
+          console.error("background generation error:", errMsg)
+          await supabase.from("presentes").update({
+            status: "failed",
+            error_message: errMsg,
+            updated_at: new Date().toISOString(),
+          }).eq("id", presenteId).catch((e2) => {
+            console.error("failed to mark presente as failed:", e2)
+          })
         }
       }
       bgGen()

@@ -46,6 +46,21 @@ BEGIN
     AND m.last_attempt_at IS NULL
     AND p.updated_at < now() - (max_age_minutes || ' minutes')::interval
   RETURNING 'failed'::TEXT, p.id, 0::INT;
+
+  -- 3. Records with no musicas row at all (generation was never triggered)
+  --    → mark present as 'failed' so user sees retry button and can restart
+  RETURN QUERY
+  UPDATE public.presentes p
+  SET
+    status = 'failed',
+    error_message = 'Geração não foi iniciada. Clique em Tentar novamente.',
+    updated_at = now()
+  WHERE p.status = 'generating'
+    AND NOT EXISTS (
+      SELECT 1 FROM public.musicas m WHERE m.presente_id = p.id
+    )
+    AND p.updated_at < now() - (max_age_minutes || ' minutes')::interval
+  RETURNING 'no_musicas'::TEXT, p.id, 0::INT;
 END;
 $$;
 
@@ -62,4 +77,5 @@ SELECT cron.schedule(
 COMMENT ON FUNCTION public.reset_stale_generations IS
   'Resets or fails stuck generation records older than max_age_minutes.
    Case 1: attempts >= 3 → reset to 0 (user can retry from Dashboard).
-   Case 2: attempts = 0, never attempted → set present to failed (user sees retry).';
+   Case 2: attempts = 0, never attempted → set present to failed (user sees retry).
+   Case 3: no musicas row → set present to failed (user sees retry).';

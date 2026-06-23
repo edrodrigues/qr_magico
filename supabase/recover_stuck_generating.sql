@@ -44,5 +44,17 @@ WHERE p.id = m.presente_id
   AND p.status = 'generating'
   AND p.updated_at < now() - interval '30 minutes';
 
--- 6. CHECK cron is running
+-- 6. BATCH FAIL: mark stuck presentes with no musicas row as failed
+UPDATE public.presentes p
+SET status = 'failed',
+    error_message = 'Geração não foi iniciada. Clique em Tentar novamente.',
+    updated_at = now()
+WHERE p.status = 'generating'
+  AND NOT EXISTS (
+    SELECT 1 FROM public.musicas m WHERE m.presente_id = p.id
+  )
+  AND p.updated_at < now() - interval '30 minutes';
+
+-- 7. CHECK cron is running
+SELECT * FROM cron.job WHERE jobname = 'recover-stuck-generations';
 SELECT * FROM cron.job WHERE jobname = 'retry-music-generation';
