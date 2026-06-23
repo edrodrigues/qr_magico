@@ -87,11 +87,14 @@ serve(async (req) => {
       webhook_url: webhookUrl,
     }
 
-    if (customer?.name || customer?.email) {
+    const customerName = customer?.name?.trim() || customer?.email?.split("@")[0] || ""
+    if (customerName) {
       payload.customer = {
-        name: customer?.name || "",
+        name: customerName,
         email: customer?.email || "",
-        phone_number: customer?.phone_number || "",
+      }
+      if (customer?.phone_number) {
+        (payload.customer as Record<string, string>).phone_number = customer.phone_number
       }
     }
 
