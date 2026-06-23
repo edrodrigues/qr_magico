@@ -6,8 +6,6 @@ import { useToast } from "../components/Toast";
 import { supabase } from "../lib/supabase";
 import { cn } from "../lib/utils";
 
-type PaymentMethod = "pix" | "card";
-
 type Transacao = {
   id: string;
   tipo: "compra" | "consumo" | "bonus";
@@ -23,6 +21,7 @@ type CupomResgatado = {
 };
 
 const PRECO_UNITARIO = 19.9;
+const EDGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -44,7 +43,7 @@ function formatarHora(data: string) {
 }
 
 export function Creditos() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { addToast } = useToast();
   const [codigo, setCodigo] = useState("");
   const [redeeming, setRedeeming] = useState(false);
@@ -56,7 +55,6 @@ export function Creditos() {
   const [loadingSaldo, setLoadingSaldo] = useState(true);
 
   const [showModal, setShowModal] = useState(false);
-  const [method, setMethod] = useState<PaymentMethod>("pix");
   const [buying, setBuying] = useState(false);
 
   useEffect(() => {
@@ -124,33 +122,50 @@ export function Creditos() {
   };
 
   const handleComprar = async () => {
-    setBuying(true);
-    const valorEsperado = PRECO_UNITARIO * quantidade;
-
-    const { data, error } = await supabase.rpc("comprar_creditos", {
-      p_quantidade: quantidade,
-      p_valor_pago: valorEsperado,
-    });
-
-    if (error || data?.error) {
-      addToast(data?.error || "Erro ao processar compra.", "error");
-    } else {
-      addToast(`Compra realizada! ${quantidade} crédito(s) adicionado(s).`, "success");
-      setShowModal(false);
-      setQuantidade(1);
-      const [saldoRes, transacoesRes] = await Promise.all([
-        supabase.rpc("obter_saldo_creditos"),
-        supabase
-          .from("creditos_transacoes")
-          .select("*")
-          .eq("usuario_id", user!.id)
-          .order("created_at", { ascending: false })
-          .limit(5),
-      ]);
-      if (!saldoRes.error) setSaldo(saldoRes.data as number);
-      if (!transacoesRes.error) setTransacoes(transacoesRes.data as Transacao[]);
+    if (!user || !session) {
+      addToast("Usuário não autenticado.", "error");
+      return;
     }
-    setBuying(false);
+    setBuying(true);
+    try {
+      const totalCentavos = Math.round(PRECO_UNITARIO * quantidade * 100);
+
+      const linkRes = await fetch(`${EDGE_URL}/create-infinitepay-link`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          tipo: "creditos",
+          quantidade_creditos: quantidade,
+          valor_centavos: totalCentavos,
+          customer: {
+            name: user?.user_metadata?.full_name || "",
+            email: user?.email || "",
+          },
+        }),
+      });
+
+      if (!linkRes.ok) {
+        const errBody = await linkRes.text();
+        console.error("create-infinitepay-link error:", errBody);
+        addToast("Erro ao criar link de pagamento. Tente novamente.", "error");
+        return;
+      }
+
+      const { checkout_url } = await linkRes.json();
+      if (checkout_url) {
+        window.location.href = checkout_url;
+      } else {
+        addToast("Erro: link de pagamento não recebido", "error");
+      }
+    } catch (err) {
+      console.error("handleComprar error:", err);
+      addToast("Erro ao processar compra", "error");
+    } finally {
+      setBuying(false);
+    }
   };
 
   const userName =
@@ -516,107 +531,28 @@ export function Creditos() {
             </div>
 
             <div className="p-6">
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                <button
-                  onClick={() => setMethod("pix")}
-                  className={cn(
-                    "flex items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all",
-                    method === "pix"
-                      ? "border-primary bg-surface-container-low"
-                      : "border-outline-variant"
-                  )}
-                >
-                  <span className="material-symbols-outlined text-primary">qr_code_2</span>
-                  <div className="text-left">
-                    <p className="font-label-md text-label-md text-on-surface">PIX</p>
-                    <p className="text-[11px] text-secondary font-semibold">Rápido e seguro</p>
+              <div className="glass-panel p-6 rounded-xl border border-outline-variant/30 flex flex-col items-center text-center">
+                <span className="material-symbols-outlined text-primary text-[48px] mb-4">
+                  qr_code_2
+                </span>
+                <h3 className="font-title-lg text-title-lg text-on-surface mb-2">
+                  Pagamento via InfinityPay
+                </h3>
+                <p className="font-body-md text-body-md text-on-surface-variant mb-6 max-w-sm">
+                  Você será redirecionado para o checkout seguro da InfinityPay para finalizar
+                  a compra de {quantidade} crédito{quantidade > 1 ? "s" : ""}.
+                </p>
+                <div className="flex items-center gap-6 mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-secondary text-[20px]">pix</span>
+                    <span className="font-label-md text-label-md text-on-surface">PIX</span>
                   </div>
-                </button>
-                <button
-                  onClick={() => setMethod("card")}
-                  className={cn(
-                    "flex items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all",
-                    method === "card"
-                      ? "border-primary bg-surface-container-low"
-                      : "border-outline-variant"
-                  )}
-                >
-                  <span className="material-symbols-outlined text-on-surface-variant">credit_card</span>
-                  <div className="text-left">
-                    <p className="font-label-md text-label-md text-on-surface">Cartão</p>
-                    <p className="text-[11px] text-on-surface-variant">Débito ou crédito</p>
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-secondary text-[20px]">credit_card</span>
+                    <span className="font-label-md text-label-md text-on-surface">Cartão</span>
                   </div>
-                </button>
+                </div>
               </div>
-
-              {method === "pix" && (
-                <div className="glass-panel p-6 rounded-xl border border-outline-variant/30 flex flex-col items-center text-center">
-                  <div className="bg-white p-4 rounded-xl shadow-inner mb-4 relative">
-                    <img
-                      alt="QR Code PIX"
-                      className="w-40 h-40 opacity-90"
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuADlRrD1BjMp04tGDLv2wzGQQVV_X5RyUcz_D6rWkE9r_PhhXzuulp8nWXTblztro8gHTg1LqCCn7qwmCET350gOe1nqurCPth9cHatFddpBcdy9ztWp8WQ8gAIWizN860fYRtB20m-Il3Q_UyH6qyqKjClg5mRO1Ou_ZZFBZ_0B3oC1VOsrR-QWiTk6Fh7UJD0cWUmFnLOMnMftNDGxVe99Dps0Gw1_I8VdDOhcJf_9neyqeAhXZKgqlFb_l5Ui0OvBCMcvjSSjJc"
-                    />
-                  </div>
-                  <h3 className="font-title-md text-title-md text-on-surface mb-1">
-                    Escaneie para pagar
-                  </h3>
-                  <p className="text-sm text-on-surface-variant mb-4">
-                    Acesse o app do seu banco e escolha pagar via PIX.
-                  </p>
-                  <button className="flex items-center gap-2 text-primary font-label-md text-label-md hover:underline">
-                    <span className="material-symbols-outlined text-sm">content_copy</span>
-                    Copiar código PIX
-                  </button>
-                </div>
-              )}
-
-              {method === "card" && (
-                <div className="glass-panel p-6 rounded-xl border border-outline-variant/30">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="col-span-2">
-                      <label className="block font-label-sm text-label-sm text-on-surface-variant mb-1.5">
-                        Número do Cartão
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="0000 0000 0000 0000"
-                        className="w-full bg-surface border border-outline-variant/40 rounded-lg p-3 text-on-surface placeholder:text-outline-variant focus:outline-none focus:ring-2 focus:ring-primary/10 font-body-md text-body-md"
-                      />
-                    </div>
-                    <div className="col-span-2">
-                      <label className="block font-label-sm text-label-sm text-on-surface-variant mb-1.5">
-                        Nome Impresso
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Como no cartão"
-                        className="w-full bg-surface border border-outline-variant/40 rounded-lg p-3 text-on-surface placeholder:text-outline-variant focus:outline-none focus:ring-2 focus:ring-primary/10 font-body-md text-body-md"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-label-sm text-label-sm text-on-surface-variant mb-1.5">
-                        Validade
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="MM/AA"
-                        className="w-full bg-surface border border-outline-variant/40 rounded-lg p-3 text-on-surface placeholder:text-outline-variant focus:outline-none focus:ring-2 focus:ring-primary/10 font-body-md text-body-md"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-label-sm text-label-sm text-on-surface-variant mb-1.5">
-                        CVV
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="123"
-                        className="w-full bg-surface border border-outline-variant/40 rounded-lg p-3 text-on-surface placeholder:text-outline-variant focus:outline-none focus:ring-2 focus:ring-primary/10 font-body-md text-body-md"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
 
               <div className="mt-6 p-4 rounded-xl bg-surface-variant">
                 <div className="flex justify-between items-center mb-2">
@@ -645,12 +581,12 @@ export function Creditos() {
                 {buying ? (
                   <>
                     <span className="material-symbols-outlined text-[20px] animate-spin">refresh</span>
-                    Processando...
+                    Redirecionando...
                   </>
                 ) : (
                   <>
                     <span className="material-symbols-outlined text-[20px]">check</span>
-                    Confirmar Compra
+                    Ir para Pagamento
                   </>
                 )}
               </button>

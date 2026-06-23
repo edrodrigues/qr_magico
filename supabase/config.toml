@@ -13,3 +13,12 @@ verify_jwt = false
 
 [functions.render-complete]
 verify_jwt = false
+
+[functions.create-infinitepay-link]
+verify_jwt = true
+
+[functions.infinitepay-webhook]
+verify_jwt = false
+
+[functions.check-infinitepay-payment]
+verify_jwt = true

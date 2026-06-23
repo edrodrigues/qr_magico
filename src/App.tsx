@@ -14,6 +14,8 @@ import { WizardEstiloMusical } from "./pages/WizardEstiloMusical";
 import { WizardUploadFotos } from "./pages/WizardUploadFotos";
 import { WizardRevisaoFinal } from "./pages/WizardRevisaoFinal";
 import { WizardPagamento } from "./pages/WizardPagamento";
+import { PaymentSuccess } from "./pages/PaymentSuccess";
+import { CreditosSuccess } from "./pages/CreditosSuccess";
 import { Dashboard } from "./pages/Dashboard";
 import { Creditos } from "./pages/Creditos";
 import { Admin } from "./pages/Admin";
@@ -40,6 +42,8 @@ export default function App() {
               <Route path="revisao-final" element={<WizardRevisaoFinal />} />
               <Route path="pagamento" element={<WizardPagamento />} />
             </Route>
+            <Route path="/payment-success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
+            <Route path="/creditos-success" element={<ProtectedRoute><CreditosSuccess /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/dashboard/creditos" element={<ProtectedRoute><Creditos /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
