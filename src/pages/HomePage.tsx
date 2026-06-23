@@ -150,7 +150,7 @@ export function HomePage() {
                   Criar presente
                 </Link>
                 <a
-                  href="https://qrmagico.vercel.app/p/samuel-mqnlwjgacp1f"
+                  href="https://www.momentomagico.xyz/p/samuel-mqnlwjgacp1f"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="border-2 border-primary text-primary px-8 py-4 rounded-full font-label-md text-label-md hover:bg-primary/5 transition-all flex items-center justify-center gap-2"

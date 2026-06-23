@@ -678,7 +678,7 @@ export function Dashboard() {
       doc.setTextColor(86, 86, 85);
       doc.setFontSize(8);
       doc.text("Escaneie o QR Code para ver o presente especial!", pw / 2, y + 5, { align: "center" });
-      doc.text("qrmagico.vercel.app", pw / 2, y + 11, { align: "center" });
+      doc.text("www.momentomagico.xyz", pw / 2, y + 11, { align: "center" });
 
       doc.save(`momento-magico-${gift.name}.pdf`);
     } catch {

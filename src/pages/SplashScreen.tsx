@@ -73,7 +73,7 @@ export function SplashScreen() {
                 Sua URL única
               </p>
               <p className="font-body-sm text-body-sm text-primary truncate text-left">
-                qrmagico.app/p/sua-memoria-unica
+                www.momentomagico.xyz/p/sua-memoria-unica
               </p>
             </div>
             <span className="material-symbols-outlined text-tertiary shrink-0 ml-auto" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>

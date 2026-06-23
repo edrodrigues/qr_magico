@@ -101,7 +101,7 @@ export function SlideShare({ isActive }: SlideShareProps) {
           className="mt-6 font-label-sm text-label-sm text-on-surface-variant"
         >
           Crie memórias que brilham em{" "}
-          <a href="https://qrmagico.vercel.app/" className="text-primary underline">Momento Mágico</a>
+          <a href="https://www.momentomagico.xyz/" className="text-primary underline">Momento Mágico</a>
         </motion.p>
       </div>
     </div>
