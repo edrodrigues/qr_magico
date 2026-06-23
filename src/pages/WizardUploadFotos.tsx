@@ -7,7 +7,7 @@ import { cn } from "../lib/utils";
 
 export function WizardUploadFotos() {
   const navigate = useNavigate();
-  const { data, setPhotos, draftId, isSaving } = useWizard();
+  const { data, setPhotos, draftId } = useWizard();
   const { photos } = data;
   const [uploading, setUploading] = useState(false);
   const [savingPhotos, setSavingPhotos] = useState(false);
