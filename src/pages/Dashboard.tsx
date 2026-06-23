@@ -287,17 +287,47 @@ function GiftCard({
                 {gift.statusLabel}
               </span>
             </div>
+
+            <div className="mt-4 space-y-2">
+              {gift.generationSteps?.map((step, i) => (
+                <div key={step.id}>
+                  <div className="flex items-center gap-3">
+                    {step.status === "done" ? (
+                      <span className="material-symbols-outlined text-[20px] text-green-600">
+                        check_circle
+                      </span>
+                    ) : step.status === "active" ? (
+                      <span className="material-symbols-outlined text-[20px] text-primary animate-spin">
+                        sync
+                      </span>
+                    ) : (
+                      <span className="material-symbols-outlined text-[20px] text-outline-variant">
+                        radio_button_unchecked
+                      </span>
+                    )}
+                    <span
+                      className={cn(
+                        "font-body-md text-body-md",
+                        step.status === "done" && "text-green-700",
+                        step.status === "active" && "text-primary font-semibold",
+                        step.status === "pending" && "text-outline-variant",
+                      )}
+                    >
+                      {step.label}
+                    </span>
+                  </div>
+                  {i < (gift.generationSteps?.length ?? 0) - 1 && (
+                    <div className="ml-[10px] w-px h-3 bg-outline-variant/30 my-1" />
+                  )}
+                </div>
+              ))}
+            </div>
+
             <p className="font-body-md text-body-md text-on-surface-variant mt-3 italic">
-              {gift.description}
+              {gift.currentStepMessage}
             </p>
+
             <div className="flex gap-3 mt-4">
-              <button
-                disabled
-                onClick={() => onRetry?.(gift)}
-                className="font-label-md text-label-md text-outline px-4 py-2 rounded-lg cursor-not-allowed transition-all"
-              >
-                Tentar novamente
-              </button>
               <button
                 onClick={() => onDelete(gift)}
                 className="font-label-md text-label-md text-on-surface-variant px-4 py-2 rounded-lg hover:bg-warm-gray transition-all"

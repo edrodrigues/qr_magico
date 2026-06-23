@@ -4,6 +4,14 @@ import { useAuth } from "../contexts/AuthContext";
 
 export type GiftStatus = "draft" | "pending_payment" | "generating" | "ready" | "failed";
 
+export type StepStatus = "pending" | "active" | "done";
+
+export interface GenerationStep {
+  id: string;
+  label: string;
+  status: StepStatus;
+}
+
 export interface Gift {
   id: string;
   name: string;
@@ -17,6 +25,8 @@ export interface Gift {
   description?: string;
   createdAt: string;
   attempts?: number;
+  generationSteps?: GenerationStep[];
+  currentStepMessage?: string;
 }
 
 const STATUS_MAP: Record<string, GiftStatus> = {
@@ -43,11 +53,38 @@ const STATUS_ICONS: Record<GiftStatus, string> = {
   failed: "error",
 };
 
+function inferGenerationSteps(row: any): GenerationStep[] {
+  const musicStatus = row.musicas?.[0]?.status;
+  const musicReady = musicStatus === "ready";
+  const videoStarted = !!row.render_request_id;
+  const videoReady = !!row.video_url;
+  const linkReady = !!row.link;
+
+  return [
+    { id: "music", label: "Música personalizada", status: musicReady ? "done" : "active" },
+    { id: "video", label: "Vídeo com fotos", status: videoReady ? "done" : videoStarted ? "active" : "pending" },
+    { id: "link", label: "Link exclusivo", status: linkReady ? "done" : "pending" },
+  ];
+}
+
+function getCurrentStepMessage(steps: GenerationStep[]): string {
+  const active = steps.find((s) => s.status === "active");
+  if (!active) return "Finalizando...";
+  switch (active.id) {
+    case "music":
+      return "Criando sua música personalizada com inteligência artificial...";
+    case "video":
+      return "Música pronta! Renderizando o vídeo com suas fotos...";
+    default:
+      return "Preparando os últimos detalhes...";
+  }
+}
+
 function mapRowToGift(row: any): Gift {
   const status = STATUS_MAP[row.status] || "draft";
   const attempts = row.musicas?.[0]?.attempts ?? 0;
-  const elapsed = Date.now() - new Date(row.updated_at ?? row.created_at).getTime();
-  const stuck = status === "generating" && elapsed > 5 * 60 * 1000;
+  const steps = status === "generating" ? inferGenerationSteps(row) : undefined;
+  const currentMessage = steps ? getCurrentStepMessage(steps) : undefined;
   return {
     id: row.id,
     name: row.nome_homenageado,
@@ -59,11 +96,11 @@ function mapRowToGift(row: any): Gift {
     thumbnailUrl: row.thumbnail_url || undefined,
     videoUrl: row.video_url || undefined,
     attempts,
+    generationSteps: steps,
+    currentStepMessage: currentMessage,
     description:
       status === "generating"
-        ? stuck
-          ? `A geração está demorando mais que o esperado. Tentativa ${attempts + 1} de 3.`
-          : "Estamos processando sua música personalizada..."
+        ? currentMessage
         : status === "draft"
           ? `Iniciado em ${new Date(row.created_at).toLocaleDateString("pt-BR")}`
           : status === "failed"
@@ -91,7 +128,7 @@ export function useGifts() {
 
     const { data, error: err } = await supabase
       .from("presentes")
-      .select("*, musicas(attempts)")
+      .select("*, musicas(attempts, status), render_request_id, video_url, link")
       .eq("usuario_id", user.id)
       .neq("status", "cancelled")
       .order("created_at", { ascending: false });
