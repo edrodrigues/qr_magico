@@ -16,7 +16,7 @@ function ScrollStoryViewerInner({ slides, renderSlide }: {
   slides: SlideConfig[];
   renderSlide: (slide: SlideConfig, index: number, isActive: boolean) => React.ReactNode;
 }) {
-  const { isMuted, toggleMute, audioRef, initAudioAnalyser } = useStoryViewer();
+  const { audioRef, initAudioAnalyser } = useStoryViewer();
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -109,18 +109,7 @@ function ScrollStoryViewerInner({ slides, renderSlide }: {
   }, [activeIndex, scrollNext, scrollToSlide]);
 
   return (
-    <div className="relative w-full h-full overflow-hidden">
-      {/* Mute button */}
-      <button
-        onClick={toggleMute}
-        className="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-black/20 backdrop-blur flex items-center justify-center text-white text-sm"
-        aria-label={isMuted ? "Ativar som" : "Desativar som"}
-      >
-        <span className="material-symbols-outlined text-[20px]">
-          {isMuted ? "volume_off" : "volume_up"}
-        </span>
-      </button>
-
+      <div className="relative w-full h-full overflow-hidden">
       {/* Background audio */}
       <audio ref={audioRef} loop preload="auto" autoPlay />
 

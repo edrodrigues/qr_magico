@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Header, Footer } from "../components/Header";
+import { useAuth } from "../contexts/AuthContext";
 
 function useReveal<T extends HTMLElement>(threshold = 0.15) {
   const ref = useRef<T>(null);
@@ -117,6 +118,7 @@ const testimonials = [
 ];
 
 export function HomePage() {
+  const { user } = useAuth();
   const heroReveal = useReveal<HTMLDivElement>();
   const stepsReveal = useReveal<HTMLDivElement>();
   const bentoReveal = useReveal<HTMLDivElement>();
@@ -142,7 +144,7 @@ export function HomePage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                 <Link
-                  to="/auth"
+                  to={user ? "/wizard/ocasiao-nome" : "/auth"}
                   className="bg-primary text-on-primary px-8 py-4 rounded-full font-label-md text-label-md hover:bg-coral-deep transition-all hover:scale-105 shadow-lg flex items-center justify-center gap-2"
                   aria-label="Criar um presente personalizado"
                 >
@@ -323,7 +325,7 @@ export function HomePage() {
               </ul>
 
               <Link
-                to="/auth"
+                to={user ? "/wizard/ocasiao-nome" : "/auth"}
                 className="bg-primary text-on-primary w-full py-4 rounded-full font-label-md text-label-md text-lg hover:bg-coral-deep transition-all hover:scale-105 shadow-lg flex items-center justify-center gap-2"
                 aria-label="Criar presente agora por R$ 19,90"
               >

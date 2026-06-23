@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Header, Footer } from "../components/Header";
 import { useAuth } from "../contexts/AuthContext";
@@ -10,11 +10,15 @@ export function AuthPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const { user, loading, signIn, signUp, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/wizard/ocasiao-nome";
+
+  useEffect(() => {
+    if (!loading && user) navigate("/dashboard", { replace: true });
+  }, [user, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
