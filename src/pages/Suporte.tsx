@@ -24,7 +24,7 @@ export function Suporte() {
           <p>O processo e quase instantaneo. Apos o pagamento, sua retrospectiva e gerada em segundos.</p>
 
           <h2 className="font-title-lg text-title-lg text-on-surface mt-10 mb-4">Contato</h2>
-          <p>Nao encontrou o que procura? Envie um e-mail para <a href="mailto:suporte@momentomagico.xyz" className="text-secondary hover:underline">suporte@momentomagico.xyz</a> e responderemos em ate 24 horas uteis.</p>
+          <p>Nao encontrou o que procura? Envie um e-mail para <a href="mailto:momentomagico@proton.me" className="text-secondary hover:underline">momentomagico@proton.me</a> e responderemos em ate 24 horas uteis.</p>
         </div>
       </main>
       <Footer />

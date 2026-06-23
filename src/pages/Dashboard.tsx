@@ -546,10 +546,45 @@ export function Dashboard() {
       .eq("id", id);
     if (err) {
       addToast("Erro ao confirmar pagamento", "error");
-    } else {
-      addToast("Pagamento confirmado! Presente em processamento.", "success");
-      refetch();
+      return;
     }
+    addToast("Pagamento confirmado! Presente em processamento.", "success");
+
+    const { error: resetErr } = await supabase.rpc("upsert_musica", {
+      p_presente_id: id,
+      p_status: "generating",
+      p_attempts: 0,
+      p_last_attempt_at: null,
+    });
+    if (resetErr) {
+      console.error("musicas upsert error:", resetErr);
+    }
+
+    const edgeUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session?.access_token}`,
+    };
+    const body = JSON.stringify({ presente_id: id });
+
+    (async () => {
+      try {
+        const musicRes = await fetch(`${edgeUrl}/generate-music`, { method: "POST", headers, body });
+        if (!musicRes.ok) throw new Error(`generate-music failed: ${musicRes.status}`);
+        const videoRes = await fetch(`${edgeUrl}/render-video`, { method: "POST", headers, body });
+        if (!videoRes.ok) throw new Error(`render-video failed: ${videoRes.status}`);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Unknown error";
+        console.error("generation failed:", msg);
+        await supabase
+          .from("presentes")
+          .update({ status: "failed", error_message: msg, updated_at: new Date().toISOString() })
+          .eq("id", id);
+        addToast("Erro ao gerar o presente. Tente novamente.", "error");
+      }
+    })();
+
+    refetch();
   };
 
   const handleDownload = async (gift: Gift) => {

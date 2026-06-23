@@ -123,14 +123,18 @@ serve(async (req) => {
     })
   }
 
-  const { data: { user }, error: userErr } = await supabase.auth.getUser(
-    authHeader.replace("Bearer ", ""),
-  )
-  if (userErr || !user) {
-    return new Response(JSON.stringify({ error: "Invalid token" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-    })
+  const token = authHeader.replace("Bearer ", "")
+  const isServiceRole = token === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+  let user: { id: string } | null = null
+  if (!isServiceRole) {
+    const { data: { user: u }, error: userErr } = await supabase.auth.getUser(token)
+    if (userErr || !u) {
+      return new Response(JSON.stringify({ error: "Invalid token" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      })
+    }
+    user = u
   }
 
   let presenteId: string | undefined
@@ -158,7 +162,7 @@ serve(async (req) => {
       })
     }
 
-    if (presente.usuario_id !== user.id) {
+    if (user && presente.usuario_id !== user.id) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403,
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
@@ -270,14 +274,16 @@ serve(async (req) => {
           status: newStatus,
         }, { onConflict: "presente_id" })
 
-      await supabase
-        .from("presentes")
-        .update({
-          status: "failed",
-          error_message: errMsg,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", presenteId)
+      if (newStatus === "failed") {
+        await supabase
+          .from("presentes")
+          .update({
+            status: "failed",
+            error_message: errMsg,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", presenteId)
+      }
     }
 
     return new Response(
