@@ -90,14 +90,20 @@ serve(async (req) => {
         .eq("id", presenteId)
       console.log(`render-complete: ${presenteId} → ready`)
     } else {
+      const errorMsg = body.errors
+        ? (Array.isArray(body.errors) ? body.errors.join("; ") : String(body.errors))
+        : body.message
+          ? String(body.message)
+          : `Webhook status: ${renderStatus}`
       await supabase
         .from("presentes")
         .update({
           status: "failed",
+          error_message: errorMsg,
           updated_at: new Date().toISOString(),
         })
         .eq("id", presenteId)
-      console.log(`render-complete: ${presenteId} → failed`)
+      console.log(`render-complete: ${presenteId} → failed (${errorMsg})`)
     }
 
     return new Response(JSON.stringify({ success: true }), {

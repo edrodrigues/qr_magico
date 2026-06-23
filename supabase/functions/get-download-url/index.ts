@@ -197,7 +197,7 @@ serve(async (req) => {
         try {
           await supabase
             .from("presentes")
-            .update({ status: "failed", updated_at: new Date().toISOString() })
+            .update({ status: "failed", error_message: "Video not found in S3 on download check", updated_at: new Date().toISOString() })
             .eq("id", presenteId);
         } catch {}
       }

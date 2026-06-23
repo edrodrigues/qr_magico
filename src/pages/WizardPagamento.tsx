@@ -127,8 +127,9 @@ export function WizardPagamento() {
         const videoRes = await fetch(`${edgeUrl}/render-video`, { method: "POST", headers, body });
         if (!videoRes.ok) throw new Error(`render-video failed: ${videoRes.status}`);
       } catch (err) {
-        console.error("generation failed:", err);
-        await supabase.from("presentes").update({ status: "failed", updated_at: new Date().toISOString() }).eq("id", presenteId);
+        const msg = err instanceof Error ? err.message : "Unknown error";
+        console.error("generation failed:", msg);
+        await supabase.from("presentes").update({ status: "failed", error_message: msg, updated_at: new Date().toISOString() }).eq("id", presenteId);
         addToast("Erro ao gerar o presente. Tente novamente.", "error");
       }
     })();

@@ -248,7 +248,8 @@ serve(async (req) => {
     })
   } catch (err) {
     const elapsed = Date.now() - startTime
-    console.error(`generate-music error ${presenteId} at ${elapsed}ms:`, err)
+    const errMsg = err instanceof Error ? err.message : "Unknown error"
+    console.error(`generate-music error ${presenteId} at ${elapsed}ms:`, errMsg)
 
     if (presenteId) {
       const { data: musicasRow } = await supabase
@@ -273,6 +274,7 @@ serve(async (req) => {
         .from("presentes")
         .update({
           status: newStatus === "failed" ? "failed" : undefined,
+          error_message: newStatus === "failed" ? errMsg : undefined,
           updated_at: new Date().toISOString(),
         })
         .eq("id", presenteId)

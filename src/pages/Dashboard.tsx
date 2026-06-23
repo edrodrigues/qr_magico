@@ -542,7 +542,7 @@ export function Dashboard() {
   const handleConfirmPayment = async (id: string) => {
     const { error: err } = await supabase
       .from("presentes")
-      .update({ status: "generating", updated_at: new Date().toISOString() })
+      .update({ status: "generating", error_message: "", updated_at: new Date().toISOString() })
       .eq("id", id);
     if (err) {
       addToast("Erro ao confirmar pagamento", "error");
@@ -759,7 +759,7 @@ export function Dashboard() {
     }
     const { error: presenteErr } = await supabase
       .from("presentes")
-      .update({ status: "generating", updated_at: new Date().toISOString() })
+      .update({ status: "generating", error_message: "", updated_at: new Date().toISOString() })
       .eq("id", gift.id);
     if (presenteErr) {
       console.error("presente status update error:", presenteErr);
@@ -783,8 +783,9 @@ export function Dashboard() {
         const videoRes = await fetch(`${edgeUrl}/render-video`, { method: "POST", headers, body });
         if (!videoRes.ok) throw new Error(`render-video failed: ${videoRes.status}`);
       } catch (err) {
-        console.error("retry generation failed:", err);
-        await supabase.from("presentes").update({ status: "failed", updated_at: new Date().toISOString() }).eq("id", gift.id);
+        const msg = err instanceof Error ? err.message : "Unknown error";
+        console.error("retry generation failed:", msg);
+        await supabase.from("presentes").update({ status: "failed", error_message: msg, updated_at: new Date().toISOString() }).eq("id", gift.id);
         addToast("Erro ao gerar o presente. Tente novamente.", "error");
       }
     })();

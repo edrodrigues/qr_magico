@@ -344,7 +344,7 @@ serve(async (req) => {
       console.error(`Lambda invocation failed for ${presenteId}: ${errMsg}`);
       await supabase
         .from("presentes")
-        .update({ status: "failed", updated_at: new Date().toISOString() })
+        .update({ status: "failed", error_message: errMsg, updated_at: new Date().toISOString() })
         .eq("id", presenteId);
       return new Response(JSON.stringify({ error: errMsg }), {
         status: 500,
@@ -376,11 +376,12 @@ serve(async (req) => {
       },
     });
   } catch (err) {
-    console.error(`render-video error ${presenteId}:`, err);
+    const errMsg = err instanceof Error ? err.message : "Unknown error";
+    console.error(`render-video error ${presenteId}:`, errMsg);
     if (presenteId) {
       await supabase
         .from("presentes")
-        .update({ status: "failed", updated_at: new Date().toISOString() })
+        .update({ status: "failed", error_message: errMsg, updated_at: new Date().toISOString() })
         .eq("id", presenteId).catch(() => {});
     }
     return new Response(
