@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0"
 
 const INFINITEPAY_HANDLE = "edmilson-rodrigues-pa0"
 const INFINITEPAY_API = "https://api.checkout.infinitepay.io/links"
-const APP_URL = Deno.env.get("APP_URL") || "https://qrmagico.vercel.app"
+const APP_URL = Deno.env.get("APP_URL") || "https://www.momentomagico.xyz"
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
