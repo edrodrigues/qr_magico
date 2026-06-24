@@ -259,7 +259,7 @@ serve(async (req) => {
       type: "start",
       version: "4.0.482",
       rendererFunctionName: null,
-      framesPerLambda: 200,
+      concurrency: 10, framesPerLambda: null,
       composition: "Retrospectiva",
       serveUrl,
       inputProps: { type: "payload", payload: serializedProps },

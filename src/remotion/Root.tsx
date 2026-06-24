@@ -19,7 +19,7 @@ export const RemotionRoot: React.FC = () => {
         nome_remetente: "Remetente",
         ocasiao: "aniversario",
         data_inicio: "2024-01-01",
-        descricao_relacao: "Uma histÃ³ria especial.",
+        descricao_relacao: "Uma história especial.",
         estilo_musical: "mpb",
         fotos: [],
         thumbnail_url: "",
@@ -27,16 +27,20 @@ export const RemotionRoot: React.FC = () => {
       }}
       calculateMetadata={async ({ props }) => {
         if (!props.musicaUrl) {
-          return { durationInFrames: DEFAULT_DURATION };
+          return { durationInFrames: DEFAULT_DURATION, audioDurationInSeconds: 0 };
         }
         try {
           const audioDurationSeconds = await getAudioDurationInSeconds(props.musicaUrl as string);
-          const audioFrames = Math.round(audioDurationSeconds * 30);
+          const safeAudioDuration = Number.isFinite(audioDurationSeconds) && audioDurationSeconds > 0
+            ? audioDurationSeconds
+            : 0;
+          const audioFrames = Math.round(safeAudioDuration * 30);
           return {
             durationInFrames: Math.max(DEFAULT_DURATION, audioFrames),
+            audioDurationInSeconds: safeAudioDuration,
           };
         } catch {
-          return { durationInFrames: DEFAULT_DURATION };
+          return { durationInFrames: DEFAULT_DURATION, audioDurationInSeconds: 0 };
         }
       }}
     />
