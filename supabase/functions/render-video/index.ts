@@ -257,7 +257,6 @@ serve(async (req) => {
       type: "start",
       version: "4.0.482",
       framesPerLambda: 45,
-      concurrencyPerLambda: 1,
       rendererFunctionName: null,
       composition: "Retrospectiva",
       serveUrl,
