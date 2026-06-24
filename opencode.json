@@ -32,6 +32,11 @@
       "env": {
         "OD_DATA_DIR": "~/.open-design"
       }
+    },
+    "remotion-documentation": {
+      "type": "local",
+      "command": ["npx", "@remotion/mcp@latest"],
+      "enabled": true
     }
   }
 }

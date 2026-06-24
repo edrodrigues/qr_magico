@@ -110,7 +110,7 @@ serve(async (req) => {
   try {
     const query = supabase
       .from("presentes")
-      .select("id, video_url, status");
+      .select("id, video_url, status, render_request_id");
 
     if (presenteId) {
       query.eq("id", presenteId);
@@ -139,7 +139,9 @@ serve(async (req) => {
       });
     }
 
-    const key = `renders/${presente.id}/out.mp4`;
+    const key = presente.render_request_id
+      ? `renders/${presente.render_request_id}/renders/${presente.id}/out.mp4`
+      : `renders/${presente.id}/out.mp4`;
 
     if (!presente.video_url) {
       // HEAD request anônimo falha para buckets S3 privados (sempre retorna 403).

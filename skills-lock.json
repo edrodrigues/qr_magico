@@ -1,30 +1,6 @@
 {
   "version": 1,
   "skills": {
-    "music": {
-      "source": "elevenlabs/skills",
-      "sourceType": "github",
-      "skillPath": "music/SKILL.md",
-      "computedHash": "a3f498516bbcefb46568e5575db364569fa823299256cca1a4f721e5a8eaab7f"
-    },
-    "setup-api-key": {
-      "source": "elevenlabs/skills",
-      "sourceType": "github",
-      "skillPath": "setup-api-key/SKILL.md",
-      "computedHash": "7dd0a26da03b0265933059b85b8c90078b19191acce74270615e80679c9d3bf3"
-    },
-    "supabase": {
-      "source": "supabase/agent-skills",
-      "sourceType": "github",
-      "skillPath": "skills/supabase/SKILL.md",
-      "computedHash": "61638e85394d2e39d1109cbf607593afb9733e0de19cdf0b52ec9bc32d95ea74"
-    },
-    "supabase-postgres-best-practices": {
-      "source": "supabase/agent-skills",
-      "sourceType": "github",
-      "skillPath": "skills/supabase-postgres-best-practices/SKILL.md",
-      "computedHash": "3639bed1f40b3fbadae79fee631c42c89b2d1f5c30b05d5aa3cca06422a6bbbc"
-    },
     "api-and-interface-design": {
       "source": "addyosmani/agent-skills",
       "sourceType": "github",
@@ -115,6 +91,12 @@
       "skillPath": "skills/interview-me/SKILL.md",
       "computedHash": "f1239ec43838a3bd7feb76995906162ea2c8c4f888480b4916da3e6c817045d1"
     },
+    "music": {
+      "source": "elevenlabs/skills",
+      "sourceType": "github",
+      "skillPath": "music/SKILL.md",
+      "computedHash": "a3f498516bbcefb46568e5575db364569fa823299256cca1a4f721e5a8eaab7f"
+    },
     "observability-and-instrumentation": {
       "source": "addyosmani/agent-skills",
       "sourceType": "github",
@@ -133,11 +115,23 @@
       "skillPath": "skills/planning-and-task-breakdown/SKILL.md",
       "computedHash": "f04f4a7d8cae853a23a7615fd5a20814d786055e53bdb8a2fe5498f903187a3b"
     },
+    "remotion-best-practices": {
+      "source": "remotion-dev/skills",
+      "sourceType": "github",
+      "skillPath": "skills/remotion/SKILL.md",
+      "computedHash": "664bd31140897056bd575ef57a15f22f517bd576c6b81df429c1f4ed6453e312"
+    },
     "security-and-hardening": {
       "source": "addyosmani/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/security-and-hardening/SKILL.md",
       "computedHash": "f525f7ba9b659fc3b9c7ec679b291948995559385848d74c3d0a115e621d2b40"
+    },
+    "setup-api-key": {
+      "source": "elevenlabs/skills",
+      "sourceType": "github",
+      "skillPath": "setup-api-key/SKILL.md",
+      "computedHash": "7dd0a26da03b0265933059b85b8c90078b19191acce74270615e80679c9d3bf3"
     },
     "shipping-and-launch": {
       "source": "addyosmani/agent-skills",
@@ -156,6 +150,18 @@
       "sourceType": "github",
       "skillPath": "skills/spec-driven-development/SKILL.md",
       "computedHash": "b0023fa5d123d11ccd204377f5c55ed24ddf9ed7201b950f8b0e901c07e41697"
+    },
+    "supabase": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/supabase/SKILL.md",
+      "computedHash": "61638e85394d2e39d1109cbf607593afb9733e0de19cdf0b52ec9bc32d95ea74"
+    },
+    "supabase-postgres-best-practices": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/supabase-postgres-best-practices/SKILL.md",
+      "computedHash": "3639bed1f40b3fbadae79fee631c42c89b2d1f5c30b05d5aa3cca06422a6bbbc"
     },
     "test-driven-development": {
       "source": "addyosmani/agent-skills",
