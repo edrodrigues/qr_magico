@@ -236,8 +236,6 @@ serve(async (req) => {
       });
     }
 
-    const framesPerLambda = parseInt(Deno.env.get("FRAMES_PER_LAMBDA") || "200", 10);
-
     const inputProps = {
       nome_homenageado: presente.nome_homenageado,
       nome_remetente: presente.nome_remetente,
@@ -259,7 +257,6 @@ serve(async (req) => {
       type: "start",
       version: "4.0.482",
       rendererFunctionName: null,
-      framesPerLambda: 200,
       composition: "Retrospectiva",
       serveUrl,
       inputProps: { type: "payload", payload: serializedProps },
