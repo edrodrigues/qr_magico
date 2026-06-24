@@ -91,7 +91,7 @@ serve(async (req) => {
       console.log(`render-complete: ${presenteId} → ready`)
     } else {
       const errorMsg = body.errors
-        ? (Array.isArray(body.errors) ? body.errors.join("; ") : String(body.errors))
+        ? (Array.isArray(body.errors) ? body.errors.map((e: any) => typeof e === 'string' ? e : (e?.message || JSON.stringify(e))).join("; ") : JSON.stringify(body.errors))
         : body.message
           ? String(body.message)
           : `Webhook status: ${renderStatus}`

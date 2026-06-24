@@ -259,7 +259,7 @@ serve(async (req) => {
       type: "start",
       version: "4.0.482",
       rendererFunctionName: null,
-      concurrency: 10, framesPerLambda: null,
+      framesPerLambda: 200,
       composition: "Retrospectiva",
       serveUrl,
       inputProps: { type: "payload", payload: serializedProps },
@@ -336,7 +336,7 @@ serve(async (req) => {
     }
 
     if (!response.ok || response.headers.get("x-amz-function-error")) {
-      const errMsg = (lambdaResponse?.errorMessage as string) || bodyText;
+      const errMsg = typeof lambdaResponse?.errorMessage === "string" ? lambdaResponse.errorMessage : JSON.stringify(lambdaResponse?.errorMessage) || bodyText;
       console.error(`Lambda invocation failed for ${presenteId}: ${errMsg}`);
       await supabase
         .from("presentes")

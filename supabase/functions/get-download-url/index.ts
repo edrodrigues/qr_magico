@@ -179,7 +179,7 @@ serve(async (req) => {
     }
 
     const key = presente.render_request_id
-      ? `renders/${presente.render_request_id}/out.mp4`
+      ? `renders/${presente.render_request_id}/renders/${presenteId}/out.mp4`
       : `renders/${presenteId}/out.mp4`;
 
     // HEAD request anônimo falha para buckets S3 privados (sempre retorna 403).
