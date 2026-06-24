@@ -256,6 +256,9 @@ serve(async (req) => {
     const payload = {
       type: "start",
       version: "4.0.482",
+      framesPerLambda: null,
+      concurrency: null,
+      concurrencyPerLambda: 1,
       rendererFunctionName: null,
       composition: "Retrospectiva",
       serveUrl,
