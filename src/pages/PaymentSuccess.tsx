@@ -14,6 +14,22 @@ export function PaymentSuccess() {
   const { session } = useAuth();
   const [status, setStatus] = useState<PaymentStatus>("checking");
 
+  const confirmPayment = async (presenteId: string | null) => {
+    if (!presenteId) return;
+    try {
+      await fetch(`${EDGE_URL}/confirm-payment`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ presente_id: presenteId }),
+      });
+    } catch (err) {
+      console.error("confirm-payment error:", err);
+    }
+  };
+
   useEffect(() => {
     if (!session) return;
 
@@ -44,6 +60,7 @@ export function PaymentSuccess() {
           if (checkRes.ok) {
             const data = await checkRes.json();
             if (data.paid) {
+              confirmPayment(presenteId);
               setStatus("paid");
               return true;
             }

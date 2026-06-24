@@ -88,7 +88,6 @@ function GiftCard({
   onCopy,
   copiedId,
   onDelete,
-  onConfirmPayment,
   onRetry,
   onDownload,
   downloadingId,
@@ -100,7 +99,6 @@ function GiftCard({
   onCopy: (id: string, link: string) => void;
   copiedId: string | null;
   onDelete: (gift: Gift) => void;
-  onConfirmPayment: (id: string) => Promise<void>;
   onRetry?: (gift: Gift) => void;
   onDownload?: (gift: Gift) => void;
   downloadingId?: string | null;
@@ -427,12 +425,6 @@ function GiftCard({
                   <span className="material-symbols-outlined text-[20px]">delete</span>
                 </button>
               </div>
-              <button
-                onClick={() => onConfirmPayment(gift.id)}
-                className="text-xs text-secondary hover:text-secondary/80 hover:underline underline-offset-2 transition-all font-label-md"
-              >
-                Já paguei (confirmar)
-              </button>
             </div>
           </div>
         </div>
@@ -568,54 +560,6 @@ export function Dashboard() {
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [downloadingPdfId, setDownloadingPdfId] = useState<string | null>(null);
   const [checkingIds, setCheckingIds] = useState<Set<string>>(new Set());
-
-  const handleConfirmPayment = async (id: string) => {
-    const { error: err } = await supabase
-      .from("presentes")
-      .update({ status: "generating", error_message: "", updated_at: new Date().toISOString() })
-      .eq("id", id);
-    if (err) {
-      addToast("Erro ao confirmar pagamento", "error");
-      return;
-    }
-    addToast("Pagamento confirmado! Presente em processamento.", "success");
-
-    const { error: resetErr } = await supabase.rpc("upsert_musica", {
-      p_presente_id: id,
-      p_status: "generating",
-      p_attempts: 0,
-      p_last_attempt_at: null,
-    });
-    if (resetErr) {
-      console.error("musicas upsert error:", resetErr);
-    }
-
-    const edgeUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${session?.access_token}`,
-    };
-    const body = JSON.stringify({ presente_id: id });
-
-    (async () => {
-      try {
-        const musicRes = await fetch(`${edgeUrl}/generate-music`, { method: "POST", headers, body });
-        if (!musicRes.ok) throw new Error(`generate-music failed: ${musicRes.status}`);
-        const videoRes = await fetch(`${edgeUrl}/render-video`, { method: "POST", headers, body });
-        if (!videoRes.ok) throw new Error(`render-video failed: ${videoRes.status}`);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "Unknown error";
-        console.error("generation failed:", msg);
-        await supabase
-          .from("presentes")
-          .update({ status: "failed", error_message: msg, updated_at: new Date().toISOString() })
-          .eq("id", id);
-        addToast("Erro ao gerar o presente. Tente novamente.", "error");
-      }
-    })();
-
-    refetch();
-  };
 
   const handleDownload = async (gift: Gift) => {
     if (!session) {
@@ -1020,7 +964,6 @@ export function Dashboard() {
                   onCopy={handleCopy}
                   copiedId={copiedId}
                   onDelete={setDeleteTarget}
-                  onConfirmPayment={handleConfirmPayment}
                   onRetry={handleRetry}
                   onDownload={handleDownload}
                   downloadingId={downloadingId}
