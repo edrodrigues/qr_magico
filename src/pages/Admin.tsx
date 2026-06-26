@@ -21,6 +21,7 @@ interface CupomRow {
   uso_maximo: number;
   criado_em: string;
   total_usos: number;
+  usuarios_uso: { usuario_id: string; email: string; usado_em: string }[];
 }
 
 export function Admin() {
@@ -51,35 +52,19 @@ export function Admin() {
   }, [activeTab, addToast]);
 
   useEffect(() => {
-    setLoadingCupons(true);
-    supabase
-      .from("cupons")
-      .select("id, codigo, uso_maximo, criado_em")
-      .order("criado_em", { ascending: false })
-      .then(async ({ data: cuponsData, error }) => {
-        if (error) {
-          addToast("Erro ao carregar cupons", "error");
-          setLoadingCupons(false);
-          return;
-        }
-        const rows: CupomRow[] = [];
-        for (const c of cuponsData || []) {
-          const { count } = await supabase
-            .from("cupons_uso")
-            .select("id", { count: "exact", head: true })
-            .eq("cupom_id", c.id);
-          rows.push({
-            id: c.id,
-            codigo: c.codigo,
-            uso_maximo: c.uso_maximo,
-            criado_em: c.criado_em,
-            total_usos: count ?? 0,
-          });
-        }
-        setCupons(rows);
-        setLoadingCupons(false);
-      });
+    fetchCupons();
   }, [addToast]);
+
+  const fetchCupons = async () => {
+    setLoadingCupons(true);
+    const { data, error } = await supabase.rpc("admin_list_cupons");
+    if (error) {
+      addToast("Erro ao carregar cupons", "error");
+    } else {
+      setCupons(data || []);
+    }
+    setLoadingCupons(false);
+  };
 
   const handleCreateCupom = async () => {
     const codigo = newCodigo.trim().toUpperCase();
@@ -107,28 +92,7 @@ export function Admin() {
       addToast(`Cupom "${codigo}" criado com sucesso!`, "success");
       setNewCodigo("");
       setNewUsoMaximo("5");
-      // refresh list
-      setLoadingCupons(true);
-      const { data } = await supabase
-        .from("cupons")
-        .select("id, codigo, uso_maximo, criado_em")
-        .order("criado_em", { ascending: false });
-      const rows: CupomRow[] = [];
-      for (const c of data || []) {
-        const { count } = await supabase
-          .from("cupons_uso")
-          .select("id", { count: "exact", head: true })
-          .eq("cupom_id", c.id);
-        rows.push({
-          id: c.id,
-          codigo: c.codigo,
-          uso_maximo: c.uso_maximo,
-          criado_em: c.criado_em,
-          total_usos: count ?? 0,
-        });
-      }
-      setCupons(rows);
-      setLoadingCupons(false);
+      fetchCupons();
     }
     setCreating(false);
   };
@@ -228,9 +192,21 @@ export function Admin() {
 
               <div className="glass-card rounded-xl overflow-hidden">
                 <div className="p-6 pb-0">
-                  <h2 className="font-title-md text-title-md text-on-surface mb-1">
-                    Cupons existentes
-                  </h2>
+                  <div className="flex items-center justify-between mb-1">
+                    <h2 className="font-title-md text-title-md text-on-surface">
+                      Cupons existentes
+                    </h2>
+                    <button
+                      onClick={fetchCupons}
+                      disabled={loadingCupons}
+                      className="w-9 h-9 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant hover:bg-surface-container-higher transition-all disabled:opacity-50"
+                      title="Atualizar"
+                    >
+                      <span className={`material-symbols-outlined text-[20px] ${loadingCupons ? "animate-spin" : ""}`}>
+                        refresh
+                      </span>
+                    </button>
+                  </div>
                   <p className="font-body-md text-body-md text-on-surface-variant mb-4">
                     {cupons.length} cupom{cupons.length !== 1 ? "s" : ""} cadastrado{cupons.length !== 1 ? "s" : ""}
                   </p>
@@ -257,6 +233,9 @@ export function Admin() {
                             Usos
                           </th>
                           <th className="text-left px-6 py-3 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider hidden md:table-cell">
+                            Usado por
+                          </th>
+                          <th className="text-left px-6 py-3 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider hidden md:table-cell">
                             Criado em
                           </th>
                           <th className="text-right px-6 py-3 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
@@ -279,6 +258,25 @@ export function Admin() {
                               <span className="font-body-md text-body-md text-on-surface">
                                 {cp.total_usos} / {cp.uso_maximo}
                               </span>
+                            </td>
+                            <td className="px-6 py-4 hidden md:table-cell">
+                              {cp.usuarios_uso.length === 0 ? (
+                                <span className="font-body-md text-body-md text-on-surface-variant">
+                                  —
+                                </span>
+                              ) : (
+                                <div className="flex flex-col gap-0.5">
+                                  {cp.usuarios_uso.map((u) => (
+                                    <span
+                                      key={u.usuario_id}
+                                      className="font-body-md text-body-md text-on-surface truncate max-w-[220px] block"
+                                      title={u.email}
+                                    >
+                                      {u.email}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
                             </td>
                             <td className="px-6 py-4 hidden md:table-cell">
                               <span className="font-body-md text-body-md text-on-surface-variant">
