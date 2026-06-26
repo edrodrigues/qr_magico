@@ -119,7 +119,7 @@ export function Cover({ nome_homenageado, theme }: CoverProps) {
         <p
           style={{
             color: "rgba(255,255,255,0.7)",
-            fontSize: 28,
+            fontSize: 32,
             fontWeight: 500,
             opacity: titleOpacity,
             transform: `translateY(${titleY}px)`,
@@ -132,7 +132,7 @@ export function Cover({ nome_homenageado, theme }: CoverProps) {
         <h1
           style={{
             color: "white",
-            fontSize: 68,
+            fontSize: 72,
             fontWeight: 700,
             lineHeight: 1.1,
           }}

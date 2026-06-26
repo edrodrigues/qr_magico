@@ -13,7 +13,9 @@ export function Credits({ theme, nome_homenageado, nome_remetente }: CreditsProp
   const titleOpacity = interpolate(frame, [0, 20], [0, 1]);
   const titleY = interpolate(frame, [0, 20], [20, 0]);
   const subtitleOpacity = interpolate(frame, [20, 40], [0, 1]);
+  const subtitleY = interpolate(frame, [20, 40], [15, 0]);
   const ctaOpacity = interpolate(frame, [50, 80], [0, 1]);
+  const ctaY = interpolate(frame, [50, 80], [15, 0]);
   const ctaScale = spring({
     frame: Math.max(frame - 60, 0),
     fps: 30,
@@ -50,7 +52,7 @@ export function Credits({ theme, nome_homenageado, nome_remetente }: CreditsProp
         <h2
           style={{
             color: "white",
-            fontSize: 52,
+            fontSize: 56,
             fontWeight: 700,
             opacity: titleOpacity,
             transform: `translateY(${titleY}px)`,
@@ -65,9 +67,10 @@ export function Credits({ theme, nome_homenageado, nome_remetente }: CreditsProp
         <p
           style={{
             color: theme.secondary,
-            fontSize: 22,
+            fontSize: 26,
             fontFamily: "var(--font-body)",
             opacity: subtitleOpacity,
+            transform: `translateY(${subtitleY}px)`,
             marginBottom: 8,
           }}
         >
@@ -79,9 +82,10 @@ export function Credits({ theme, nome_homenageado, nome_remetente }: CreditsProp
         <p
           style={{
             color: "rgba(255,255,255,0.6)",
-            fontSize: 16,
+            fontSize: 20,
             fontFamily: "var(--font-body)",
             opacity: subtitleOpacity,
+            transform: `translateY(${subtitleY}px)`,
             marginBottom: 48,
           }}
         >
@@ -91,7 +95,7 @@ export function Credits({ theme, nome_homenageado, nome_remetente }: CreditsProp
         <div
           style={{
             opacity: ctaOpacity,
-            transform: `scale(${ctaScale})`,
+            transform: `translateY(${ctaY}px) scale(${ctaScale})`,
             marginTop: 48,
           }}
         >
@@ -107,7 +111,7 @@ export function Credits({ theme, nome_homenageado, nome_remetente }: CreditsProp
             <p
               style={{
                 color: "white",
-                fontSize: 26,
+                fontSize: 30,
                 fontWeight: 600,
               }}
             >

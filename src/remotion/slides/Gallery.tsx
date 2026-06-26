@@ -182,10 +182,10 @@ export function Gallery({ fotos, theme }: GalleryProps) {
           borderRadius: 20,
         }}
       >
-        <span
-          style={{ color: "rgba(255,255,255,0.9)", fontSize: 20, fontWeight: 500 }}
-        >
-          {photoIndex + 1}/{safeFotos.length}
+          <span
+            style={{ color: "rgba(255,255,255,0.9)", fontSize: 24, fontWeight: 500 }}
+          >
+            {photoIndex + 1}/{safeFotos.length}
         </span>
       </div>
     </AbsoluteFill>

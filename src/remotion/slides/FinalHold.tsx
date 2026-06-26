@@ -37,7 +37,7 @@ export function FinalHold({ theme }: FinalHoldProps) {
       <p
         style={{
           color: "rgba(255,255,255,0.85)",
-          fontSize: 28,
+          fontSize: 32,
           fontWeight: 700,
           letterSpacing: 5,
           textTransform: "uppercase",
@@ -49,7 +49,7 @@ export function FinalHold({ theme }: FinalHoldProps) {
       <p
         style={{
           color: "rgba(255,255,255,0.6)",
-          fontSize: 18,
+          fontSize: 24,
           fontWeight: 300,
           fontFamily: "var(--font-body)",
           letterSpacing: 2,

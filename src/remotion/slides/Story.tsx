@@ -19,7 +19,7 @@ export function Story({ descricao_relacao, theme }: StoryProps) {
   const safeSentences = sentences.length > 0 ? sentences : ["Uma história especial."];
 
   const titleOpacity = interpolate(frame, [0, 15], [0, 1]);
-  const titleY = interpolate(frame, [0, 15], [-10, 0]);
+  const titleY = interpolate(frame, [0, 15], [10, 0]);
 
   return (
     <AbsoluteFill
@@ -49,7 +49,7 @@ export function Story({ descricao_relacao, theme }: StoryProps) {
       <h3
         style={{
           color: "#2c2c2c",
-          fontSize: 20,
+          fontSize: 24,
           fontWeight: 600,
           letterSpacing: 3,
           textTransform: "uppercase",
@@ -78,7 +78,7 @@ export function Story({ descricao_relacao, theme }: StoryProps) {
               key={si}
               style={{
                 fontFamily: "var(--font-body)",
-                fontSize: 26,
+                fontSize: 30,
                 lineHeight: 1.6,
                 color: "#2c2c2c",
                 marginBottom: 12,

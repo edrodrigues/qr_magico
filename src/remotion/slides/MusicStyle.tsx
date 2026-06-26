@@ -64,7 +64,7 @@ export function MusicStyle({ styleLabel, estilo_musical }: MusicStyleProps) {
       <h2
         style={{
           color: palette[0],
-          fontSize: 52,
+          fontSize: 56,
           fontWeight: 700,
           opacity: titleOpacity,
           transform: `translateY(${titleY}px)`,
@@ -77,7 +77,7 @@ export function MusicStyle({ styleLabel, estilo_musical }: MusicStyleProps) {
       <p
         style={{
           color: "#555555",
-          fontSize: 22,
+          fontSize: 26,
           fontFamily: "var(--font-body)",
           textAlign: "center",
           opacity: subtitleOpacity,

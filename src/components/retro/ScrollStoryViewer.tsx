@@ -111,7 +111,7 @@ function ScrollStoryViewerInner({ slides, renderSlide }: {
   return (
       <div className="relative w-full h-full overflow-hidden">
       {/* Background audio */}
-      <audio ref={audioRef} loop preload="auto" autoPlay />
+      <audio ref={audioRef} loop preload="auto" />
 
       {/* Scrollable slides */}
       <div

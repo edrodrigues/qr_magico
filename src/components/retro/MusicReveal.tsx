@@ -1,82 +1,23 @@
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useStoryViewer } from "./StoryViewerContext";
 
 interface MusicRevealProps {
-  onReady?: () => void;
   isActive?: boolean;
 }
 
-export function MusicReveal({ onReady, isActive }: MusicRevealProps) {
-  const { musica, audioRef, analyserRef, audioCtxRef, initAudioAnalyser } = useStoryViewer();
+export function MusicReveal({ isActive }: MusicRevealProps) {
+  const { musica, analyserRef, initAudioAnalyser } = useStoryViewer();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animFrameRef = useRef<number>(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [audioLoaded, setAudioLoaded] = useState(false);
 
   const audioUrl = musica?.url_audio;
 
   useEffect(() => {
-    if (!audioUrl) return;
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const onLoaded = () => {
-      setDuration(audio.duration);
-      setAudioLoaded(true);
-      onReady?.();
-    };
-
-    const onTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
-    };
-
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
-
-    if (audio.readyState >= 1) {
-      onLoaded();
-    }
-
-    audio.addEventListener("loadedmetadata", onLoaded);
-    audio.addEventListener("timeupdate", onTimeUpdate);
-    audio.addEventListener("play", onPlay);
-    audio.addEventListener("pause", onPause);
-
-    setIsPlaying(!audio.paused);
-
-    return () => {
-      audio.removeEventListener("loadedmetadata", onLoaded);
-      audio.removeEventListener("timeupdate", onTimeUpdate);
-      audio.removeEventListener("play", onPlay);
-      audio.removeEventListener("pause", onPause);
-    };
-  }, [audioUrl, audioRef, onReady]);
-
-  useEffect(() => {
-    if (isActive && !analyserRef.current && audioRef.current) {
+    if (isActive && !analyserRef.current) {
       initAudioAnalyser();
     }
-  }, [isActive, analyserRef, audioRef, initAudioAnalyser]);
-
-  const togglePlay = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio || !audioLoaded) return;
-    if (audio.paused) {
-      audioCtxRef.current?.resume();
-      audio.play();
-    } else {
-      audio.pause();
-    }
-  }, [audioLoaded, audioRef, audioCtxRef]);
-
-  const formatTime = (t: number) => {
-    const m = Math.floor(t / 60);
-    const s = Math.floor(t % 60);
-    return `${m}:${s.toString().padStart(2, "0")}`;
-  };
+  }, [isActive, analyserRef, initAudioAnalyser]);
 
   // Visualizer loop from shared analyser
   useEffect(() => {
@@ -122,7 +63,7 @@ export function MusicReveal({ onReady, isActive }: MusicRevealProps) {
     <div className="w-full h-full bg-gradient-to-b from-surface-container to-surface flex flex-col items-center justify-center px-6">
       <motion.div
         className="relative w-48 h-48 md:w-56 md:h-56 rounded-2xl overflow-hidden shadow-2xl mb-6"
-        animate={isPlaying && isActive ? { boxShadow: "0 0 60px rgba(169,53,57,0.4), 0 0 120px rgba(169,53,57,0.2)" } : {}}
+        animate={isActive ? { boxShadow: "0 0 60px rgba(169,53,57,0.4), 0 0 120px rgba(169,53,57,0.2)" } : {}}
         transition={{ duration: 0.3 }}
       >
         <div className="w-full h-full bg-gradient-to-br from-primary/30 to-gold-glimmer/30 flex items-center justify-center">
@@ -136,23 +77,6 @@ export function MusicReveal({ onReady, isActive }: MusicRevealProps) {
         height={60}
         className="w-full max-w-xs h-15 rounded-lg mb-4"
       />
-
-      <div className="flex items-center gap-4 mb-4">
-        <button
-          onClick={togglePlay}
-          className="w-14 h-14 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-lg active:scale-90 transition-transform"
-          aria-label={isPlaying ? "Pausar" : "Tocar"}
-        >
-          <span className="material-symbols-outlined text-3xl">
-            {isPlaying ? "pause" : "play_arrow"}
-          </span>
-        </button>
-        <div className="text-left">
-          <p className="font-label-sm text-label-sm text-on-surface-variant">
-            {formatTime(currentTime)} / {formatTime(duration)}
-          </p>
-        </div>
-      </div>
 
       {audioUrl && (
         <a

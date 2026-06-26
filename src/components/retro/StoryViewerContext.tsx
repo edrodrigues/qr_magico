@@ -53,7 +53,6 @@ export function StoryViewerProvider({
     if (audioRef.current && musica?.url_audio) {
       audioRef.current.src = musica.url_audio;
       audioRef.current.loop = true;
-      audioRef.current.play().catch(() => {});
     }
   }, [musica?.url_audio]);
 

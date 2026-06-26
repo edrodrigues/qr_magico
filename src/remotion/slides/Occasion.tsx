@@ -66,7 +66,7 @@ export function Occasion({
         <p
           style={{
             color: "#2c2c2c",
-            fontSize: 20,
+            fontSize: 24,
             fontWeight: 600,
             letterSpacing: 3,
             textTransform: "uppercase",
@@ -82,7 +82,7 @@ export function Occasion({
       <h1
         style={{
           color: "#2c2c2c",
-          fontSize: 52,
+          fontSize: 56,
           fontWeight: 700,
           lineHeight: 1.1,
           textAlign: "center",
@@ -111,14 +111,14 @@ export function Occasion({
           <p
             style={{
               color: "#555555",
-              fontSize: 20,
+              fontSize: 24,
               fontFamily: "var(--font-body)",
               marginBottom: 8,
             }}
           >
             Desde {formattedDate}
           </p>
-          <p style={{ color: theme.primary, fontSize: 26, fontWeight: 700 }}>
+          <p style={{ color: theme.primary, fontSize: 30, fontWeight: 700 }}>
             {daysSince} dias juntos
           </p>
         </div>
