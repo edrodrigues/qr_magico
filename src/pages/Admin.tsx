@@ -24,6 +24,42 @@ interface CupomRow {
   usuarios_uso: { usuario_id: string; email: string; usado_em: string }[];
 }
 
+interface ActionRow {
+  id: string;
+  usuario_id: string;
+  email: string;
+  tipo: string;
+  descricao: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+const ACTION_ICONS: Record<string, string> = {
+  criou_presente: "card_giftcard",
+  iniciou_geracao: "movie",
+  video_pronto: "check_circle",
+  geracao_falhou: "error",
+  cancelou_presente: "cancel",
+  criou_pagamento: "credit_card",
+  pagamento_confirmado: "paid",
+  comprou_creditos: "monetization_on",
+  consumiu_credito: "play_circle",
+  recebeu_bonus: "redeem",
+  resgatou_cupom: "discount",
+};
+
+function formatRelativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "agora";
+  if (mins < 60) return `há ${mins} min`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `há ${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `há ${days}d`;
+  return new Date(dateStr).toLocaleDateString("pt-BR");
+}
+
 export function Admin() {
   const { user } = useAuth();
   const { addToast } = useToast();
@@ -35,20 +71,24 @@ export function Admin() {
   const [newCodigo, setNewCodigo] = useState("");
   const [newUsoMaximo, setNewUsoMaximo] = useState("5");
   const [creating, setCreating] = useState(false);
+  const [actions, setActions] = useState<ActionRow[]>([]);
+  const [loadingActions, setLoadingActions] = useState(false);
 
   useEffect(() => {
     if (activeTab !== "usuarios") return;
     setLoadingUsers(true);
-    supabase
-      .rpc("admin_list_users")
-      .then(({ data, error }) => {
-        if (error) {
-          addToast("Erro ao carregar usuários", "error");
-        } else {
-          setUsers(data || []);
-        }
-        setLoadingUsers(false);
-      });
+    setLoadingActions(true);
+    Promise.all([
+      supabase.rpc("admin_list_users"),
+      supabase.rpc("admin_list_acoes", { limite: 30 }),
+    ]).then(([usersRes, actionsRes]) => {
+      if (usersRes.error) addToast("Erro ao carregar usuários", "error");
+      else setUsers(usersRes.data || []);
+      if (actionsRes.error) addToast("Erro ao carregar ações", "error");
+      else setActions(actionsRes.data || []);
+      setLoadingUsers(false);
+      setLoadingActions(false);
+    });
   }, [activeTab, addToast]);
 
   useEffect(() => {
@@ -346,6 +386,49 @@ export function Admin() {
 
         {activeTab === "usuarios" && (
           <div className="animate-reveal">
+            <div className="glass-card p-6 rounded-xl mb-6">
+              <h2 className="font-title-md text-title-md text-on-surface mb-1">
+                Últimas Ações
+              </h2>
+              <p className="font-body-md text-body-md text-on-surface-variant mb-4">
+                Atividades recentes dos usuários
+              </p>
+              {loadingActions ? (
+                <div className="space-y-3">
+                  <div className="skeleton h-14 w-full rounded-lg" />
+                  <div className="skeleton h-14 w-full rounded-lg" />
+                  <div className="skeleton h-14 w-full rounded-lg" />
+                </div>
+              ) : actions.length === 0 ? (
+                <p className="text-center text-on-surface-variant font-body-md">
+                  Nenhuma ação registrada.
+                </p>
+              ) : (
+                <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                  {actions.map((a) => (
+                    <div
+                      key={a.id}
+                      className="flex items-center gap-3 p-3 rounded-lg bg-surface-variant hover:bg-surface-container-higher transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-on-surface-variant text-[22px]">
+                        {ACTION_ICONS[a.tipo] || "more_horiz"}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-body-md text-body-md text-on-surface truncate">
+                          {a.email || "—"}
+                        </p>
+                        <p className="font-label-sm text-label-sm text-on-surface-variant">
+                          {a.descricao}
+                        </p>
+                      </div>
+                      <span className="font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap">
+                        {formatRelativeTime(a.created_at)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             <div className="glass-card rounded-xl overflow-hidden">
               <div className="p-6 pb-0">
                 <h2 className="font-title-md text-title-md text-on-surface mb-1">
