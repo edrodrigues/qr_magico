@@ -6,6 +6,7 @@ import { ToastProvider } from "./components/Toast";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
 import { SplashScreen } from "./pages/SplashScreen";
+import { useGoogleAnalytics } from "./hooks/useGoogleAnalytics";
 import { HomePage } from "./pages/HomePage";
 import { WizardOcasiaoNome } from "./pages/WizardOcasiaoNome";
 import { WizardDataRelacao } from "./pages/WizardDataRelacao";
@@ -26,11 +27,17 @@ import { TermosDeUso } from "./pages/TermosDeUso";
 import { Privacidade } from "./pages/Privacidade";
 import { Suporte } from "./pages/Suporte";
 
+function AnalyticsTracker() {
+  useGoogleAnalytics();
+  return null;
+}
+
 export default function App() {
   return (
     <HelmetProvider>
       <BrowserRouter>
         <AuthProvider>
+          <AnalyticsTracker />
           <ToastProvider>
           <Routes>
             <Route path="/" element={<HomePage />} />
