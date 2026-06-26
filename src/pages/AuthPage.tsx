@@ -17,8 +17,12 @@ export function AuthPage() {
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/wizard/ocasiao-nome";
 
   useEffect(() => {
-    if (!loading && user) navigate("/dashboard", { replace: true });
-  }, [user, loading, navigate]);
+    if (!loading && user) {
+      const returnTo = sessionStorage.getItem("authReturnTo") || from;
+      sessionStorage.removeItem("authReturnTo");
+      navigate(returnTo, { replace: true });
+    }
+  }, [user, loading, navigate, from]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +57,7 @@ export function AuthPage() {
 
   const handleGoogle = async () => {
     setError(null);
+    sessionStorage.setItem("authReturnTo", from);
     await signInWithGoogle();
   };
 

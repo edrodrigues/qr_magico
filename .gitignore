@@ -6,6 +6,14 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+debug-*.log
+
+# Environment and local artifacts
+.env
+out/
+build/
+lambda/mux/mux-lambda.zip
+lambda/mux/dist/
 
 node_modules
 .next

@@ -1,5 +1,38 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+import { ELEVENLABS_MUSIC_LENGTH_SEC, validateAudioUrl } from "../_shared/audio-utils.ts";
+import { resolveCompositionDuration } from "../_shared/composition-duration.ts";
+
+const RENDER_TIMEOUT_MS = 840_000;
+const FRAMES_PER_LAMBDA = 300;
+const VIDEO_BITRATE = "5M";
+
+function isValidHttpUrl(value: unknown): value is string {
+  if (typeof value !== "string" || !value.trim()) return false;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function sanitizePhotoUrls(urls: unknown[]): string[] {
+  return urls.filter(isValidHttpUrl);
+}
+
+function sanitizeString(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function urlHostname(url: string | null): string {
+  if (!url) return "none";
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return "invalid";
+  }
+}
 
 const crypto = globalThis.crypto;
 
@@ -194,7 +227,7 @@ serve(async (req) => {
       console.error(`Failed to fetch fotos for ${presenteId}:`, fotosErr);
     }
 
-    const fotosUrls = (fotos || []).map((f: { url: string }) => f.url);
+    const fotosUrls = sanitizePhotoUrls((fotos || []).map((f: { url: string }) => f.url));
     console.log(
       `Fetched ${fotosUrls.length} photos for ${presenteId}:`,
       fotosUrls.length > 0
@@ -203,25 +236,55 @@ serve(async (req) => {
     );
 
     const MUSIC_POLL_INTERVAL_MS = parseInt(Deno.env.get("MUSIC_POLL_INTERVAL_MS") || "1000", 10);
-    const MUSIC_POLL_MAX_ATTEMPTS = parseInt(Deno.env.get("MUSIC_POLL_MAX_ATTEMPTS") || "10", 10);
+    const MUSIC_POLL_MAX_ATTEMPTS = parseInt(Deno.env.get("MUSIC_POLL_MAX_ATTEMPTS") || "120", 10);
 
     let musicaUrl: string | null = null;
-    try {
-      for (let i = 0; i < MUSIC_POLL_MAX_ATTEMPTS; i++) {
-        const { data: musica } = await supabase
-          .from("musicas")
-          .select("url_audio")
-          .eq("presente_id", presenteId)
-          .maybeSingle();
-        musicaUrl = musica?.url_audio ?? null;
-        if (musicaUrl) break;
-        console.log(`Waiting for music URL (attempt ${i + 1}/20) for ${presenteId}`);
-        await new Promise((r) => setTimeout(r, MUSIC_POLL_INTERVAL_MS));
+    let musicaStatus: string | null = null;
+    for (let i = 0; i < MUSIC_POLL_MAX_ATTEMPTS; i++) {
+      const { data: musica } = await supabase
+        .from("musicas")
+        .select("url_audio, status")
+        .eq("presente_id", presenteId)
+        .maybeSingle();
+      musicaUrl = musica?.url_audio ?? null;
+      musicaStatus = musica?.status ?? null;
+      if (musicaUrl && musicaStatus === "ready") break;
+      if (musicaStatus === "failed") {
+        return new Response(JSON.stringify({ error: "music_generation_failed" }), {
+          status: 409,
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        });
       }
-      console.log(`Music URL ${musicaUrl ? "found" : "not found after 60s"} for ${presenteId}`);
-    } catch (e) {
-      console.warn("Failed to fetch music, rendering without audio:", e);
+      console.log(`Waiting for music (attempt ${i + 1}/${MUSIC_POLL_MAX_ATTEMPTS}) for ${presenteId}`);
+      await new Promise((r) => setTimeout(r, MUSIC_POLL_INTERVAL_MS));
     }
+
+    if (!musicaUrl || musicaStatus !== "ready") {
+      console.error(`Music not ready for ${presenteId} after polling`);
+      return new Response(JSON.stringify({ error: "music_not_ready" }), {
+        status: 409,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      });
+    }
+
+    const audioCheck = await validateAudioUrl(musicaUrl);
+    if (!audioCheck.ok) {
+      const errorMsg = `Arquivo de música inválido: ${audioCheck.error ?? "desconhecido"}`;
+      console.error(`render-video ${presenteId}: ${errorMsg}`);
+      await supabase
+        .from("presentes")
+        .update({
+          status: "failed",
+          error_message: "Arquivo de música inválido. Tente gerar novamente.",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", presenteId);
+      return new Response(JSON.stringify({ error: "invalid_audio", detail: audioCheck.error }), {
+        status: 422,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      });
+    }
+    console.log(`render-video ${presenteId}: audio OK (${audioCheck.size} bytes)`);
 
     const awsRegion = Deno.env.get("AWS_REGION") || "us-east-1";
     const functionName = Deno.env.get("REMOTION_FUNCTION_NAME") || "";
@@ -236,16 +299,20 @@ serve(async (req) => {
       });
     }
 
+    const compositionDuration = resolveCompositionDuration(ELEVENLABS_MUSIC_LENGTH_SEC);
+
     const inputProps = {
-      nome_homenageado: presente.nome_homenageado,
-      nome_remetente: presente.nome_remetente,
-      ocasiao: presente.ocasiao,
-      data_inicio: presente.data_inicio,
-      descricao_relacao: presente.descricao_relacao,
-      estilo_musical: presente.estilo_musical,
+      nome_homenageado: sanitizeString(presente.nome_homenageado),
+      nome_remetente: sanitizeString(presente.nome_remetente),
+      ocasiao: sanitizeString(presente.ocasiao),
+      data_inicio: sanitizeString(presente.data_inicio),
+      descricao_relacao: sanitizeString(presente.descricao_relacao),
+      estilo_musical: sanitizeString(presente.estilo_musical),
       fotos: fotosUrls,
-      thumbnail_url: presente.thumbnail_url || "",
-      musicaUrl,
+      thumbnail_url: sanitizeString(presente.thumbnail_url),
+      musicaUrl: null,
+      audioDurationInSeconds: compositionDuration.audioDurationInSeconds,
+      skipAudioInRender: true,
     };
 
     const webhookUrl = `${supabaseUrl}/functions/v1/render-complete`;
@@ -255,9 +322,10 @@ serve(async (req) => {
 
     const payload = {
       type: "start",
-      version: "4.0.481",
-      framesPerLambda: 500,
+      version: Deno.env.get("REMOTION_VERSION") || "4.0.482",
+      framesPerLambda: FRAMES_PER_LAMBDA,
       concurrency: null,
+      concurrencyPerLambda: 1,
       rendererFunctionName: null,
       composition: "Retrospectiva",
       serveUrl,
@@ -275,28 +343,33 @@ serve(async (req) => {
       privacy: "public",
       logLevel: "info",
       frameRange: null,
-      outName: `out.mp4`,
-      timeoutInMilliseconds: 300000,
+      outName: null,
+      timeoutInMilliseconds: RENDER_TIMEOUT_MS,
       chromiumOptions: {},
       scale: 1,
       everyNthFrame: 1,
       numberOfGifLoops: null,
-      downloadBehavior: { type: "download" },
-      muted: false,
+      downloadBehavior: { type: "play-in-browser" },
+      muted: true,
+      enforceAudioTrack: false,
       overwrite: true,
       audioBitrate: null,
-      videoBitrate: "8M",
+      videoBitrate: VIDEO_BITRATE,
       encodingBufferSize: null,
       encodingMaxRate: null,
       webhook: {
         url: webhookUrl,
         secret: webhookSecret || undefined,
-        customData: { presente_id: presenteId },
+        customData: {
+          presente_id: presenteId,
+          mux_audio: true,
+          musica_url: musicaUrl,
+        },
       },
       forceHeight: null,
       forceWidth: null,
       forceFps: null,
-      forceDurationInFrames: null,
+      forceDurationInFrames: compositionDuration.durationInFrames,
       bucketName: null,
       audioCodec: null,
       offthreadVideoCacheSizeInBytes: null,
@@ -315,7 +388,7 @@ serve(async (req) => {
 
     const payloadSize = new TextEncoder().encode(JSON.stringify(payload)).length;
     console.log(
-      `Invoking Lambda for ${presenteId}: payload=${(payloadSize / 1024).toFixed(1)}KB, ${fotosUrls.length} photos`,
+      `Invoking Lambda for ${presenteId}: payload=${(payloadSize / 1024).toFixed(1)}KB, ${fotosUrls.length} photos, concurrencyPerLambda=1, downloadBehavior=play-in-browser`,
     );
 
     const response = await invokeLambdaWithRetry(
@@ -356,7 +429,7 @@ serve(async (req) => {
       .update({
         render_request_id: renderId,
         status: "generating",
-        updated_at: new Date().toISOString(),
+        generation_started_at: new Date().toISOString(),
       })
       .eq("id", presenteId);
 
@@ -364,7 +437,11 @@ serve(async (req) => {
       console.error(`Failed to update presente ${presenteId}:`, updateErr);
     }
 
-    return new Response(JSON.stringify({ success: true, presenteId, renderId }), {
+    return new Response(JSON.stringify({
+      success: true,
+      presenteId,
+      renderId,
+    }), {
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",

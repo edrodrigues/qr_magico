@@ -7,6 +7,7 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
+import { getAppOrigin } from "../lib/appUrl";
 
 interface AuthContextType {
   user: User | null;
@@ -60,10 +61,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    const redirectTo = import.meta.env.VITE_APP_URL || window.location.origin;
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo },
+      options: { redirectTo: `${getAppOrigin()}/auth` },
     });
   };
 

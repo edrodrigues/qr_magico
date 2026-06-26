@@ -1,16 +1,19 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
+import {
+  inferGenerationSteps,
+  getStepMessage,
+  getGenerationPhase,
+  isGenerationStuck,
+  type GenerationStep,
+  type GenerationPhase,
+  type StepStatus,
+} from "../lib/generation";
 
 export type GiftStatus = "draft" | "pending_payment" | "generating" | "ready" | "failed";
 
-export type StepStatus = "pending" | "active" | "done";
-
-export interface GenerationStep {
-  id: string;
-  label: string;
-  status: StepStatus;
-}
+export type { GenerationStep, GenerationPhase, StepStatus };
 
 export interface Gift {
   id: string;
@@ -22,11 +25,19 @@ export interface Gift {
   link?: string;
   thumbnailUrl?: string;
   videoUrl?: string;
+  musicUrl?: string;
+  musicStatus?: string;
+  musicAttempts?: number;
+  musicLastAttemptAt?: string;
+  errorMessage?: string;
+  generationStartedAt?: string;
   description?: string;
   createdAt: string;
   attempts?: number;
   generationSteps?: GenerationStep[];
   currentStepMessage?: string;
+  generationPhase?: GenerationPhase;
+  isStuck?: boolean;
 }
 
 const STATUS_MAP: Record<string, GiftStatus> = {
@@ -53,38 +64,28 @@ const STATUS_ICONS: Record<GiftStatus, string> = {
   failed: "error",
 };
 
-function inferGenerationSteps(row: any): GenerationStep[] {
-  const musicStatus = row.musicas?.[0]?.status;
-  const musicReady = musicStatus === "ready";
-  const videoStarted = !!row.render_request_id;
-  const videoReady = !!row.video_url;
-  const linkReady = !!row.link;
-
-  return [
-    { id: "music", label: "Música personalizada", status: musicReady ? "done" : "active" },
-    { id: "video", label: "Vídeo com fotos", status: videoReady ? "done" : videoStarted ? "active" : "pending" },
-    { id: "link", label: "Link exclusivo", status: linkReady ? "done" : "pending" },
-  ];
-}
-
-function getCurrentStepMessage(steps: GenerationStep[]): string {
-  const active = steps.find((s) => s.status === "active");
-  if (!active) return "Finalizando...";
-  switch (active.id) {
-    case "music":
-      return "Criando sua música personalizada com inteligência artificial...";
-    case "video":
-      return "Música pronta! Renderizando o vídeo com suas fotos...";
-    default:
-      return "Preparando os últimos detalhes...";
-  }
-}
-
 function mapRowToGift(row: any): Gift {
   const status = STATUS_MAP[row.status] || "draft";
-  const attempts = row.musicas?.[0]?.attempts ?? 0;
+  const musicRow = row.musicas?.[0];
+  const attempts = musicRow?.attempts ?? 0;
+  const musicStatus = musicRow?.status;
+  const musicUrl = musicRow?.url_audio;
+  const musicLastAttemptAt = musicRow?.last_attempt_at;
+  const errorMessage = row.error_message || undefined;
   const steps = status === "generating" ? inferGenerationSteps(row) : undefined;
-  const currentMessage = steps ? getCurrentStepMessage(steps) : undefined;
+  const currentMessage = steps ? getStepMessage(steps, errorMessage) : undefined;
+  const generationPhase = steps ? getGenerationPhase(steps) : undefined;
+  const musicReady = musicStatus === "ready" || !!musicUrl;
+
+  const createdAt = row.created_at;
+  const generationStartedAt = row.generation_started_at || undefined;
+  const isStuck = isGenerationStuck(
+    status,
+    createdAt,
+    musicLastAttemptAt,
+    generationStartedAt,
+  );
+
   return {
     id: row.id,
     name: row.nome_homenageado,
@@ -95,19 +96,57 @@ function mapRowToGift(row: any): Gift {
     link: row.link || undefined,
     thumbnailUrl: row.thumbnail_url || undefined,
     videoUrl: row.video_url || undefined,
+    musicUrl: musicUrl || undefined,
+    musicStatus: musicStatus || undefined,
+    musicAttempts: attempts,
+    musicLastAttemptAt: musicLastAttemptAt || undefined,
+    errorMessage,
+    generationStartedAt: row.generation_started_at || undefined,
     attempts,
     generationSteps: steps,
     currentStepMessage: currentMessage,
+    generationPhase,
+    isStuck,
     description:
       status === "generating"
         ? currentMessage
         : status === "draft"
-          ? `Iniciado em ${new Date(row.created_at).toLocaleDateString("pt-BR")}`
+          ? `Iniciado em ${new Date(createdAt).toLocaleDateString("pt-BR")}`
           : status === "failed"
-            ? "Falha na geração. Tente novamente."
+            ? errorMessage ||
+              (musicReady
+                ? "Música pronta — falha apenas no vídeo. Tente novamente."
+                : "Falha na geração. Tente novamente.")
             : undefined,
-    createdAt: row.created_at,
+    createdAt,
   };
+}
+
+function stepsEqual(a?: GenerationStep[], b?: GenerationStep[]): boolean {
+  if (!a && !b) return true;
+  if (!a || !b || a.length !== b.length) return false;
+  return a.every((step, i) => step.id === b[i].id && step.status === b[i].status);
+}
+
+function giftsAreEqual(prev: Gift[], next: Gift[]): boolean {
+  if (prev.length !== next.length) return false;
+  return prev.every((gift, i) => {
+    const other = next[i];
+    return (
+      gift.id === other.id &&
+      gift.status === other.status &&
+      gift.link === other.link &&
+      gift.videoUrl === other.videoUrl &&
+      gift.musicUrl === other.musicUrl &&
+      gift.musicStatus === other.musicStatus &&
+      gift.musicAttempts === other.musicAttempts &&
+      gift.errorMessage === other.errorMessage &&
+      gift.isStuck === other.isStuck &&
+      gift.currentStepMessage === other.currentStepMessage &&
+      gift.description === other.description &&
+      stepsEqual(gift.generationSteps, other.generationSteps)
+    );
+  });
 }
 
 export function useGifts() {
@@ -116,36 +155,45 @@ export function useGifts() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchGifts = useCallback(async () => {
+  const fetchGifts = useCallback(async (silent = false) => {
     if (!user) {
       setGifts([]);
       setLoading(false);
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    if (!silent) {
+      setLoading(true);
+      setError(null);
+    }
 
     const { data, error: err } = await supabase
       .from("presentes")
-      .select("*, musicas(attempts, status), render_request_id, video_url, link")
+      .select(
+        "*, musicas(attempts, status, url_audio, last_attempt_at), render_request_id, video_url, link, error_message, generation_started_at",
+      )
       .eq("usuario_id", user.id)
       .neq("status", "cancelled")
       .order("created_at", { ascending: false });
 
     if (err) {
-      setError(err.message);
-      setGifts([]);
+      if (!silent) {
+        setError(err.message);
+        setGifts([]);
+      }
     } else {
-      setGifts((data || []).map(mapRowToGift));
+      const mapped = (data || []).map(mapRowToGift);
+      setGifts((prev) => (giftsAreEqual(prev, mapped) ? prev : mapped));
     }
 
-    setLoading(false);
+    if (!silent) setLoading(false);
   }, [user]);
 
   useEffect(() => {
-    fetchGifts();
+    fetchGifts(false);
   }, [fetchGifts]);
+
+  const refetch = useCallback(() => fetchGifts(true), [fetchGifts]);
 
   const stats = {
     total: gifts.length,
@@ -156,5 +204,5 @@ export function useGifts() {
     payment: gifts.filter((g) => g.status === "pending_payment" || g.status === "generating").length,
   };
 
-  return { gifts, loading, error, stats, refetch: fetchGifts };
+  return { gifts, loading, error, stats, refetch };
 }

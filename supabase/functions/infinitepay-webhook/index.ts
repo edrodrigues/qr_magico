@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0"
+import { runGenerationPipeline } from "../_shared/generation-pipeline.ts"
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -72,7 +73,11 @@ serve(async (req) => {
 
       await supabase
         .from("presentes")
-        .update({ status: "generating", updated_at: new Date().toISOString() })
+        .update({
+          status: "generating",
+          generation_started_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", presenteId)
 
       const { data: saldoAtual } = await supabase
@@ -105,56 +110,7 @@ serve(async (req) => {
         console.error("failed to create musicas row:", e)
       })
 
-      const { data: userData } = await supabase.auth.admin.getUserById(pagamento.usuario_id)
-      const user = userData?.user
-
-      const edgeHeaders = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${supabaseServiceKey}`,
-      }
-      const body = JSON.stringify({ presente_id: presenteId })
-
-      // Fire-and-forget: do not block webhook response while generation runs
-      const bgGen = async () => {
-        try {
-          const musicRes = await fetch(`${supabaseUrl}/functions/v1/generate-music`, {
-            method: "POST", headers: edgeHeaders, body,
-          })
-          if (!musicRes.ok) {
-            const errText = await musicRes.text()
-            console.error(`background: generate-music returned ${musicRes.status}: ${errText}`)
-            await supabase.from("presentes").update({
-              status: "failed",
-              error_message: "Geração de música falhou",
-              updated_at: new Date().toISOString(),
-            }).eq("id", presenteId)
-            return
-          }
-          const videoRes = await fetch(`${supabaseUrl}/functions/v1/render-video`, {
-            method: "POST", headers: edgeHeaders, body,
-          })
-          if (!videoRes.ok) {
-            const errText = await videoRes.text()
-            console.error(`background: render-video returned ${videoRes.status}: ${errText}`)
-            await supabase.from("presentes").update({
-              status: "failed",
-              error_message: "Renderização de vídeo falhou",
-              updated_at: new Date().toISOString(),
-            }).eq("id", presenteId)
-          }
-        } catch (e) {
-          const errMsg = e instanceof Error ? e.message : "Erro desconhecido na geração"
-          console.error("background generation error:", errMsg)
-          await supabase.from("presentes").update({
-            status: "failed",
-            error_message: errMsg,
-            updated_at: new Date().toISOString(),
-          }).eq("id", presenteId).catch((e2) => {
-            console.error("failed to mark presente as failed:", e2)
-          })
-        }
-      }
-      bgGen()
+      runGenerationPipeline(supabaseUrl, supabaseServiceKey, presenteId, supabase)
     }
 
     if (pagamento.tipo === "creditos") {

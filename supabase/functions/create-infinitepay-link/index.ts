@@ -5,6 +5,17 @@ const INFINITEPAY_HANDLE = "edmilson-rodrigues-pa0"
 const INFINITEPAY_API = "https://api.checkout.infinitepay.io/links"
 const APP_URL = Deno.env.get("APP_URL") || "https://www.momentomagico.xyz"
 
+function resolveRedirectBase(url: unknown): string | null {
+  if (typeof url !== "string" || !url.trim()) return null
+  try {
+    const parsed = new URL(url)
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null
+    return parsed.origin
+  } catch {
+    return null
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, {
@@ -44,7 +55,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json()
-    const { tipo, presente_id, quantidade_creditos, valor_centavos, customer } = body
+    const { tipo, presente_id, quantidade_creditos, valor_centavos, customer, redirect_base_url } = body
 
     if (!tipo || !["presente", "creditos"].includes(tipo)) {
       return new Response(JSON.stringify({ error: "tipo must be 'presente' or 'creditos'" }), {
@@ -64,10 +75,11 @@ serve(async (req) => {
       ? `presente_${presente_id}`
       : `creditos_${user.id}_${quantidade_creditos || 1}_${Date.now()}`
 
+    const redirectBase = resolveRedirectBase(redirect_base_url) || APP_URL
     const webhookUrl = `${supabaseUrl}/functions/v1/infinitepay-webhook`
     const redirectUrl = tipo === "presente"
-      ? `${APP_URL}/payment-success?presente_id=${presente_id}`
-      : `${APP_URL}/creditos-success`
+      ? `${redirectBase}/payment-success?presente_id=${presente_id}`
+      : `${redirectBase}/creditos-success`
 
     const description = tipo === "presente"
       ? "QR Mágico - Presente Personalizado"

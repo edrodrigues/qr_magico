@@ -79,6 +79,7 @@ async function fetchPresenteData(presenteId, supabase) {
     fotos: fotosUrls,
     thumbnail_url: presente.thumbnail_url || "",
     musicaUrl,
+    audioDurationInSeconds: 60,
   };
 }
 

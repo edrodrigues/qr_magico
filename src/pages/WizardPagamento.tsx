@@ -5,6 +5,8 @@ import { useWizard } from "../contexts/WizardContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/Toast";
 import { supabase } from "../lib/supabase";
+import { getAppOrigin } from "../lib/appUrl";
+import { restartGeneration, triggerGeneration } from "../lib/generation";
 
 const PRECO_UNITARIO_CENTAVOS = 1990;
 const EDGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
@@ -83,6 +85,7 @@ export function WizardPagamento() {
           tipo: "presente",
           presente_id: presenteId,
           valor_centavos: PRECO_UNITARIO_CENTAVOS,
+          redirect_base_url: getAppOrigin(),
           customer: {
             name: wizardData.remetente || user?.user_metadata?.full_name || "",
             email: user?.email || "",
@@ -112,48 +115,18 @@ export function WizardPagamento() {
   };
 
   const dispararGeracao = async (presenteId: string) => {
-    const linkSlug = (await supabase.from("presentes").select("slug").eq("id", presenteId).single()).data?.slug;
-    if (presenteId && linkSlug) {
-      const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
-      const link = `${appUrl}/p/${linkSlug}`;
-      await supabase.from("presentes").update({ link }).eq("id", presenteId);
-    }
-
-    const { error: musicaError } = await supabase.rpc("upsert_musica", {
-      p_presente_id: presenteId,
-      p_status: "generating",
-      p_estilo: wizardData.musicStyle || "gerando",
-      p_attempts: 0,
-      p_last_attempt_at: null,
+    const { error, skipMusic } = await restartGeneration(presenteId, "full", {
+      musicStyle: wizardData.musicStyle || "gerando",
     });
-    if (musicaError) {
-      console.error("musicas upsert error:", musicaError);
-      addToast("Erro ao preparar a música", "error");
+    if (error) {
+      addToast("Erro ao iniciar a geração", "error");
       return;
     }
 
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${session?.access_token}`,
-    };
-    const body = JSON.stringify({ presente_id: presenteId });
-
-    (async () => {
-      try {
-        const musicRes = await fetch(`${EDGE_URL}/generate-music`, { method: "POST", headers, body });
-        if (!musicRes.ok) throw new Error(`generate-music failed: ${musicRes.status}`);
-        const videoRes = await fetch(`${EDGE_URL}/render-video`, { method: "POST", headers, body });
-        if (!videoRes.ok) throw new Error(`render-video failed: ${videoRes.status}`);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "Unknown error";
-        console.error("generation failed:", msg);
-        await supabase
-          .from("presentes")
-          .update({ status: "failed", error_message: msg, updated_at: new Date().toISOString() })
-          .eq("id", presenteId);
-        addToast("Erro ao gerar o presente. Tente novamente.", "error");
-      }
-    })();
+    triggerGeneration(presenteId, session, {
+      skipMusic,
+      onError: (msg) => addToast(msg || "Erro ao gerar o presente. Tente novamente.", "error"),
+    });
   };
 
   return (

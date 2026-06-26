@@ -1,12 +1,29 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef, memo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { cn } from "../lib/utils";
 import { useAuth } from "../contexts/AuthContext";
-import { useGifts, type Gift, type GiftStatus } from "../hooks/useGifts";
+import { useGifts, type Gift, type GiftStatus, type GenerationStep } from "../hooks/useGifts";
+import { GenerationStepper } from "../components/GenerationStepper";
 import { useToast } from "../components/Toast";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { Header, Footer } from "../components/Header";
 import { supabase } from "../lib/supabase";
+import {
+  resolveRestartPhase,
+  resolveRestartPhaseFromDb,
+  restartGeneration,
+  promoteOrphanVideo,
+  triggerGeneration,
+  runStaleGenerationRecovery,
+  shouldRunRecovery,
+} from "../lib/generation";
+import { logGeneration, logGenerationPoll, type RenderPollDebug } from "../lib/generationDebug";
+import {
+  buildVideoProcessingUi,
+  formatRenderErrorForUser,
+  formatRenderErrorTechnical,
+  type VideoRenderUiState,
+} from "../lib/renderStatusMessages";
 import { getOccasionTheme } from "../remotion/theme";
 import { jsPDF } from "jspdf";
 
@@ -83,8 +100,26 @@ function StatCard({
   );
 }
 
-function GiftCard({
+function generationStepsEqual(a?: GenerationStep[], b?: GenerationStep[]): boolean {
+  if (!a && !b) return true;
+  if (!a || !b || a.length !== b.length) return false;
+  return a.every((step, i) => step.id === b[i].id && step.status === b[i].status);
+}
+
+function videoRenderUiEqual(a?: VideoRenderUiState, b?: VideoRenderUiState): boolean {
+  if (!a && !b) return true;
+  if (!a || !b) return false;
+  return (
+    a.message === b.message &&
+    a.hint === b.hint &&
+    a.errorMessage === b.errorMessage &&
+    a.technicalNote === b.technicalNote
+  );
+}
+
+const GiftCard = memo(function GiftCard({
   gift,
+  renderUi,
   onCopy,
   copiedId,
   onDelete,
@@ -96,6 +131,7 @@ function GiftCard({
   style,
 }: {
   gift: Gift;
+  renderUi?: VideoRenderUiState;
   onCopy: (id: string, link: string) => void;
   copiedId: string | null;
   onDelete: (gift: Gift) => void;
@@ -143,7 +179,8 @@ function GiftCard({
   return (
     <div
       className={cn(
-        "glass-card p-6 rounded-xl animate-reveal gradient-border-card transition-all duration-300",
+        "glass-card p-6 rounded-xl gradient-border-card transition-all duration-300",
+        gift.status !== "generating" && "animate-reveal",
         gift.status === "ready" && "hover:shadow-lg",
         gift.status === "pending_payment" && "grayscale"
       )}
@@ -286,46 +323,25 @@ function GiftCard({
               </span>
             </div>
 
-            <div className="mt-4 space-y-2">
-              {gift.generationSteps?.map((step, i) => (
-                <div key={step.id}>
-                  <div className="flex items-center gap-3">
-                    {step.status === "done" ? (
-                      <span className="material-symbols-outlined text-[20px] text-green-600">
-                        check_circle
-                      </span>
-                    ) : step.status === "active" ? (
-                      <span className="material-symbols-outlined text-[20px] text-primary animate-spin">
-                        sync
-                      </span>
-                    ) : (
-                      <span className="material-symbols-outlined text-[20px] text-outline-variant">
-                        radio_button_unchecked
-                      </span>
-                    )}
-                    <span
-                      className={cn(
-                        "font-body-md text-body-md",
-                        step.status === "done" && "text-green-700",
-                        step.status === "active" && "text-primary font-semibold",
-                        step.status === "pending" && "text-outline-variant",
-                      )}
-                    >
-                      {step.label}
-                    </span>
-                  </div>
-                  {i < (gift.generationSteps?.length ?? 0) - 1 && (
-                    <div className="ml-[10px] w-px h-3 bg-outline-variant/30 my-1" />
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <p className="font-body-md text-body-md text-on-surface-variant mt-3 italic">
-              {gift.currentStepMessage}
-            </p>
+            {gift.generationSteps && (
+              <GenerationStepper
+                steps={gift.generationSteps}
+                message={renderUi?.message ?? gift.currentStepMessage}
+                hint={renderUi?.hint}
+                errorMessage={renderUi?.errorMessage ?? (gift.isStuck ? "Processamento demorou mais que o esperado." : undefined)}
+                technicalNote={renderUi?.technicalNote}
+              />
+            )}
 
             <div className="flex gap-3 mt-4">
+              {gift.isStuck && onRetry && (
+                <button
+                  onClick={() => onRetry(gift)}
+                  className="font-label-md text-label-md text-primary px-4 py-2 rounded-lg hover:bg-primary-fixed transition-all"
+                >
+                  Tentar novamente
+                </button>
+              )}
               <button
                 onClick={() => onDelete(gift)}
                 className="font-label-md text-label-md text-on-surface-variant px-4 py-2 rounded-lg hover:bg-warm-gray transition-all"
@@ -362,8 +378,13 @@ function GiftCard({
               </span>
             </div>
             <p className="font-body-md text-body-md text-on-surface-variant mt-3 italic">
-              {gift.description}
+              {formatRenderErrorForUser(gift.errorMessage ?? gift.description)}
             </p>
+            {import.meta.env.DEV && formatRenderErrorTechnical(gift.errorMessage) && (
+              <p className="font-mono text-xs text-on-surface-variant/60 mt-2 break-all">
+                {formatRenderErrorTechnical(gift.errorMessage)}
+              </p>
+            )}
             <div className="flex gap-3 mt-4">
               <button
                 onClick={() => onRetry?.(gift)}
@@ -480,7 +501,29 @@ function GiftCard({
       )}
     </div>
   );
-}
+}, (prev, next) => {
+  const pg = prev.gift;
+  const ng = next.gift;
+  return (
+    pg.id === ng.id &&
+    pg.status === ng.status &&
+    pg.name === ng.name &&
+    pg.occasion === ng.occasion &&
+    pg.link === ng.link &&
+    pg.description === ng.description &&
+    pg.isStuck === ng.isStuck &&
+    pg.errorMessage === ng.errorMessage &&
+    pg.currentStepMessage === ng.currentStepMessage &&
+    videoRenderUiEqual(prev.renderUi, next.renderUi) &&
+    pg.statusLabel === ng.statusLabel &&
+    pg.statusIcon === ng.statusIcon &&
+    generationStepsEqual(pg.generationSteps, ng.generationSteps) &&
+    prev.copiedId === next.copiedId &&
+    prev.downloadingId === next.downloadingId &&
+    prev.downloadingPdfId === next.downloadingPdfId &&
+    prev.style.animationDelay === next.style.animationDelay
+  );
+});
 
 function EmptyState({ onSelectOccasion }: { onSelectOccasion: (o: string) => void }) {
   return (
@@ -559,7 +602,10 @@ export function Dashboard() {
   const [deleteTarget, setDeleteTarget] = useState<Gift | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [downloadingPdfId, setDownloadingPdfId] = useState<string | null>(null);
-  const [checkingIds, setCheckingIds] = useState<Set<string>>(new Set());
+  const checkingIdsRef = useRef<Set<string>>(new Set());
+  const lastPollStatusRef = useRef<Map<string, string>>(new Map());
+  const lastPollProgressRef = useRef<Map<string, number | null>>(new Map());
+  const [videoRenderUi, setVideoRenderUi] = useState<Record<string, VideoRenderUiState>>({});
 
   const handleDownload = async (gift: Gift) => {
     if (!session) {
@@ -698,8 +744,8 @@ export function Dashboard() {
   };
 
   const checkVideoStatus = useCallback(async (gift: Gift) => {
-    if (!session || checkingIds.has(gift.id)) return;
-    setCheckingIds((prev) => new Set(prev).add(gift.id));
+    if (!session || checkingIdsRef.current.has(gift.id)) return;
+    checkingIdsRef.current.add(gift.id);
     try {
       const edgeUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
       const res = await fetch(`${edgeUrl}/get-download-url`, {
@@ -711,28 +757,64 @@ export function Dashboard() {
         body: JSON.stringify({ presente_id: gift.id }),
       });
       const data = await res.json();
-      if (data.status === "ready") {
+      const status = data.status || (res.ok ? "unknown" : "error");
+      const debug = data.debug as RenderPollDebug | undefined;
+      const progress = debug?.overall_progress ?? null;
+
+      const prevStatus = lastPollStatusRef.current.get(gift.id);
+      const prevProgress = lastPollProgressRef.current.get(gift.id);
+      const statusChanged = prevStatus !== status;
+      const progressChanged = progress !== prevProgress && progress !== null;
+
+      if (statusChanged || progressChanged) {
+        lastPollStatusRef.current.set(gift.id, status);
+        if (progress !== null) lastPollProgressRef.current.set(gift.id, progress);
+        logGenerationPoll(gift.id, status, debug);
+      }
+
+      const ui = buildVideoProcessingUi({
+        debug,
+        defaultMessage: gift.currentStepMessage,
+        isStuck: gift.isStuck,
+      });
+      setVideoRenderUi((prev) =>
+        videoRenderUiEqual(prev[gift.id], ui) ? prev : { ...prev, [gift.id]: ui },
+      );
+
+      if (status === "failed") {
+        setVideoRenderUi((prev) => {
+          if (!(gift.id in prev)) return prev;
+          const next = { ...prev };
+          delete next[gift.id];
+          return next;
+        });
+        const userMsg = formatRenderErrorForUser(data.error_message);
+        addToast(userMsg, "error");
+      }
+
+      if (status === "ready" || status === "pending" || status === "failed") {
         refetch();
       }
     } catch {
     } finally {
-      setCheckingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(gift.id);
-        return next;
-      });
+      checkingIdsRef.current.delete(gift.id);
     }
-  }, [session, checkingIds, refetch]);
+  }, [session, refetch, addToast]);
 
   const hasProcessing = useMemo(() => gifts.some((g) => g.status === "generating"), [gifts]);
+  const showInitialSkeleton = loading && gifts.length === 0;
 
   const pollingRef = useRef({ refetch, checkVideoStatus, gifts });
   pollingRef.current = { refetch, checkVideoStatus, gifts };
 
   useEffect(() => {
     if (!hasProcessing) return;
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       const { refetch: rf, checkVideoStatus: cvs, gifts: gs } = pollingRef.current;
+      const hasStuck = gs.some((g) => shouldRunRecovery(g));
+      if (hasStuck) {
+        await runStaleGenerationRecovery(15);
+      }
       rf();
       gs.filter((g) => g.status === "generating").forEach(cvs);
     }, 15000);
@@ -756,54 +838,41 @@ export function Dashboard() {
       addToast("Sessão expirada. Faça login novamente.", "error");
       return;
     }
-    addToast("Reiniciando geração...", "info");
-    const { error: resetErr } = await supabase.rpc("upsert_musica", {
-      p_presente_id: gift.id,
-      p_status: "generating",
-      p_attempts: 0,
-      p_last_attempt_at: null,
-    });
-    if (resetErr) {
-      console.error("musicas retry upsert error:", { code: resetErr.code, message: resetErr.message, details: resetErr.details, presente_id: gift.id });
-      addToast(`Erro ao reiniciar a geração (${resetErr.code})`, "error");
-      return;
+
+    if (gift.videoUrl && gift.status !== "ready") {
+      const { promoted, error } = await promoteOrphanVideo(gift.id);
+      if (promoted && !error) {
+        addToast("Presente atualizado!", "success");
+        refetch();
+        return;
+      }
     }
-    const { error: presenteErr } = await supabase
-      .from("presentes")
-      .update({ status: "generating", error_message: "", updated_at: new Date().toISOString() })
-      .eq("id", gift.id);
-    if (presenteErr) {
-      console.error("presente status update error:", presenteErr);
+
+    const phase = gift.status === "failed"
+      ? await resolveRestartPhaseFromDb(gift.id)
+      : resolveRestartPhase(gift);
+    logGeneration(gift.id, "retry_start", { phase });
+
+    addToast(
+      phase === "video_only" ? "Retomando geração do vídeo..." : "Reiniciando geração...",
+      "info",
+    );
+
+    const { error, skipMusic } = await restartGeneration(gift.id, phase);
+    if (error) {
       addToast("Erro ao reiniciar a geração", "error");
       return;
     }
-    const edgeUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${session?.access_token}`,
-    };
-    const body = JSON.stringify({ presente_id: gift.id });
-    (async () => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 120000);
-      try {
-        const musicRes = await fetch(`${edgeUrl}/generate-music`, { method: "POST", headers, body, signal: controller.signal });
-        if (!musicRes.ok) {
-          const errBody = await musicRes.text();
-          console.error("generate-music error body:", { status: musicRes.status, body: errBody });
-          throw new Error(`generate-music failed: ${musicRes.status}`);
-        }
-        const videoRes = await fetch(`${edgeUrl}/render-video`, { method: "POST", headers, body, signal: controller.signal });
-        if (!videoRes.ok) throw new Error(`render-video failed: ${videoRes.status}`);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "Unknown error";
-        console.error("retry generation failed:", msg);
-        await supabase.from("presentes").update({ status: "failed", error_message: msg, updated_at: new Date().toISOString() }).eq("id", gift.id);
-        addToast("Erro ao gerar o presente. Tente novamente.", "error");
-      } finally {
-        clearTimeout(timeoutId);
-      }
-    })();
+
+    if (skipMusic && gift.videoUrl) {
+      refetch();
+      return;
+    }
+
+    triggerGeneration(gift.id, session, {
+      skipMusic,
+      onError: (msg) => addToast(msg, "error"),
+    });
     refetch();
   };
 
@@ -941,7 +1010,7 @@ export function Dashboard() {
 
         <div className="flex flex-col lg:flex-row gap-gutter-desktop">
           <div className="flex-1 space-y-6">
-            {loading && (
+            {showInitialSkeleton && (
               <>
                 <SkeletonCard />
                 <SkeletonCard />
@@ -949,18 +1018,19 @@ export function Dashboard() {
               </>
             )}
 
-            {!loading && error && <ErrorBanner message={error} onRetry={refetch} />}
+            {!showInitialSkeleton && error && <ErrorBanner message={error} onRetry={refetch} />}
 
-            {!loading && !error && filteredGifts.length === 0 && (
+            {(gifts.length > 0 || !loading) && !error && filteredGifts.length === 0 && (
               <EmptyState onSelectOccasion={handleSelectOccasion} />
             )}
 
-            {!loading &&
+            {(gifts.length > 0 || !loading) &&
               !error &&
               filteredGifts.map((gift, i) => (
                 <GiftCard
                   key={gift.id}
                   gift={gift}
+                  renderUi={videoRenderUi[gift.id]}
                   onCopy={handleCopy}
                   copiedId={copiedId}
                   onDelete={setDeleteTarget}

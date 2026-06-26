@@ -1,7 +1,11 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0"
+import {
+  buildElevenLabsMusicUrl,
+  validateAudioBytes,
+} from "../_shared/audio-utils.ts"
 
-const ELEVENLABS_API_URL = Deno.env.get("ELEVENLABS_API_URL") || "https://api.elevenlabs.io/v1/music"
+const ELEVENLABS_API_URL = buildElevenLabsMusicUrl(Deno.env.get("ELEVENLABS_API_URL") || undefined)
 const FETCH_TIMEOUT_MS = parseInt(Deno.env.get("FETCH_TIMEOUT_MS") || "120000", 10)
 
 interface PresenteRow {
@@ -175,12 +179,40 @@ serve(async (req) => {
       })
     }
 
-    if (!["generating", "pending_payment"].includes(presente.status)) {
+    if (!["generating", "pending_payment", "failed"].includes(presente.status)) {
       return new Response(JSON.stringify({ error: "Presente is not in a processable state" }), {
         status: 409,
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       })
     }
+
+    const { data: existingMusic } = await supabase
+      .from("musicas")
+      .select("url_audio, status, attempts")
+      .eq("presente_id", presenteId)
+      .maybeSingle()
+
+    if (existingMusic?.status === "ready" && existingMusic?.url_audio) {
+      console.log(`generate-music skipped ${presenteId}: music already exists`)
+      return new Response(JSON.stringify({
+        success: true,
+        skipped: true,
+        reason: "music_already_exists",
+      }), {
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      })
+    }
+
+    const attemptNumber = (existingMusic?.attempts ?? 0) + 1
+    await supabase
+      .from("musicas")
+      .upsert({
+        presente_id: presenteId,
+        status: "generating",
+        attempts: attemptNumber,
+        last_attempt_at: new Date().toISOString(),
+        estilo: presente.estilo_musical,
+      }, { onConflict: "presente_id" })
 
     const { data: secretRow } = await supabase
       .from("app_secrets")
@@ -208,6 +240,15 @@ serve(async (req) => {
       isInstrumental = true
     }
 
+    const audioBytes = new Uint8Array(audioData)
+    const audioCheck = validateAudioBytes(audioBytes)
+    if (!audioCheck.ok) {
+      throw new Error(`ElevenLabs retornou áudio inválido: ${audioCheck.error ?? "desconhecido"}`)
+    }
+    console.log(
+      `generate-music ${presenteId}: audio ${audioCheck.size} bytes, ~${audioCheck.durationSec?.toFixed(1)}s`,
+    )
+
     if (!musicasBucketEnsured) {
       const { data: buckets } = await supabase.storage.listBuckets()
       if (!buckets?.find((b) => b.name === "musicas")) {
@@ -219,7 +260,7 @@ serve(async (req) => {
     const filePath = `${presenteId}.mp3`
     const { error: uploadErr } = await supabase.storage
       .from("musicas")
-      .upload(filePath, new Uint8Array(audioData), {
+      .upload(filePath, audioBytes, {
         contentType: "audio/mpeg",
         upsert: true,
       })
@@ -262,7 +303,7 @@ serve(async (req) => {
         .eq("presente_id", presenteId)
         .maybeSingle()
 
-      const attempts = (musicasRow?.attempts ?? 0) + 1
+      const attempts = musicasRow?.attempts ?? 1
       const newStatus = attempts >= 3 ? "failed" : "generating"
 
       await supabase

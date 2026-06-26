@@ -3,44 +3,21 @@ import { Link } from "react-router-dom";
 import { Header, Footer } from "../components/Header";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/Toast";
-import { supabase } from "../lib/supabase";
+import {
+  type CreditoTransacao,
+  type CupomResgatado,
+  fetchDadosCreditos,
+  formatarData,
+  formatarHora,
+  formatarMoeda,
+  labelTransacao,
+  resgatarCupom,
+} from "../lib/creditos";
 import { cn } from "../lib/utils";
-
-type Transacao = {
-  id: string;
-  tipo: "compra" | "consumo" | "bonus";
-  quantidade: number;
-  descricao: string;
-  created_at: string;
-};
-
-type CupomResgatado = {
-  id: string;
-  codigo: string;
-  usado_em: string;
-};
+import { getAppOrigin } from "../lib/appUrl";
 
 const PRECO_UNITARIO = 19.9;
 const EDGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
-
-function formatarMoeda(valor: number) {
-  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function formatarData(data: string) {
-  return new Date(data).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
-
-function formatarHora(data: string) {
-  return new Date(data).toLocaleTimeString("pt-BR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 export function Creditos() {
   const { user, session } = useAuth();
@@ -50,40 +27,24 @@ export function Creditos() {
 
   const [quantidade, setQuantidade] = useState(1);
   const [saldo, setSaldo] = useState<number | null>(null);
-  const [transacoes, setTransacoes] = useState<Transacao[]>([]);
+  const [transacoes, setTransacoes] = useState<CreditoTransacao[]>([]);
   const [cuponsResgatados, setCuponsResgatados] = useState<CupomResgatado[]>([]);
   const [loadingSaldo, setLoadingSaldo] = useState(true);
 
   const [showModal, setShowModal] = useState(false);
   const [buying, setBuying] = useState(false);
 
-  useEffect(() => {
+  const carregarDados = async () => {
     if (!user) return;
-    Promise.all([
-      supabase.rpc("obter_saldo_creditos"),
-      supabase
-        .from("creditos_transacoes")
-        .select("*")
-        .eq("usuario_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(5),
-      supabase
-        .from("cupons_uso")
-        .select("id, usado_em, cupom:cupons(codigo)")
-        .eq("usuario_id", user.id)
-        .order("usado_em", { ascending: false }),
-    ]).then(([saldoRes, transacoesRes, cuponsRes]) => {
-      if (!saldoRes.error) setSaldo(saldoRes.data as number);
-      if (!transacoesRes.error) setTransacoes(transacoesRes.data as Transacao[]);
-      if (!cuponsRes.error) {
-        setCuponsResgatados(
-          (cuponsRes.data as unknown as { id: string; usado_em: string; cupom: { codigo: string } }[]).map(
-            (r) => ({ id: r.id, codigo: r.cupom.codigo, usado_em: r.usado_em })
-          )
-        );
-      }
-      setLoadingSaldo(false);
-    });
+    const dados = await fetchDadosCreditos(user.id);
+    setSaldo(dados.saldo);
+    setTransacoes(dados.transacoes);
+    setCuponsResgatados(dados.cuponsResgatados);
+    setLoadingSaldo(false);
+  };
+
+  useEffect(() => {
+    carregarDados();
   }, [user]);
 
   const handleRedeem = async () => {
@@ -94,29 +55,14 @@ export function Creditos() {
     }
     setRedeeming(true);
 
-    const { data, error } = await supabase.rpc("resgatar_cupom", {
-      codigo_cupom: trimmed,
-    });
+    const { ok, error } = await resgatarCupom(trimmed);
 
-    if (error || data?.error) {
-      addToast(data?.error || "Erro ao resgatar cupom.", "error");
+    if (!ok) {
+      addToast(error || "Erro ao resgatar cupom.", "error");
     } else {
       addToast("Cupom resgatado! 1 crédito concedido.", "success");
       setCodigo("");
-      const { data: novoSaldo } = await supabase.rpc("obter_saldo_creditos");
-      if (typeof novoSaldo === "number") setSaldo(novoSaldo);
-      const { data: novosCupons } = await supabase
-        .from("cupons_uso")
-        .select("id, usado_em, cupom:cupons(codigo)")
-        .eq("usuario_id", user!.id)
-        .order("usado_em", { ascending: false });
-      if (novosCupons) {
-        setCuponsResgatados(
-          (novosCupons as unknown as { id: string; usado_em: string; cupom: { codigo: string } }[]).map(
-            (r) => ({ id: r.id, codigo: r.cupom.codigo, usado_em: r.usado_em })
-          )
-        );
-      }
+      await carregarDados();
     }
     setRedeeming(false);
   };
@@ -140,6 +86,7 @@ export function Creditos() {
           tipo: "creditos",
           quantidade_creditos: quantidade,
           valor_centavos: totalCentavos,
+          redirect_base_url: getAppOrigin(),
           customer: {
             name: user?.user_metadata?.full_name || "",
             email: user?.email || "",
@@ -220,8 +167,7 @@ export function Creditos() {
                     value={codigo}
                     onChange={(e) => setCodigo(e.target.value.toUpperCase())}
                     placeholder="Digite o código do cupom"
-                    disabled={false}
-                    className="flex-1 px-4 py-3 rounded-lg bg-surface border border-outline-variant/40 font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all uppercase tracking-widest disabled:opacity-50"
+                    className="flex-1 px-4 py-3 rounded-lg bg-surface border border-outline-variant/40 font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all uppercase tracking-widest"
                   />
                   <button
                     onClick={handleRedeem}
@@ -439,11 +385,8 @@ export function Creditos() {
                             </span>
                           </div>
                           <div className="text-right flex-shrink-0 ml-3">
-                            <span className={cn(
-                              "font-label-md text-label-md",
-                              saldo !== null && saldo > 0 ? "text-green-700" : "text-on-surface-variant"
-                            )}>
-                              {saldo !== null && saldo > 0 ? "Disponível" : "Utilizado"}
+                            <span className="font-label-md text-label-md text-green-700">
+                              Resgatado
                             </span>
                             <p className="text-[10px] text-on-surface-variant">
                               {formatarData(c.usado_em)}
@@ -482,7 +425,7 @@ export function Creditos() {
                                   : "card_giftcard"}
                             </span>
                             <span className="font-body-md text-body-md text-on-surface truncate">
-                              {t.descricao || (t.tipo === "compra" ? "Compra de créditos" : t.tipo === "consumo" ? "Consumo" : "Bônus")}
+                              {labelTransacao(t)}
                             </span>
                           </div>
                           <div className="text-right flex-shrink-0 ml-3">

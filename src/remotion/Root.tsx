@@ -1,16 +1,23 @@
 import { Composition } from "remotion";
 import { getAudioDurationInSeconds } from "@remotion/media-utils";
 import { RetrospectivaComposition } from "./RetrospectivaComposition";
+import { CONTENT_DURATION, resolveCompositionDuration } from "./duration";
 import "./assets/fonts.css";
 
-const DEFAULT_DURATION = 1530;
+function resolveFromProps(props: Record<string, unknown>) {
+  const serverDuration = Number(props.audioDurationInSeconds);
+  if (Number.isFinite(serverDuration) && serverDuration > 0) {
+    return resolveCompositionDuration(serverDuration);
+  }
+  return null;
+}
 
 export const RemotionRoot: React.FC = () => {
   return (
     <Composition
       id="Retrospectiva"
       component={RetrospectivaComposition as unknown as React.ComponentType<Record<string, unknown>>}
-      durationInFrames={DEFAULT_DURATION}
+      durationInFrames={CONTENT_DURATION}
       fps={30}
       width={1080}
       height={1920}
@@ -19,28 +26,60 @@ export const RemotionRoot: React.FC = () => {
         nome_remetente: "Remetente",
         ocasiao: "aniversario",
         data_inicio: "2024-01-01",
-        descricao_relacao: "Uma história especial.",
+        descricao_relacao: "Uma histÃ³ria especial.",
         estilo_musical: "mpb",
         fotos: [],
         thumbnail_url: "",
         musicaUrl: null,
+        audioDurationInSeconds: 0,
+        skipAudioInRender: false,
       }}
       calculateMetadata={async ({ props }) => {
-        if (!props.musicaUrl) {
-          return { durationInFrames: DEFAULT_DURATION, audioDurationInSeconds: 0 };
-        }
-        try {
-          const audioDurationSeconds = await getAudioDurationInSeconds(props.musicaUrl as string);
-          const safeAudioDuration = Number.isFinite(audioDurationSeconds) && audioDurationSeconds > 0
-            ? audioDurationSeconds
-            : 0;
-          const audioFrames = Math.round(safeAudioDuration * 30);
+        if (props.skipAudioInRender) {
+          const resolved = resolveFromProps(props as Record<string, unknown>)
+            ?? resolveCompositionDuration(0);
           return {
-            durationInFrames: Math.max(DEFAULT_DURATION, audioFrames),
-            audioDurationInSeconds: safeAudioDuration,
+            durationInFrames: resolved.durationInFrames,
+            props: {
+              ...props,
+              musicaUrl: null,
+              audioDurationInSeconds: resolved.audioDurationInSeconds,
+            },
+          };
+        }
+
+        const fromServer = resolveFromProps(props as Record<string, unknown>);
+        if (fromServer) {
+          return {
+            durationInFrames: fromServer.durationInFrames,
+            props: {
+              ...props,
+              audioDurationInSeconds: fromServer.audioDurationInSeconds,
+            },
+          };
+        }
+
+        if (!props.musicaUrl) {
+          const fallback = resolveCompositionDuration(0);
+          return {
+            durationInFrames: fallback.durationInFrames,
+            props: { ...props, audioDurationInSeconds: 0 },
+          };
+        }
+
+        try {
+          const raw = await getAudioDurationInSeconds(props.musicaUrl as string);
+          const resolved = resolveCompositionDuration(raw);
+          return {
+            durationInFrames: resolved.durationInFrames,
+            props: { ...props, audioDurationInSeconds: resolved.audioDurationInSeconds },
           };
         } catch {
-          return { durationInFrames: DEFAULT_DURATION, audioDurationInSeconds: 0 };
+          const fallback = resolveCompositionDuration(0);
+          return {
+            durationInFrames: fallback.durationInFrames,
+            props: { ...props, audioDurationInSeconds: 0 },
+          };
         }
       }}
     />

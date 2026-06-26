@@ -1,5 +1,12 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+import {
+  buildLegacyOutputKey,
+  buildRenderOutputKeys,
+  findExistingRenderKey,
+} from "../_shared/remotion-s3.ts";
+import { fetchReadyMusicUrl, muxRenderWithMusic } from "../_shared/mux-video-audio.ts";
+import { summarizeMuxError } from "../_shared/mux-lambda.ts";
 
 const crypto = globalThis.crypto;
 
@@ -139,29 +146,31 @@ serve(async (req) => {
       });
     }
 
-    const key = presente.render_request_id
-      ? `renders/${presente.render_request_id}/renders/${presente.id}/out.mp4`
-      : `renders/${presente.id}/out.mp4`;
+    const candidateKeys = presente.render_request_id
+      ? buildRenderOutputKeys(presente.render_request_id, presente.id)
+      : [buildLegacyOutputKey(presente.id)];
 
-    if (!presente.video_url) {
-      // HEAD request anônimo falha para buckets S3 privados (sempre retorna 403).
-      // Usamos uma GET presigned + Range: 0-0 para verificar existência do arquivo.
+    const checkS3Exists = async (s3Key: string): Promise<boolean> => {
       const checkUrl = await generatePresignedGetUrl(
-        bucket, key, region, accessKeyId, secretAccessKey, 60,
+        bucket, s3Key, region, accessKeyId, secretAccessKey, 60,
       );
       const checkResp = await fetch(checkUrl, {
         method: "GET",
-        headers: { "Range": "bytes=0-0" },
+        headers: { Range: "bytes=0-0" },
       });
-      if (checkResp.status !== 206 && checkResp.status !== 200) {
+      return checkResp.status === 206 || checkResp.status === 200;
+    };
+
+    const key = await findExistingRenderKey(candidateKeys, checkS3Exists);
+
+    if (!presente.video_url) {
+      if (!key) {
         return new Response(JSON.stringify({ error: "Video not available" }), {
           status: 404,
           headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
         });
       }
-    }
 
-    if (!presente.video_url) {
       const proxyUrl = `${supabaseUrl}/functions/v1/proxy-video?presente_id=${presente.id}`;
       await supabase
         .from("presentes")
@@ -172,6 +181,33 @@ serve(async (req) => {
         })
         .eq("id", presente.id);
     }
+
+    if (!key) {
+      return new Response(JSON.stringify({ error: "Video not available" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      });
+    }
+
+    const musicaUrl = presente.render_request_id
+      ? await fetchReadyMusicUrl(supabase, presente.id)
+      : null;
+
+    if (musicaUrl && presente.render_request_id) {
+      const mux = await muxRenderWithMusic({
+        renderId: presente.render_request_id,
+        musicaUrl,
+        bucket,
+        videoKey: key,
+      });
+      if (!mux.ok) {
+        return new Response(JSON.stringify({ error: summarizeMuxError(mux.error) }), {
+          status: 503,
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        });
+      }
+    }
+
     const presignedUrl = await generatePresignedGetUrl(
       bucket, key, region, accessKeyId, secretAccessKey, 3600,
     );

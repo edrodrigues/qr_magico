@@ -11,6 +11,7 @@ export const GENRE_PALETTES: Record<string, string[]> = {
 
 export const DEFAULT_PALETTE = ['#8a7a6a', '#b8a898', '#e8e4e0'];
 
-export function getPalette(genre: string): string[] {
+export function getPalette(genre?: string | null): string[] {
+  if (!genre || typeof genre !== "string") return DEFAULT_PALETTE;
   return GENRE_PALETTES[genre.toLowerCase()] ?? DEFAULT_PALETTE;
 }
