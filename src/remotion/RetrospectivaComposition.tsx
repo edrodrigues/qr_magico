@@ -40,6 +40,8 @@ const STYLE_LABELS: Record<string, string> = {
   piano: "Piano Solo",
   lofi: "Lo-fi",
   sertanejo: "Sertanejo",
+  rock: "Rock n Roll",
+  pagode: "Pagode",
 };
 
 function computeDaysSince(dateStr: string): number {

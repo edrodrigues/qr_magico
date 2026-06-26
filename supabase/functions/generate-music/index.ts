@@ -24,6 +24,8 @@ const STYLE_DESCRIPTIONS: Record<string, string> = {
   piano: "piano solo emocional e intimista",
   lofi: "lo-fi moderno, nostálgico e relaxante",
   sertanejo: "sertanejo raiz romântico",
+  rock: "rock and roll animado e energético",
+  pagode: "pagode brasileiro contagiante e envolvente",
 }
 
 const OCASIAO_LABELS: Record<string, string> = {

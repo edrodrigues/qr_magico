@@ -7,6 +7,7 @@ export const GENRE_PALETTES: Record<string, string[]> = {
   acoustic: ['#5a5548', '#958a7a', '#e6e4e0'],
   eletronica: ['#4a3a60', '#7a6a90', '#e6e0ee'],
   rock: ['#3a3a3a', '#7a7a7a', '#e0e0e0'],
+  pagode: ['#c48a3a', '#e0b87a', '#f5ecd8'],
 };
 
 export const DEFAULT_PALETTE = ['#8a7a6a', '#b8a898', '#e8e4e0'];

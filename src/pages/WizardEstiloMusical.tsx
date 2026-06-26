@@ -9,6 +9,8 @@ const musicStyles = [
   { key: "piano", label: "Piano Solo", mood: "Emocional", icon: "piano" },
   { key: "lofi", label: "Lo-fi", mood: "Moderno", icon: "headphones" },
   { key: "sertanejo", label: "Sertanejo", mood: "Raiz", icon: "agriculture" },
+  { key: "rock", label: "Rock n Roll", mood: "Energético", icon: "music_note" },
+  { key: "pagode", label: "Pagode", mood: "Contagiante", icon: "celebration" },
 ];
 
 export function WizardEstiloMusical() {
