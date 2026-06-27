@@ -27,6 +27,8 @@ export function Cover({ nome_homenageado, theme }: CoverProps) {
   const glowOpacity = interpolate(frame, [0, 150], [0.12, 0.2], {
     extrapolateRight: "clamp",
   });
+  const iconOpacity = interpolate(frame, [0, 20], [0, 1]);
+  const iconY = interpolate(frame, [0, 20], [20, 0]);
   const iconScale = spring({
     frame: Math.min(frame, 30),
     fps: 30,
@@ -108,7 +110,8 @@ export function Cover({ nome_homenageado, theme }: CoverProps) {
             width: 56,
             height: 56,
             margin: "0 auto 24px",
-            transform: `scale(${iconScale})`,
+            opacity: iconOpacity,
+            transform: `translateY(${iconY}px) scale(${iconScale})`,
           }}
           viewBox="0 0 24 24"
           fill={theme.primary}

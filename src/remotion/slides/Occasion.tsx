@@ -25,6 +25,7 @@ export function Occasion({
   const cardOpacity = interpolate(frame, [40, 70], [0, 1]);
   const cardY = interpolate(frame, [40, 70], [20, 0]);
   const iconOpacity = interpolate(frame, [0, 25], [0, 1]);
+  const iconY = interpolate(frame, [0, 25], [20, 0]);
   const iconScale = interpolate(frame, [0, 25], [0.5, 1], {
     extrapolateRight: "clamp",
   });
@@ -54,7 +55,7 @@ export function Occasion({
           height: 48,
           marginBottom: 20,
           opacity: iconOpacity,
-          transform: `scale(${iconScale})`,
+          transform: `translateY(${iconY}px) scale(${iconScale})`,
         }}
         viewBox="0 0 24 24"
         fill={theme.primary}
