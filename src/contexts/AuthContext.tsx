@@ -35,10 +35,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      if (event === "SIGNED_IN" && session?.user) {
+        addToResendAudience(session.user.email, session.user.user_metadata?.full_name);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -57,6 +61,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) return { error: error.message, needsEmailConfirmation: false };
     const needsEmailConfirmation = !!data?.user?.confirmation_sent_at;
+
+    if (data?.user) {
+      addToResendAudience(data.user.email, data.user.user_metadata?.full_name);
+    }
 
     if (data?.user && data?.session) {
       const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`;
@@ -87,6 +95,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       options: { redirectTo: `${getAppOrigin()}/auth` },
     });
   };
+
+  function addToResendAudience(email: string, fullName?: string) {
+    const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/add-resend-contact`;
+    fetch(functionUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        first_name: fullName || email.split("@")[0] || "",
+      }),
+    }).catch((err) => console.error("Resend audience error:", err));
+  }
 
   const signOut = async () => {
     await supabase.auth.signOut();
