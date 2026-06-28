@@ -37,7 +37,7 @@ export function Story({ descricao_relacao, theme }: StoryProps) {
           position: "absolute",
           top: 40,
           left: "50%",
-          transform: "translateX(-50%)",
+          transform: `translateX(-50%) translateY(${titleY}px)`,
           width: 60,
           height: 2,
           borderRadius: 1,

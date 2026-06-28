@@ -19,6 +19,8 @@ const KEN_BURNS_DIRS = [
 export function Gallery({ fotos, theme }: GalleryProps) {
   const frame = useCurrentFrame();
   const safeFotos = Array.isArray(fotos) ? fotos : [];
+  const counterOpacity = interpolate(frame, [0, 20], [0, 1]);
+  const counterY = interpolate(frame, [0, 20], [10, 0]);
 
   if (safeFotos.length === 0) {
     return (
@@ -175,11 +177,12 @@ export function Gallery({ fotos, theme }: GalleryProps) {
           position: "absolute",
           bottom: 40,
           left: "50%",
-          transform: "translateX(-50%)",
+          transform: `translateX(-50%) translateY(${counterY}px)`,
           backgroundColor: `${theme.primary}99`,
           backdropFilter: "blur(8px)",
           padding: "8px 20px",
           borderRadius: 20,
+          opacity: counterOpacity,
         }}
       >
           <span

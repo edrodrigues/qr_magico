@@ -112,6 +112,8 @@ export function Cover({ nome_homenageado, theme }: CoverProps) {
             margin: "0 auto 24px",
             opacity: iconOpacity,
             transform: `translateY(${iconY}px) scale(${iconScale})`,
+            position: "relative",
+            zIndex: 3,
           }}
           viewBox="0 0 24 24"
           fill={theme.primary}
@@ -127,6 +129,8 @@ export function Cover({ nome_homenageado, theme }: CoverProps) {
             opacity: titleOpacity,
             transform: `translateY(${titleY}px)`,
             marginBottom: 12,
+            position: "relative",
+            zIndex: 2,
           }}
         >
           Uma surpresa para
@@ -138,6 +142,8 @@ export function Cover({ nome_homenageado, theme }: CoverProps) {
             fontSize: 72,
             fontWeight: 700,
             lineHeight: 1.1,
+            position: "relative",
+            zIndex: 1,
           }}
         >
           {nome_homenageado.split("").map((char, i) => {
