@@ -10,6 +10,7 @@ debug-*.log
 
 # Environment and local artifacts
 .env
+supabase/.env
 out/
 build/
 lambda/mux/mux-lambda.zip
