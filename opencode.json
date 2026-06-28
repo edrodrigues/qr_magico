@@ -40,11 +40,8 @@
     },
     "resend": {
       "type": "local",
-      "command": ["node", "C:\\Users\\lc_admin\\AppData\\Roaming\\npm\\node_modules\\resend-mcp\\dist\\index.js"],
-      "enabled": true,
-      "env": {
-        "RESEND_API_KEY": "re_hKYEv1d1_9Yd9sJ8EhMstR56WfVQk6smR"
-      }
+      "command": ["node", "C:\\Users\\lc_admin\\AppData\\Roaming\\npm\\node_modules\\resend-mcp\\dist\\index.js", "--key", "re_hKYEv1d1_9Yd9sJ8EhMstR56WfVQk6smR"],
+      "enabled": true
     }
   }
 }
