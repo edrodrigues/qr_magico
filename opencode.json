@@ -37,6 +37,14 @@
       "type": "local",
       "command": ["npx", "@remotion/mcp@latest"],
       "enabled": true
+    },
+    "resend": {
+      "type": "local",
+      "command": ["npx", "-y", "resend-mcp"],
+      "enabled": true,
+      "env": {
+        "RESEND_API_KEY": "re_NDiJ5kNY_MSPtDDgFTemaytuRWqY63Y6h"
+      }
     }
   }
 }

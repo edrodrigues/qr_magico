@@ -57,6 +57,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) return { error: error.message, needsEmailConfirmation: false };
     const needsEmailConfirmation = !!data?.user?.confirmation_sent_at;
+
+    if (data?.user && data?.session) {
+      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`;
+      fetch(functionUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${data.session.access_token}`,
+        },
+        body: JSON.stringify({
+          to: data.user.email,
+          tipo: "welcome",
+          usuario_id: data.user.id,
+          data: {
+            nome: data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "",
+            link: `${window.location.origin}/criar`,
+          },
+        }),
+      }).catch((err) => console.error("Welcome email error:", err));
+    }
+
     return { error: null, needsEmailConfirmation };
   };
 
