@@ -446,12 +446,12 @@ async function logNotification(
   presente_id?: string,
   metadata?: Record<string, unknown>,
 ) {
-  const { error } = await supabase.from("email_notificacoes").insert({
-    usuario_id,
-    tipo,
-    email,
-    presente_id: presente_id || null,
-    metadata: metadata || null,
+  const { error } = await supabase.rpc("insert_email_notificacao", {
+    p_usuario_id: usuario_id,
+    p_tipo: tipo,
+    p_email: email,
+    p_presente_id: presente_id || null,
+    p_metadata: metadata || null,
   })
 
   if (error) {

@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           usuario_id: data.user.id,
           data: {
             nome: data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "",
-            link: `${window.location.origin}/criar`,
+            link: `${window.location.origin}/wizard/ocasiao-nome`,
           },
         }),
       }).catch((err) => console.error("Welcome email error:", err));

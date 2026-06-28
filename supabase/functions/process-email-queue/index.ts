@@ -23,7 +23,7 @@ interface Candidate {
 }
 
 function buildLink(tipo: string, presente_id: string | null): string {
-  if (!presente_id) return `${APP_URL}/criar`
+  if (!presente_id) return `${APP_URL}/wizard/ocasiao-nome`
   if (tipo.startsWith("payment")) return `${APP_URL}/presentes/${presente_id}/pagamento`
   return `${APP_URL}/presentes/${presente_id}`
 }
