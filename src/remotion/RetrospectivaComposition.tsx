@@ -3,7 +3,6 @@ import { Cover } from "./slides/Cover";
 import { Occasion } from "./slides/Occasion";
 import { Story } from "./slides/Story";
 import { Gallery } from "./slides/Gallery";
-import { MusicStyle } from "./slides/MusicStyle";
 import { Credits } from "./slides/Credits";
 import { LogoEnd } from "./slides/LogoEnd";
 import { FinalHold } from "./slides/FinalHold";
@@ -16,7 +15,6 @@ export interface RetroInputProps {
   nome_homenageado: string;
   nome_remetente: string;
   ocasiao: string;
-  data_inicio: string;
   descricao_relacao: string;
   estilo_musical: string;
   fotos: string[];
@@ -34,34 +32,18 @@ const OCCASION_LABELS: Record<string, string> = {
   outro: "Especial",
 };
 
-const STYLE_LABELS: Record<string, string> = {
-  mpb: "MPB",
-  pop: "Pop",
-  piano: "Piano Solo",
-  lofi: "Lo-fi",
-  sertanejo: "Sertanejo",
-  rock: "Rock n Roll",
-  pagode: "Pagode",
-};
-
-function computeDaysSince(dateStr: string): number {
-  if (!dateStr) return 0;
-  const start = new Date(dateStr + "T12:00:00");
-  const now = new Date();
-  return Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-}
-
 function FadeTransition({ durationInFrames }: { durationInFrames: number }) {
   const frame = useCurrentFrame();
-  const opacity = interpolate(frame, [0, durationInFrames], [0, 1], {
+  const half = Math.floor(durationInFrames / 2);
+  const opacity = interpolate(frame, [0, half, durationInFrames], [0, 1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
   return (
     <AbsoluteFill
       style={{
-        backgroundColor: "#faf8f5",
-        opacity: 1 - opacity,
+        backgroundColor: "black",
+        opacity,
         zIndex: 999,
       }}
     />
@@ -72,7 +54,6 @@ export function RetrospectivaComposition({
   nome_homenageado,
   nome_remetente,
   ocasiao,
-  data_inicio,
   descricao_relacao,
   estilo_musical,
   fotos,
@@ -88,15 +69,12 @@ export function RetrospectivaComposition({
   const safeNome = String(nome_homenageado ?? "");
   const safeRemetente = String(nome_remetente ?? "");
   const safeOcasiao = String(ocasiao ?? "");
-  const safeDataInicio = String(data_inicio ?? "");
   const safeDescricao = String(descricao_relacao ?? "");
   const safeEstilo = String(estilo_musical ?? "");
 
   const occasionLabel = OCCASION_LABELS[safeOcasiao] || safeOcasiao || "Especial";
-  const styleLabel = STYLE_LABELS[safeEstilo] || safeEstilo || "Especial";
   const palette = getPalette(safeEstilo);
   const theme: OccasionTheme = getGenreTheme(palette, safeOcasiao);
-  const daysSince = computeDaysSince(safeDataInicio);
   const { extraHoldFrames } = resolveCompositionDuration(
     audioDurationInSeconds ?? 0,
   );
@@ -123,8 +101,6 @@ export function RetrospectivaComposition({
         <Occasion
           nome_remetente={safeRemetente}
           occasionLabel={occasionLabel}
-          data_inicio={safeDataInicio}
-          daysSince={daysSince}
           theme={theme}
         />
       </Sequence>
@@ -141,23 +117,11 @@ export function RetrospectivaComposition({
         <FadeTransition durationInFrames={5} />
       </Sequence>
 
-      <Sequence from={600} durationInFrames={600} name="Gallery">
+      <Sequence from={600} durationInFrames={720} name="Gallery">
         <Gallery fotos={allPhotos} theme={theme} />
       </Sequence>
 
-      <Sequence from={1195} durationInFrames={5} name="Fade4">
-        <FadeTransition durationInFrames={5} />
-      </Sequence>
-
-      <Sequence from={1200} durationInFrames={120} name="MusicStyle">
-        <MusicStyle
-          styleLabel={styleLabel}
-          estilo_musical={safeEstilo}
-          theme={theme}
-        />
-      </Sequence>
-
-      <Sequence from={1315} durationInFrames={5} name="Fade5">
+      <Sequence from={1315} durationInFrames={5} name="Fade4">
         <FadeTransition durationInFrames={5} />
       </Sequence>
 

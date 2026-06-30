@@ -18,9 +18,6 @@ export function Story({ descricao_relacao, theme }: StoryProps) {
   const sentences = splitSentences(safeDescricao);
   const safeSentences = sentences.length > 0 ? sentences : ["Uma história especial."];
 
-  const titleOpacity = interpolate(frame, [0, 15], [0, 1]);
-  const titleY = interpolate(frame, [0, 15], [10, 0]);
-
   return (
     <AbsoluteFill
       style={{
@@ -32,35 +29,6 @@ export function Story({ descricao_relacao, theme }: StoryProps) {
         padding: "40px 36px",
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          top: 40,
-          left: "50%",
-          transform: `translateX(-50%) translateY(${titleY}px)`,
-          width: 60,
-          height: 2,
-          borderRadius: 1,
-          background: `linear-gradient(90deg, transparent, ${theme.secondary}, transparent)`,
-          opacity: titleOpacity,
-        }}
-      />
-
-      <h3
-        style={{
-          color: "#2c2c2c",
-          fontSize: 24,
-          fontWeight: 600,
-          letterSpacing: 3,
-          textTransform: "uppercase",
-          opacity: titleOpacity,
-          transform: `translateY(${titleY}px)`,
-          marginBottom: 40,
-        }}
-      >
-        A História de Vocês
-      </h3>
-
       <div
         style={{
           maxWidth: 720,

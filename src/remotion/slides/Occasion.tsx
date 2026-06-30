@@ -4,16 +4,12 @@ import type { OccasionTheme } from "../theme";
 interface OccasionProps {
   nome_remetente: string;
   occasionLabel: string;
-  data_inicio: string;
-  daysSince: number;
   theme: OccasionTheme;
 }
 
 export function Occasion({
   nome_remetente,
   occasionLabel,
-  data_inicio,
-  daysSince,
   theme,
 }: OccasionProps) {
   const frame = useCurrentFrame();
@@ -22,21 +18,11 @@ export function Occasion({
   const remetenteY = interpolate(frame, [0, 20], [20, 0]);
   const titleOpacity = interpolate(frame, [15, 45], [0, 1]);
   const titleY = interpolate(frame, [15, 45], [20, 0]);
-  const cardOpacity = interpolate(frame, [40, 70], [0, 1]);
-  const cardY = interpolate(frame, [40, 70], [20, 0]);
   const iconOpacity = interpolate(frame, [0, 25], [0, 1]);
   const iconY = interpolate(frame, [0, 25], [20, 0]);
   const iconScale = interpolate(frame, [0, 25], [0.5, 1], {
     extrapolateRight: "clamp",
   });
-
-  const formattedDate = data_inicio
-    ? new Date(data_inicio + "T12:00:00").toLocaleDateString("pt-BR", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })
-    : null;
 
   return (
     <AbsoluteFill
@@ -94,36 +80,6 @@ export function Occasion({
       >
         {occasionLabel}
       </h1>
-
-      {data_inicio && (
-        <div
-          style={{
-            background: theme.surface,
-            borderRadius: 20,
-            padding: "28px 40px",
-            textAlign: "center",
-            opacity: cardOpacity,
-            transform: `translateY(${cardY}px)`,
-            backdropFilter: "blur(12px)",
-            border: `1px solid ${theme.secondary}30`,
-            boxShadow: `0 8px 32px ${theme.primary}10`,
-          }}
-        >
-          <p
-            style={{
-              color: "#555555",
-              fontSize: 24,
-              fontFamily: "var(--font-body)",
-              marginBottom: 8,
-            }}
-          >
-            Desde {formattedDate}
-          </p>
-          <p style={{ color: theme.primary, fontSize: 30, fontWeight: 700 }}>
-            {daysSince} dias juntos
-          </p>
-        </div>
-      )}
     </AbsoluteFill>
   );
 }

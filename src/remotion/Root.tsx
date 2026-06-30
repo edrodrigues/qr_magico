@@ -25,7 +25,6 @@ export const RemotionRoot: React.FC = () => {
         nome_homenageado: "Nome",
         nome_remetente: "Remetente",
         ocasiao: "aniversario",
-        data_inicio: "2024-01-01",
         descricao_relacao: "Uma história especial.",
         estilo_musical: "mpb",
         fotos: [],
