@@ -52,3 +52,45 @@ export async function fetchReadyMusicUrl(
   if (data?.status === "ready" && data.url_audio) return data.url_audio;
   return null;
 }
+
+export async function ensureVideoMuxed(
+  supabase: SupabaseClient,
+  presenteId: string,
+  input: {
+    renderId: string | null;
+    musicaUrl: string | null;
+    bucket: string;
+    videoKey: string;
+    videoMuxedAt: string | null;
+  },
+): Promise<{ ok: boolean; skipped: boolean; error?: string }> {
+  if (!input.musicaUrl || !input.renderId) {
+    return { ok: true, skipped: true };
+  }
+  if (input.videoMuxedAt) {
+    return { ok: true, skipped: true };
+  }
+
+  const mux = await muxRenderWithMusic({
+    renderId: input.renderId,
+    musicaUrl: input.musicaUrl,
+    bucket: input.bucket,
+    videoKey: input.videoKey,
+  });
+
+  if (!mux.ok) {
+    return { ok: false, skipped: false, error: mux.error };
+  }
+
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from("presentes")
+    .update({ video_muxed_at: now, updated_at: now })
+    .eq("id", presenteId);
+
+  if (error) {
+    console.error(`ensureVideoMuxed: failed to set video_muxed_at for ${presenteId}:`, error);
+  }
+
+  return { ok: true, skipped: false };
+}

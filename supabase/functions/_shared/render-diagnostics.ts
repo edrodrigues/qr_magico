@@ -3,8 +3,14 @@ import { extractProgressErrorMessage } from "./remotion-lambda.ts";
 
 export const PROGRESS_GRACE_MS = 30_000;
 export const FATAL_CONFIRM_MS = 3 * 60_000;
+export const STUCK_RENDER_MS = 25 * 60_000;
 
-export type RenderVerdict = "rendering" | "failed_remotion" | "waiting_s3" | "grace_period";
+export type RenderVerdict =
+  | "rendering"
+  | "failed_remotion"
+  | "waiting_s3"
+  | "grace_period"
+  | "unrecoverable";
 
 export interface RenderDiagnostics {
   render_id: string | null;
@@ -118,4 +124,36 @@ export function buildFatalErrorLogDetail(
   const raw = diagnostics.remotion_error || "unknown";
   const renderId = diagnostics.render_id || "desconhecido";
   return `Falha na renderização (Remotion): ${raw} Render ID: ${renderId}. Tempo: ${minutes}min.`;
+}
+
+export function isVideoAbsentUnrecoverable(
+  status: string,
+  s3Found: boolean,
+  elapsedMs: number,
+  debug: RenderDiagnostics,
+): boolean {
+  if (s3Found) return false;
+  if (status === "ready" || status === "failed") return true;
+  if (status === "generating" && elapsedMs >= STUCK_RENDER_MS) {
+    return debug.fatal_error || debug.progress_unavailable || !debug.done;
+  }
+  return false;
+}
+
+const ABSENT_VIDEO_READY_MSG =
+  "Arquivo de vídeo não encontrado. Gere novamente.";
+
+export function buildAbsentVideoMessage(
+  status: string,
+  storedErrorMessage: string | null | undefined,
+  debug: RenderDiagnostics,
+  elapsedMs: number,
+): string {
+  if (status === "failed" && storedErrorMessage?.trim()) {
+    return storedErrorMessage.trim();
+  }
+  if (status === "ready") {
+    return ABSENT_VIDEO_READY_MSG;
+  }
+  return buildFatalErrorMessage(debug, elapsedMs);
 }

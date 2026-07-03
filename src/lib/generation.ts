@@ -142,7 +142,7 @@ export function inferGenerationSteps(row: PresenteGenerationRow): GenerationStep
 
   const musicUrl = musicRow?.url_audio;
 
-  const videoReady = !!row.video_url;
+  const videoReady = row.status === "ready";
 
   const hasRenderRequest = !!row.render_request_id;
 
@@ -395,76 +395,69 @@ export async function prepareMusicRow(
 
 
 
-/** Promove presente com video_url mas status ainda não ready. */
-
-export async function promoteOrphanVideo(
-
+/** Verifica se o MP4 existe no S3 via proxy-video (sem auth). */
+export async function verifyVideoOnS3(
   presenteId: string,
+  session: Session,
+): Promise<boolean> {
+  const url = `${EDGE_URL}/proxy-video?presente_id=${encodeURIComponent(presenteId)}&format=json`;
+  try {
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
 
+/** Promove presente em generating com vídeo no S3 mas status ainda não ready. */
+export async function promoteOrphanVideo(
+  presenteId: string,
+  session: Session,
 ): Promise<{ promoted: boolean; error: string | null }> {
-
   const { data, error } = await supabase
-
     .from("presentes")
-
     .select("video_url, status")
-
     .eq("id", presenteId)
-
     .single();
 
-
-
-  if (error || !data?.video_url || data.status === "ready") {
-
+  if (error || !data?.video_url) {
     return { promoted: false, error: error?.message ?? null };
-
   }
 
+  if (data.status === "ready" || data.status === "failed") {
+    return { promoted: false, error: null };
+  }
 
+  if (data.status !== "generating") {
+    return { promoted: false, error: null };
+  }
+
+  const exists = await verifyVideoOnS3(presenteId, session);
+  if (!exists) {
+    return { promoted: false, error: null };
+  }
 
   const { error: updateErr } = await supabase
-
     .from("presentes")
-
     .update({
-
       status: "ready",
-
       error_message: "",
-
       updated_at: new Date().toISOString(),
-
     })
-
     .eq("id", presenteId);
 
-
-
   return { promoted: true, error: updateErr?.message ?? null };
-
 }
 
 
 
 export async function restartGeneration(
-
   presenteId: string,
-
   phase: RestartPhase,
-
   options: { musicStyle?: string } = {},
-
 ): Promise<{ error: string | null; skipMusic: boolean }> {
-
-  const orphan = await promoteOrphanVideo(presenteId);
-
-  if (orphan.promoted) return { error: orphan.error, skipMusic: true };
-
-  if (orphan.error) return { error: orphan.error, skipMusic: false };
-
-
-
   if (phase === "full") {
 
     const { error: prepErr } = await prepareMusicRow(
@@ -496,6 +489,8 @@ export async function restartGeneration(
       render_request_id: null,
 
       video_url: null,
+
+      video_muxed_at: null,
 
       updated_at: new Date().toISOString(),
 

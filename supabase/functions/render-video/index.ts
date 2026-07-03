@@ -430,6 +430,9 @@ serve(async (req) => {
         render_request_id: renderId,
         status: "generating",
         generation_started_at: new Date().toISOString(),
+        video_url: null,
+        video_muxed_at: null,
+        error_message: "",
       })
       .eq("id", presenteId);
 

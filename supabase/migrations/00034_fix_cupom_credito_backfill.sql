@@ -1,3 +1,4 @@
+-- Renumerada de 00025 (conflito com 00025_admin_fix_cupons_rls já aplicada no remoto).
 -- Helper centralizado para conceder créditos (evita duplicação entre RPCs)
 CREATE OR REPLACE FUNCTION public.conceder_credito(
   p_usuario_id UUID,

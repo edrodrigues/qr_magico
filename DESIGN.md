@@ -282,13 +282,25 @@ Track: `h-1.5 bg-surface-container rounded-full`. Fill: `bg-primary rounded-full
 
 ## 9. Ícones
 
-**Material Symbols Outlined** — variável weight 100-700, fill 0-1.
+**Material Symbols Outlined Variable** — variável weight 100-700, fill 0-1. Self-hosted via `@fontsource-variable/material-symbols-outlined` (import em `src/main.tsx`).
 
-```html
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+```ts
+import "@fontsource-variable/material-symbols-outlined/full.css";
 ```
 
-Uso: `<span className="material-symbols-outlined">icon_name</span>`. Fill ativo com `style={{ fontVariationSettings: "'FILL' 1" }}`.
+A classe `.material-symbols-outlined` em `src/index.css` usa `font-family: "Material Symbols Outlined Variable"` (nome exato do `@font-face` do pacote).
+
+```tsx
+<span className="material-symbols-outlined">icon_name</span>
+```
+
+Ou o wrapper `Icon` em `src/components/Icon.tsx` para novos componentes:
+
+```tsx
+<Icon name="check_circle" filled className="text-primary text-[22px]" />
+```
+
+Fill ativo com `filled` prop ou `style={{ fontVariationSettings: "'FILL' 1" }}`.
 
 Ícones comuns: `auto_awesome`, `favorite`, `calendar_month`, `photo_library`, `music_note`, `play_arrow`, `pause`, `arrow_forward`, `arrow_back`, `check_circle`, `check`, `close`, `menu`, `share`, `content_copy`, `download`, `picture_as_pdf`, `refresh`, `volume_off`, `volume_up`, `qr_code`, `qr_code_2`, `credit_card`, `shopping_cart`, `error`, `delete`, `edit`, `edit_note`, `add_photo_alternate`, `link`, `celebration`, `cake`, `group`, `auto_stories`, `spark`, `magic_button`, `piano`, `headphones`, `self_improvement`.
 

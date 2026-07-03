@@ -4,7 +4,7 @@ INSERT INTO public.app_secrets (key, value)
 VALUES ('RESEND_API_KEY', '')
 ON CONFLICT (key) DO NOTHING;
 
-CREATE TABLE public.email_notificacoes (
+CREATE TABLE IF NOT EXISTS public.email_notificacoes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   usuario_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   presente_id UUID REFERENCES public.presentes(id) ON DELETE CASCADE,
@@ -22,9 +22,9 @@ CREATE TABLE public.email_notificacoes (
   metadata JSONB
 );
 
-CREATE INDEX idx_email_notificacoes_usuario ON email_notificacoes(usuario_id);
-CREATE INDEX idx_email_notificacoes_tipo ON email_notificacoes(tipo);
-CREATE INDEX idx_email_notificacoes_presente ON email_notificacoes(presente_id);
+CREATE INDEX IF NOT EXISTS idx_email_notificacoes_usuario ON email_notificacoes(usuario_id);
+CREATE INDEX IF NOT EXISTS idx_email_notificacoes_tipo ON email_notificacoes(tipo);
+CREATE INDEX IF NOT EXISTS idx_email_notificacoes_presente ON email_notificacoes(presente_id);
 
 CREATE OR REPLACE FUNCTION public.get_email_candidates(p_tipo TEXT)
 RETURNS TABLE(
@@ -114,15 +114,20 @@ BEGIN
 END;
 $$;
 
-SELECT cron.schedule(
-  'process-email-queue',
-  '0 * * * *',
-  $$SELECT net.http_post(
-    url := 'https://phaglbxdzkadcaomtsmw.supabase.co/functions/v1/process-email-queue',
-    headers := jsonb_build_object(
-      'Content-Type', 'application/json',
-      'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key', true)
-    ),
-    body := '{}'::jsonb
-  ) AS request_id$$
-);
+DO $outer$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'process-email-queue') THEN
+    PERFORM cron.schedule(
+      'process-email-queue',
+      '0 * * * *',
+      $cmd$SELECT net.http_post(
+        url := 'https://phaglbxdzkadcaomtsmw.supabase.co/functions/v1/process-email-queue',
+        headers := jsonb_build_object(
+          'Content-Type', 'application/json',
+          'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key', true)
+        ),
+        body := '{}'::jsonb
+      ) AS request_id$cmd$
+    );
+  END IF;
+END $outer$;
