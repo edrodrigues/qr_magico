@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-
+ 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 import { buildPresenteLink } from "../_shared/generation-pipeline.ts";
 
@@ -246,10 +247,11 @@ async function resolveVideoKey(
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("origin"))
   if (req.method === "OPTIONS") {
     return new Response(null, {
       headers: {
-        "Access-Control-Allow-Origin": "*",
+        ...corsHeaders,
         "Access-Control-Allow-Methods": "POST",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
       },
@@ -268,7 +270,7 @@ serve(async (req) => {
   if (!authHeader) {
     return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
       status: 401,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
 
@@ -278,7 +280,7 @@ serve(async (req) => {
   if (userErr || !user) {
     return new Response(JSON.stringify({ error: "Invalid token" }), {
       status: 401,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
 
@@ -288,7 +290,7 @@ serve(async (req) => {
     if (!presenteId) {
       return new Response(JSON.stringify({ error: "Missing presente_id" }), {
         status: 400,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -301,14 +303,14 @@ serve(async (req) => {
     if (presenteErr || !presente) {
       return new Response(JSON.stringify({ error: "Presente not found" }), {
         status: 404,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
     if (presente.usuario_id !== user.id) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -323,7 +325,7 @@ serve(async (req) => {
     if (!aws.bucket || !aws.accessKeyId || !aws.secretAccessKey) {
       return new Response(JSON.stringify({ error: "S3 not configured" }), {
         status: 500,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -351,7 +353,7 @@ serve(async (req) => {
         debug: resolved.debug,
       }), {
         status: 200,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -363,7 +365,7 @@ serve(async (req) => {
         debug: resolved.debug,
       }), {
         status: 202,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -387,7 +389,7 @@ serve(async (req) => {
           debug: { ...resolved.debug, verdict: "muxing", mux_error: mux.error },
         }), {
           status: 202,
-          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+          headers: { "Content-Type": "application/json", ...corsHeaders },
         });
       }
     }
@@ -421,14 +423,14 @@ serve(async (req) => {
       download_url: downloadUrl,
       debug: resolved.debug,
     }), {
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("get-download-url error:", message);
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
 });

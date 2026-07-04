@@ -10,6 +10,16 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+    const auth = req.headers.get("Authorization") || ""
+    const token = auth.replace("Bearer ", "")
+    const isServiceRole = token === supabaseServiceKey
+    if (!isServiceRole) {
+      const { data: { user }, error } = await supabase.auth.getUser(token)
+      if (error || !user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 })
+      }
+    }
+
     const { email, first_name, last_name } = await req.json()
 
     if (!email) {

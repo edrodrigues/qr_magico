@@ -1,14 +1,16 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0"
+import { getCorsHeaders } from "../_shared/cors.ts"
 
 const INFINITEPAY_HANDLE = "edmilson-rodrigues-pa0"
 const INFINITEPAY_CHECK_API = "https://api.checkout.infinitepay.io/payment_check"
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("origin"))
   if (req.method === "OPTIONS") {
     return new Response(null, {
       headers: {
-        "Access-Control-Allow-Origin": "*",
+        ...corsHeaders,
         "Access-Control-Allow-Methods": "POST",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
       },
@@ -27,7 +29,7 @@ serve(async (req) => {
   if (!authHeader) {
     return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
       status: 401,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     })
   }
 
@@ -37,7 +39,7 @@ serve(async (req) => {
   if (userErr || !user) {
     return new Response(JSON.stringify({ error: "Invalid token" }), {
       status: 401,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     })
   }
 
@@ -48,7 +50,7 @@ serve(async (req) => {
     if (!order_nsu && !slug) {
       return new Response(JSON.stringify({ error: "Provide order_nsu or slug" }), {
         status: 400,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
@@ -69,7 +71,7 @@ serve(async (req) => {
       const errorText = await checkRes.text()
       return new Response(JSON.stringify({ error: "Payment check failed", details: errorText }), {
         status: 502,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
@@ -78,7 +80,7 @@ serve(async (req) => {
     return new Response(JSON.stringify(checkData), {
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
+        ...corsHeaders,
       },
     })
   } catch (err) {
@@ -89,7 +91,7 @@ serve(async (req) => {
         status: 500,
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
+          ...corsHeaders,
         },
       },
     )

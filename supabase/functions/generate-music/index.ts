@@ -4,6 +4,7 @@ import {
   buildElevenLabsMusicUrl,
   validateAudioBytes,
 } from "../_shared/audio-utils.ts"
+import { getCorsHeaders } from "../_shared/cors.ts"
 
 const ELEVENLABS_API_URL = buildElevenLabsMusicUrl(Deno.env.get("ELEVENLABS_API_URL") || undefined)
 const FETCH_TIMEOUT_MS = parseInt(Deno.env.get("FETCH_TIMEOUT_MS") || "120000", 10)
@@ -101,12 +102,13 @@ async function callElevenLabs(
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("origin"))
   const startTime = Date.now()
 
   if (req.method === "OPTIONS") {
     return new Response(null, {
       headers: {
-        "Access-Control-Allow-Origin": "*",
+        ...corsHeaders,
         "Access-Control-Allow-Methods": "POST",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
       },
@@ -125,7 +127,7 @@ serve(async (req) => {
   if (!authHeader) {
     return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
       status: 401,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     })
   }
 
@@ -137,7 +139,7 @@ serve(async (req) => {
     if (userErr || !u) {
       return new Response(JSON.stringify({ error: "Invalid token" }), {
         status: 401,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
     user = u
@@ -151,7 +153,7 @@ serve(async (req) => {
     if (!presenteId) {
       return new Response(JSON.stringify({ error: "Missing presente_id" }), {
         status: 400,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
@@ -164,27 +166,27 @@ serve(async (req) => {
     if (presenteErr || !presente) {
       return new Response(JSON.stringify({ error: "Presente not found" }), {
         status: 404,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
     if (user && presente.usuario_id !== user.id) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
     if (presente.status === "ready") {
       return new Response(JSON.stringify({ success: true, skipped: true }), {
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
     if (!["generating", "pending_payment", "failed"].includes(presente.status)) {
       return new Response(JSON.stringify({ error: "Presente is not in a processable state" }), {
         status: 409,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
@@ -201,7 +203,7 @@ serve(async (req) => {
         skipped: true,
         reason: "music_already_exists",
       }), {
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
@@ -226,7 +228,7 @@ serve(async (req) => {
     if (!elevenLabsKey) {
       return new Response(JSON.stringify({ error: "ELEVENLABS_API_KEY not configured" }), {
         status: 500,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
@@ -290,7 +292,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ success: true, isInstrumental }), {
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
+        ...corsHeaders,
       },
     })
   } catch (err) {
@@ -335,7 +337,7 @@ serve(async (req) => {
         status: 500,
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
+          ...corsHeaders,
         },
       },
     )

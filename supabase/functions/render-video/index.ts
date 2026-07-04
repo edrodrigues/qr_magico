@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+import { getCorsHeaders } from "../_shared/cors.ts";
 import { ELEVENLABS_MUSIC_LENGTH_SEC, validateAudioUrl } from "../_shared/audio-utils.ts";
 import { resolveCompositionDuration } from "../_shared/composition-duration.ts";
 
@@ -151,10 +152,11 @@ async function invokeLambda(
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("origin"))
   if (req.method === "OPTIONS") {
     return new Response(null, {
       headers: {
-        "Access-Control-Allow-Origin": "*",
+        ...corsHeaders,
         "Access-Control-Allow-Methods": "POST",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
       },
@@ -193,7 +195,7 @@ serve(async (req) => {
     if (!presenteId) {
       return new Response(JSON.stringify({ error: "Missing presente_id" }), {
         status: 400,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -206,14 +208,14 @@ serve(async (req) => {
     if (presenteErr || !presente) {
       return new Response(JSON.stringify({ error: "Presente not found" }), {
         status: 404,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
     if (user && presente.usuario_id !== user.id) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -252,7 +254,7 @@ serve(async (req) => {
       if (musicaStatus === "failed") {
         return new Response(JSON.stringify({ error: "music_generation_failed" }), {
           status: 409,
-          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+          headers: { "Content-Type": "application/json", ...corsHeaders },
         });
       }
       console.log(`Waiting for music (attempt ${i + 1}/${MUSIC_POLL_MAX_ATTEMPTS}) for ${presenteId}`);
@@ -263,7 +265,7 @@ serve(async (req) => {
       console.error(`Music not ready for ${presenteId} after polling`);
       return new Response(JSON.stringify({ error: "music_not_ready" }), {
         status: 409,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -281,7 +283,7 @@ serve(async (req) => {
         .eq("id", presenteId);
       return new Response(JSON.stringify({ error: "invalid_audio", detail: audioCheck.error }), {
         status: 422,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
     console.log(`render-video ${presenteId}: audio OK (${audioCheck.size} bytes)`);
@@ -295,7 +297,7 @@ serve(async (req) => {
     if (!functionName || !serveUrl) {
       return new Response(JSON.stringify({ error: "Remotion Lambda not configured" }), {
         status: 500,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -416,7 +418,7 @@ serve(async (req) => {
         .eq("id", presenteId);
       return new Response(JSON.stringify({ error: errMsg }), {
         status: 500,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -444,7 +446,7 @@ serve(async (req) => {
     }), {
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
+        ...corsHeaders,
       },
     });
   } catch (err) {
@@ -462,7 +464,7 @@ serve(async (req) => {
         status: 500,
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
+          ...corsHeaders,
         },
       },
     );

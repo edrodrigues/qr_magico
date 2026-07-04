@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0"
+import { getCorsHeaders } from "../_shared/cors.ts"
 
 const INFINITEPAY_HANDLE = "edmilson-rodrigues-pa0"
 const INFINITEPAY_API = "https://api.checkout.infinitepay.io/links"
@@ -17,10 +18,11 @@ function resolveRedirectBase(url: unknown): string | null {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("origin"))
   if (req.method === "OPTIONS") {
     return new Response(null, {
       headers: {
-        "Access-Control-Allow-Origin": "*",
+        ...corsHeaders,
         "Access-Control-Allow-Methods": "POST",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
       },
@@ -39,7 +41,7 @@ serve(async (req) => {
   if (!authHeader) {
     return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
       status: 401,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     })
   }
 
@@ -49,7 +51,7 @@ serve(async (req) => {
   if (userErr || !user) {
     return new Response(JSON.stringify({ error: "Invalid token" }), {
       status: 401,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     })
   }
 
@@ -60,14 +62,14 @@ serve(async (req) => {
     if (!tipo || !["presente", "creditos"].includes(tipo)) {
       return new Response(JSON.stringify({ error: "tipo must be 'presente' or 'creditos'" }), {
         status: 400,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
     if (!valor_centavos || valor_centavos < 1) {
       return new Response(JSON.stringify({ error: "Invalid valor_centavos" }), {
         status: 400,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
@@ -106,7 +108,7 @@ serve(async (req) => {
     if (customerName.length < 3) {
       return new Response(JSON.stringify({ error: "Customer name must be at least 3 characters" }), {
         status: 400,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
     if (customerName) {
@@ -130,7 +132,7 @@ serve(async (req) => {
       console.error("InfinityPay error:", infinitepayRes.status, errorText)
       return new Response(JSON.stringify({ error: "InfinityPay API error", details: errorText }), {
         status: 502,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
@@ -163,7 +165,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ checkout_url: checkoutUrl, slug, order_nsu: orderNsu }), {
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
+        ...corsHeaders,
       },
     })
   } catch (err) {
@@ -174,7 +176,7 @@ serve(async (req) => {
         status: 500,
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
+          ...corsHeaders,
         },
       },
     )

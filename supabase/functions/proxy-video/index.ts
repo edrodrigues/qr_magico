@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+import { getCorsHeaders } from "../_shared/cors.ts";
 import {
   buildLegacyOutputKey,
   buildRenderOutputKeys,
@@ -89,10 +90,11 @@ async function generatePresignedGetUrl(
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("origin"))
   if (req.method === "OPTIONS") {
     return new Response(null, {
       headers: {
-        "Access-Control-Allow-Origin": "*",
+        ...corsHeaders,
         "Access-Control-Allow-Methods": "GET, HEAD",
         "Access-Control-Allow-Headers": "*",
       },
@@ -106,7 +108,7 @@ serve(async (req) => {
   if (!presenteId && !slug) {
     return new Response(JSON.stringify({ error: "Missing presente_id or slug" }), {
       status: 400,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
 
@@ -130,7 +132,33 @@ serve(async (req) => {
     if (presenteErr || !presente) {
       return new Response(JSON.stringify({ error: "Presente not found" }), {
         status: 404,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    if (presenteId && !slug) {
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) {
+        return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+      const { data: { user }, error: userErr } = await supabase.auth.getUser(
+        authHeader.replace("Bearer ", ""),
+      );
+      if (userErr || !user || presente.usuario_id !== user.id) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+    }
+
+    if (slug && presente.status !== "ready") {
+      return new Response(JSON.stringify({ error: "Not available" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -142,7 +170,7 @@ serve(async (req) => {
     if (!bucket || !accessKeyId || !secretAccessKey) {
       return new Response(JSON.stringify({ error: "S3 not configured" }), {
         status: 500,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -167,7 +195,7 @@ serve(async (req) => {
       if (!key) {
         return new Response(JSON.stringify({ error: "Video not available" }), {
           status: 404,
-          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+          headers: { "Content-Type": "application/json", ...corsHeaders },
         });
       }
 
@@ -185,7 +213,7 @@ serve(async (req) => {
     if (!key) {
       return new Response(JSON.stringify({ error: "Video not available" }), {
         status: 404,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -203,7 +231,7 @@ serve(async (req) => {
       if (!mux.ok) {
         return new Response(JSON.stringify({ error: summarizeMuxError(mux.error) }), {
           status: 503,
-          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+          headers: { "Content-Type": "application/json", ...corsHeaders },
         });
       }
     }
@@ -220,7 +248,7 @@ serve(async (req) => {
       }), {
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
+          ...corsHeaders,
           "Access-Control-Expose-Headers": "*",
         },
       });
@@ -230,14 +258,14 @@ serve(async (req) => {
       status: 302,
       headers: {
         "Location": presignedUrl,
-        "Access-Control-Allow-Origin": "*",
+        ...corsHeaders,
       },
     });
   } catch (err) {
     console.error("proxy-video error:", err);
     return new Response(JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }), {
       status: 500,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
 });

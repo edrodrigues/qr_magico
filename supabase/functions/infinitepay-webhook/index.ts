@@ -1,12 +1,14 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0"
 import { runGenerationPipeline } from "../_shared/generation-pipeline.ts"
+import { getCorsHeaders } from "../_shared/cors.ts"
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("origin"))
   if (req.method === "OPTIONS") {
     return new Response(null, {
       headers: {
-        "Access-Control-Allow-Origin": "*",
+        ...corsHeaders,
         "Access-Control-Allow-Methods": "POST",
         "Access-Control-Allow-Headers": "Content-Type",
       },
@@ -33,7 +35,7 @@ serve(async (req) => {
     if (!orderNsu) {
       return new Response(JSON.stringify({ error: "Missing order_nsu" }), {
         status: 400,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
@@ -47,13 +49,13 @@ serve(async (req) => {
       console.error(`webhook: pagamento not found for order_nsu=${orderNsu}`)
       return new Response(JSON.stringify({ error: "Pagamento not found" }), {
         status: 404,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
     if (pagamento.status === "paid") {
       return new Response(JSON.stringify({ success: true, already_paid: true }), {
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
@@ -138,13 +140,13 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ success: true }), {
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     })
   } catch (err) {
     console.error("infinitepay-webhook error:", err)
     return new Response(JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }), {
       status: 500,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     })
   }
 })

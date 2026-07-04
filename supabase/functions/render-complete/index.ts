@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+import { getCorsHeaders } from "../_shared/cors.ts";
 import { buildPresenteLink } from "../_shared/generation-pipeline.ts";
 import { muxRenderWithMusic } from "../_shared/mux-video-audio.ts";
 import { summarizeMuxError } from "../_shared/mux-lambda.ts";
@@ -27,10 +28,11 @@ function extractErrorMessage(body: Record<string, unknown>): string {
 
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("origin"))
   if (req.method === "OPTIONS") {
     return new Response(null, {
       headers: {
-        "Access-Control-Allow-Origin": "*",
+        ...corsHeaders,
         "Access-Control-Allow-Methods": "POST",
         "Access-Control-Allow-Headers": "Content-Type, X-Remotion-Signature",
       },
@@ -47,7 +49,7 @@ serve(async (req) => {
     if (!signature) {
       return new Response(JSON.stringify({ error: "Missing X-Remotion-Signature" }), {
         status: 401,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
     const rawBody = await req.clone().text();
@@ -56,7 +58,7 @@ serve(async (req) => {
       console.warn(`render-complete: invalid signature. Got ${signature.slice(0, 16)}..., expected ${expected.slice(0, 16)}...`);
       return new Response(JSON.stringify({ error: "Invalid signature" }), {
         status: 401,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
   }
@@ -85,7 +87,7 @@ serve(async (req) => {
     if (!presenteId) {
       return new Response(JSON.stringify({ error: "Missing presente_id" }), {
         status: 400,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -119,7 +121,7 @@ serve(async (req) => {
           console.error(`render-complete: ${presenteId} mux failed — ${mux.error}`);
           return new Response(JSON.stringify({ success: false, error: mux.error }), {
             status: 500,
-            headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+            headers: { "Content-Type": "application/json", ...corsHeaders },
           });
         }
         console.log(`render-complete: ${presenteId} mux OK`);
@@ -153,13 +155,13 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ success: true }), {
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (err) {
     console.error("render-complete error:", err);
     return new Response(JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }), {
       status: 500,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
 });

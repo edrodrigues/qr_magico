@@ -1,15 +1,17 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0"
 import { runGenerationPipeline } from "../_shared/generation-pipeline.ts"
+import { getCorsHeaders } from "../_shared/cors.ts"
 
 const INFINITEPAY_HANDLE = "edmilson-rodrigues-pa0"
 const INFINITEPAY_CHECK_API = "https://api.checkout.infinitepay.io/payment_check"
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("origin"))
   if (req.method === "OPTIONS") {
     return new Response(null, {
       headers: {
-        "Access-Control-Allow-Origin": "*",
+        ...corsHeaders,
         "Access-Control-Allow-Methods": "POST",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
       },
@@ -28,7 +30,7 @@ serve(async (req) => {
   if (!authHeader) {
     return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
       status: 401,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     })
   }
 
@@ -38,7 +40,7 @@ serve(async (req) => {
   if (userErr || !user) {
     return new Response(JSON.stringify({ error: "Invalid token" }), {
       status: 401,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     })
   }
 
@@ -48,7 +50,7 @@ serve(async (req) => {
     if (!presente_id) {
       return new Response(JSON.stringify({ error: "Missing presente_id" }), {
         status: 400,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
@@ -65,27 +67,27 @@ serve(async (req) => {
       console.error("pagamento lookup error:", pagErr)
       return new Response(JSON.stringify({ error: "Erro ao buscar pagamento" }), {
         status: 500,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
     if (!pagamento) {
       return new Response(JSON.stringify({ error: "Pagamento não encontrado" }), {
         status: 404,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
     if (pagamento.usuario_id !== user.id) {
       return new Response(JSON.stringify({ error: "Pagamento não pertence ao usuário" }), {
         status: 403,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
     if (pagamento.status === "paid") {
       return new Response(JSON.stringify({ success: true, already_paid: true }), {
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
@@ -103,7 +105,7 @@ serve(async (req) => {
     if (!checkRes.ok) {
       return new Response(JSON.stringify({ error: "Falha ao verificar pagamento no InfinityPay" }), {
         status: 502,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
@@ -111,7 +113,7 @@ serve(async (req) => {
 
     if (!checkData.paid) {
       return new Response(JSON.stringify({ paid: false, message: "Pagamento ainda não confirmado" }), {
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       })
     }
 
@@ -167,13 +169,13 @@ serve(async (req) => {
     runGenerationPipeline(supabaseUrl, supabaseServiceKey, presente_id, supabase)
 
     return new Response(JSON.stringify({ success: true, paid: true }), {
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     })
   } catch (err) {
     console.error("confirm-payment error:", err)
     return new Response(JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }), {
       status: 500,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     })
   }
 })

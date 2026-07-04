@@ -465,6 +465,9 @@ serve(async (req: Request) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+    const payload: SendEmailPayload = await req.json()
+    const { to, tipo, usuario_id, presente_id, data } = payload
+
     const auth = req.headers.get("Authorization") || ""
     const token = auth.replace("Bearer ", "")
 
@@ -474,10 +477,10 @@ serve(async (req: Request) => {
       if (error || !user) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 })
       }
+      if (user.id !== usuario_id) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 })
+      }
     }
-
-    const payload: SendEmailPayload = await req.json()
-    const { to, tipo, usuario_id, presente_id, data } = payload
 
     const apiKey = await getResendApiKey(supabase)
     const rawTemplate = TEMPLATES[tipo]
