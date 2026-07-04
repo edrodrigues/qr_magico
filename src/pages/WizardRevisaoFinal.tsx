@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Header, Footer } from "../components/Header";
 import { useWizard } from "../contexts/WizardContext";
 import { cn } from "../lib/utils";
+import { resgatarCupom } from "../lib/creditos";
 
 const ROTATIONS = ["-2deg", "3deg", "-1deg", "2deg", "-3deg"];
 
@@ -28,6 +29,31 @@ export function WizardRevisaoFinal() {
   const navigate = useNavigate();
   const { data } = useWizard();
   const [termsChecked, setTermsChecked] = useState(false);
+  const [codigoCupom, setCodigoCupom] = useState("");
+  const [resgatando, setResgatando] = useState(false);
+  const [mensagemCupom, setMensagemCupom] = useState("");
+  const [tipoMensagem, setTipoMensagem] = useState<"success" | "error">("success");
+
+  const handleResgatarCupom = async () => {
+    const codigo = codigoCupom.trim();
+    if (!codigo) return;
+
+    setResgatando(true);
+    setMensagemCupom("");
+
+    const result = await resgatarCupom(codigo);
+
+    if (result.ok) {
+      setMensagemCupom("Cupom resgatado! Crédito concedido.");
+      setTipoMensagem("success");
+      setCodigoCupom("");
+    } else {
+      setMensagemCupom(result.error || "Erro ao resgatar cupom.");
+      setTipoMensagem("error");
+    }
+
+    setResgatando(false);
+  };
 
   return (
     <div className="bg-soft-cream font-body-md text-on-surface min-h-screen selection:bg-primary-fixed selection:text-on-primary-fixed overflow-x-hidden">
@@ -239,6 +265,41 @@ export function WizardRevisaoFinal() {
                         </div>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="border-t border-outline-variant/20 pt-6 mb-6">
+                    <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[18px]">confirmation_number</span>
+                      Cupom de desconto
+                    </p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={codigoCupom}
+                        onChange={(e) => setCodigoCupom(e.target.value)}
+                        placeholder="Insira o código"
+                        className="flex-1 px-4 py-3 rounded-lg border border-outline-variant/30 bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                      />
+                      <button
+                        onClick={handleResgatarCupom}
+                        disabled={resgatando || !codigoCupom.trim()}
+                        className="px-6 py-3 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:brightness-110 transition-all disabled:opacity-50 flex items-center gap-1"
+                      >
+                        {resgatando ? (
+                          <span className="material-symbols-outlined text-[18px] animate-spin">refresh</span>
+                        ) : (
+                          "Aplicar"
+                        )}
+                      </button>
+                    </div>
+                    {mensagemCupom && (
+                      <div className={`mt-3 flex items-center gap-2 font-label-sm text-label-sm ${tipoMensagem === "success" ? "text-green-600" : "text-error"}`}>
+                        <span className="material-symbols-outlined text-[16px]">
+                          {tipoMensagem === "success" ? "check_circle" : "error"}
+                        </span>
+                        {mensagemCupom}
+                      </div>
+                    )}
                   </div>
 
                   <div className="mb-8">

@@ -1,4 +1,4 @@
-import { AbsoluteFill, useCurrentFrame, interpolate, spring } from "remotion";
+import { AbsoluteFill, useCurrentFrame, interpolate } from "remotion";
 import type { OccasionTheme } from "../theme";
 
 interface CoverProps {
@@ -6,17 +6,27 @@ interface CoverProps {
   theme: OccasionTheme;
 }
 
-const PARTICLES = [
-  { x: 15, y: 20, size: 3, delay: 0 },
-  { x: 78, y: 15, size: 2, delay: 20 },
-  { x: 50, y: 85, size: 4, delay: 40 },
-  { x: 85, y: 70, size: 2, delay: 10 },
-  { x: 20, y: 75, size: 3, delay: 50 },
-  { x: 65, y: 8, size: 2, delay: 30 },
-  { x: 8, y: 60, size: 3, delay: 60 },
-  { x: 92, y: 40, size: 2, delay: 15 },
-  { x: 40, y: 10, size: 2, delay: 45 },
-  { x: 70, y: 88, size: 3, delay: 25 },
+interface Particle {
+  x: number;
+  y: number;
+  size: number;
+  delay: number;
+  speed: number;
+  driftX: number;
+  driftY: number;
+}
+
+const PARTICLES: Particle[] = [
+  { x: 15, y: 20, size: 3, delay: 0, speed: 0.4, driftX: 4, driftY: -3 },
+  { x: 78, y: 15, size: 2, delay: 20, speed: 0.3, driftX: -3, driftY: 5 },
+  { x: 50, y: 85, size: 4, delay: 40, speed: 0.5, driftX: 2, driftY: -4 },
+  { x: 85, y: 70, size: 2, delay: 10, speed: 0.35, driftX: -5, driftY: -2 },
+  { x: 20, y: 75, size: 3, delay: 50, speed: 0.45, driftX: 3, driftY: 3 },
+  { x: 65, y: 8, size: 2, delay: 30, speed: 0.3, driftX: -2, driftY: 4 },
+  { x: 8, y: 60, size: 3, delay: 60, speed: 0.4, driftX: 5, driftY: -2 },
+  { x: 92, y: 40, size: 2, delay: 15, speed: 0.35, driftX: -4, driftY: 3 },
+  { x: 40, y: 10, size: 2, delay: 45, speed: 0.3, driftX: 3, driftY: -5 },
+  { x: 70, y: 88, size: 3, delay: 25, speed: 0.4, driftX: -3, driftY: -3 },
 ];
 
 export function Cover({ nome_homenageado, theme }: CoverProps) {
@@ -24,15 +34,18 @@ export function Cover({ nome_homenageado, theme }: CoverProps) {
 
   const titleOpacity = interpolate(frame, [0, 20], [0, 1]);
   const titleY = interpolate(frame, [0, 20], [20, 0]);
-  const glowOpacity = interpolate(frame, [0, 150], [0.12, 0.2], {
-    extrapolateRight: "clamp",
-  });
+  const glowOpacity = interpolate(
+    frame,
+    [0, 150],
+    [0.08, 0.15],
+    { extrapolateRight: "clamp" },
+  );
+  const pulseGlow =
+    0.12 + 0.05 * Math.sin((frame / 150) * Math.PI * 2);
   const iconOpacity = interpolate(frame, [0, 20], [0, 1]);
   const iconY = interpolate(frame, [0, 20], [20, 0]);
-  const iconScale = spring({
-    frame: Math.min(frame, 30),
-    fps: 30,
-    config: { damping: 12, stiffness: 120 },
+  const iconScale = interpolate(frame, [0, 30], [0.5, 1], {
+    extrapolateRight: "clamp",
   });
 
   return (
@@ -56,8 +69,16 @@ export function Cover({ nome_homenageado, theme }: CoverProps) {
       >
         <defs>
           <radialGradient id="coverGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor={theme.secondary} stopOpacity={glowOpacity} />
-            <stop offset="100%" stopColor={theme.darkBgStart} stopOpacity={0} />
+            <stop
+              offset="0%"
+              stopColor={theme.secondary}
+              stopOpacity={glowOpacity + pulseGlow * 0.5}
+            />
+            <stop
+              offset="100%"
+              stopColor={theme.darkBgStart}
+              stopOpacity={0}
+            />
           </radialGradient>
         </defs>
         <ellipse cx="0" cy="0" rx="120" ry="120" fill="url(#coverGlow)" />
@@ -66,30 +87,40 @@ export function Cover({ nome_homenageado, theme }: CoverProps) {
       </svg>
 
       {PARTICLES.map((p, i) => {
-        const particleOpacity = interpolate(
+        const fadeIn = interpolate(
           frame,
-          [p.delay, p.delay + 15, p.delay + 60, p.delay + 90],
-          [0, 0.8, 0.6, 0],
-          { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+          [p.delay, p.delay + 15],
+          [0, 0.8],
+          { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
         );
+        const fadeOut = interpolate(
+          frame,
+          [p.delay + 60, p.delay + 90],
+          [0.6, 0],
+          { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+        );
+        const opacity = Math.min(fadeIn, fadeOut);
         const particleScale = interpolate(
           frame,
           [p.delay, p.delay + 40],
           [0.3, 1],
-          { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+          { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
         );
+        const waveX = Math.sin((frame - p.delay) * 0.03 * p.speed) * p.driftX;
+        const waveY = Math.cos((frame - p.delay) * 0.025 * p.speed) * p.driftY;
+
         return (
           <div
             key={i}
             style={{
               position: "absolute",
-              left: `${p.x}%`,
-              top: `${p.y}%`,
+              left: `${p.x + waveX}%`,
+              top: `${p.y + waveY}%`,
               width: p.size,
               height: p.size,
               borderRadius: "50%",
               backgroundColor: theme.secondary,
-              opacity: particleOpacity,
+              opacity,
               transform: `scale(${particleScale})`,
               boxShadow: `0 0 ${p.size * 2}px ${theme.secondary}`,
             }}
@@ -152,13 +183,13 @@ export function Cover({ nome_homenageado, theme }: CoverProps) {
               frame,
               [charDelay, charDelay + 10],
               [0, 1],
-              { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+              { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
             );
             const charY = interpolate(
               frame,
               [charDelay, charDelay + 10],
-              [20, 0],
-              { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+              [25, 0],
+              { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
             );
             return (
               <span

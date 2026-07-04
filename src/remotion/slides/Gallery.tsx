@@ -6,15 +6,41 @@ interface GalleryProps {
   theme: OccasionTheme;
 }
 
-const PHOTO_DURATION = 150;
+const TOTAL_FRAMES = 720;
+const MIN_PHOTO_DURATION = 120;
+const MAX_PHOTO_DURATION = 300;
 const CROSSFADE = 15;
 
-const KEN_BURNS_DIRS = [
-  { x: [-2, -1] },
-  { x: [2, 1] },
-  { x: [-1, 2] },
-  { x: [1, -2] },
+interface KenBurnsConfig {
+  zoomIn: boolean;
+  panX: number;
+  panY: number;
+}
+
+const KEN_BURNS_PATTERNS: KenBurnsConfig[] = [
+  { zoomIn: true, panX: -2, panY: -1 },
+  { zoomIn: true, panX: 2, panY: 1 },
+  { zoomIn: false, panX: -1, panY: 2 },
+  { zoomIn: false, panX: 1, panY: -2 },
+  { zoomIn: true, panX: 0, panY: 0 },
 ];
+
+function getKenBurns(photoIndex: number): KenBurnsConfig {
+  return KEN_BURNS_PATTERNS[photoIndex % KEN_BURNS_PATTERNS.length];
+}
+
+function VignetteOverlay() {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        background: "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.35) 100%)",
+        pointerEvents: "none",
+      }}
+    />
+  );
+}
 
 export function Gallery({ fotos, theme }: GalleryProps) {
   const frame = useCurrentFrame();
@@ -44,9 +70,9 @@ export function Gallery({ fotos, theme }: GalleryProps) {
   }
 
   if (safeFotos.length === 1) {
-    const kenBurnsScale = interpolate(frame, [0, 600], [1, 1.04]);
-    const kenBurnsX = interpolate(frame, [0, 600], [0, -2]);
-    const kenBurnsY = interpolate(frame, [0, 600], [0, -1]);
+    const kenZoom = interpolate(frame, [0, TOTAL_FRAMES], [1, 1.05]);
+    const kenX = interpolate(frame, [0, TOTAL_FRAMES], [0, -3]);
+    const kenY = interpolate(frame, [0, TOTAL_FRAMES], [0, -2]);
     return (
       <AbsoluteFill style={{ backgroundColor: "black" }}>
         <div
@@ -67,57 +93,54 @@ export function Gallery({ fotos, theme }: GalleryProps) {
             width: "100%",
             height: "100%",
             objectFit: "cover",
-            transform: `scale(${kenBurnsScale}) translate(${kenBurnsX}px, ${kenBurnsY}px)`,
+            transform: `scale(${kenZoom}) translate(${kenX}px, ${kenY}px)`,
           }}
         />
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: 200,
-            background: "linear-gradient(transparent, rgba(0,0,0,0.4))",
-          }}
-        />
+        <ColorWashOverlay primary={theme.primary} darkEnd={theme.darkBgEnd} />
+        <VignetteOverlay />
       </AbsoluteFill>
     );
   }
 
-  const totalDuration = safeFotos.length * PHOTO_DURATION;
-  const safeTotalDuration = totalDuration > 0 ? totalDuration : PHOTO_DURATION;
-  const effectiveFrame = frame % safeTotalDuration;
-  const photoIndex = Math.floor(effectiveFrame / PHOTO_DURATION);
-  const photoFrame = effectiveFrame % PHOTO_DURATION;
-
-  const isFirstCycle = frame < safeTotalDuration && photoIndex === 0;
-  const prevIndex = isFirstCycle
-    ? photoIndex
-    : photoIndex > 0
-      ? photoIndex - 1
-      : safeFotos.length - 1;
-  const nextIndex = Math.min(photoIndex, safeFotos.length - 1);
-
-  const crossfadeProgress = isFirstCycle
+  const numPhotos = safeFotos.length;
+  const photoDuration = Math.min(
+    MAX_PHOTO_DURATION,
+    Math.max(MIN_PHOTO_DURATION, Math.floor(TOTAL_FRAMES / numPhotos)),
+  );
+  const totalUsed = photoDuration * numPhotos;
+  const effectiveFrame = Math.min(frame, totalUsed - 1);
+  const photoIndex = Math.floor(effectiveFrame / photoDuration);
+  const localFrame = effectiveFrame % photoDuration;
+  const isFirstPhoto = photoIndex === 0;
+  const prevIndex = isFirstPhoto ? photoIndex : photoIndex - 1;
+  const nextIndex = photoIndex;
+  const crossfadeProgress = isFirstPhoto
     ? 1
-    : Math.min(photoFrame / CROSSFADE, 1);
+    : Math.min(localFrame / CROSSFADE, 1);
 
-  const dir = KEN_BURNS_DIRS[photoIndex % KEN_BURNS_DIRS.length];
-  const kenBurnsScale = interpolate(photoFrame, [0, PHOTO_DURATION], [1, 1.04]);
-  const kenBurnsX = interpolate(photoFrame, [0, PHOTO_DURATION], [0, dir.x[0]]);
-  const kenBurnsY = interpolate(photoFrame, [0, PHOTO_DURATION], [0, dir.x[1]]);
+  const pattern = getKenBurns(photoIndex);
+  const scaleStart = pattern.zoomIn ? 1 : 0.96;
+  const scaleEnd = pattern.zoomIn ? 1.05 : 1;
+  const kenScale = interpolate(
+    localFrame,
+    [0, photoDuration],
+    [scaleStart, scaleEnd],
+  );
+  const kenX = interpolate(localFrame, [0, photoDuration], [0, pattern.panX]);
+  const kenY = interpolate(localFrame, [0, photoDuration], [0, pattern.panY]);
 
   return (
     <AbsoluteFill style={{ backgroundColor: "black" }}>
-      {!isFirstCycle && (
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.darkBgEnd} 100%)`,
+        }}
+      />
+
+      {!isFirstPhoto && (
         <div style={{ position: "absolute", inset: 0 }}>
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.darkBgEnd} 100%)`,
-            }}
-          />
           <Img
             src={safeFotos[prevIndex]}
             onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -134,14 +157,8 @@ export function Gallery({ fotos, theme }: GalleryProps) {
           />
         </div>
       )}
+
       <div style={{ position: "absolute", inset: 0 }}>
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.darkBgEnd} 100%)`,
-          }}
-        />
         <Img
           src={safeFotos[nextIndex]}
           onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -153,22 +170,33 @@ export function Gallery({ fotos, theme }: GalleryProps) {
             width: "100%",
             height: "100%",
             objectFit: "cover",
-            transform: `scale(${kenBurnsScale}) translate(${kenBurnsX}px, ${kenBurnsY}px)`,
-            opacity: isFirstCycle ? 1 : crossfadeProgress,
+            transform: `scale(${kenScale}) translate(${kenX}px, ${kenY}px)`,
+            opacity: isFirstPhoto ? 1 : crossfadeProgress,
           }}
         />
       </div>
 
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: 200,
-          background: "linear-gradient(transparent, rgba(0,0,0,0.4))",
-        }}
-      />
+      <ColorWashOverlay primary={theme.primary} darkEnd={theme.darkBgEnd} />
+      <VignetteOverlay />
     </AbsoluteFill>
+  );
+}
+
+function ColorWashOverlay({
+  primary,
+  darkEnd,
+}: {
+  primary: string;
+  darkEnd: string;
+}) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        background: `linear-gradient(135deg, ${primary}08, transparent 50%, ${darkEnd}10)`,
+        pointerEvents: "none",
+      }}
+    />
   );
 }
