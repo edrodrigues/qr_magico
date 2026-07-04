@@ -206,10 +206,10 @@ const GiftCard = memo(function GiftCard({
                 />
                 <button
                   onClick={handleDownloadQr}
-                  className="absolute bottom-1 right-1 w-7 h-7 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-lg text-on-surface-variant hover:text-primary hover:bg-white shadow-sm transition-all active:scale-90"
+                  className="absolute bottom-1 right-1 w-11 h-11 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-lg text-on-surface-variant hover:text-primary hover:bg-white shadow-sm transition-all active:scale-90"
                   title="Baixar QR Code (PNG)"
                 >
-                  <span className="material-symbols-outlined text-[16px]">download</span>
+                  <span className="material-symbols-outlined text-[18px]">download</span>
                 </button>
               </>
             ) : (
@@ -259,7 +259,7 @@ const GiftCard = memo(function GiftCard({
                 <button
                   onClick={() => onCopy(gift.id, gift.link!)}
                   className={cn(
-                    "shrink-0 w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-200",
+                    "shrink-0 w-11 h-11 flex items-center justify-center rounded-lg transition-all duration-200",
                     copiedId === gift.id
                       ? "bg-green-50 text-green-700"
                       : "bg-primary/8 text-primary hover:bg-primary/[0.14] active:scale-95"
@@ -443,7 +443,7 @@ const GiftCard = memo(function GiftCard({
                 </Link>
                 <button
                   onClick={() => onDelete(gift)}
-                  className="w-9 h-9 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-warm-gray hover:text-error transition-all"
+                  className="w-11 h-11 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-warm-gray hover:text-error transition-all"
                 >
                   <span className="material-symbols-outlined text-[20px]">delete</span>
                 </button>
@@ -953,7 +953,7 @@ export function Dashboard() {
             label="Pagamento"
             value={stats.payment}
             icon="hourglass_empty"
-            color="#C96442"
+            color="#B8553A"
           />
           <StatCard label="Total" value={stats.total} icon="redeem" color="#615e5b" />
         </div>
@@ -965,6 +965,7 @@ export function Dashboard() {
             </span>
             <input
               type="text"
+              aria-label="Buscar por nome ou ocasião"
               placeholder="Buscar por nome ou ocasião..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -972,6 +973,7 @@ export function Dashboard() {
             />
           </div>
           <select
+            aria-label="Ordenar por"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
             className="px-4 py-2.5 rounded-lg bg-surface border border-outline-variant/40 font-label-md text-label-md text-on-surface focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all cursor-pointer"
@@ -1122,7 +1124,7 @@ export function Dashboard() {
             )}
 
             {stats.draft > 0 && (
-              <div className="glass-card p-5 rounded-xl border-l-4 border-l-secondary">
+              <div className="glass-card p-5 rounded-xl border border-secondary/20 bg-secondary-container/10">
                 <div className="flex items-start gap-3">
                   <span className="material-symbols-outlined text-secondary text-[24px]">
                     lightbulb

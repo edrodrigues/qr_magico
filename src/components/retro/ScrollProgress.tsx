@@ -31,7 +31,7 @@ export function ScrollProgress({ slides, active, onDotClick }: ScrollProgressPro
                 : "w-2 h-2 opacity-40 hover:opacity-70"
             }`}
             style={{
-              backgroundColor: i === active ? "#C96442" : "rgba(255,255,255,0.6)",
+              backgroundColor: i === active ? "var(--color-primary)" : "rgba(255,255,255,0.6)",
               boxShadow: i === active ? "0 0 8px rgba(201,100,66,0.6)" : "none",
             }}
           />

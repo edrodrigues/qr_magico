@@ -84,7 +84,7 @@ export function Header({ showNav, showCreateBtn, showClose, rightContent }: Head
               <div className="relative" ref={menuRef}>
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
-                  className="w-10 h-10 rounded-full bg-primary-fixed border-2 border-white shadow-sm flex items-center justify-center text-primary font-bold hover:opacity-80 transition-all cursor-pointer"
+                  className="w-11 h-11 rounded-full bg-primary-fixed border-2 border-white shadow-sm flex items-center justify-center text-primary font-bold hover:opacity-80 transition-all cursor-pointer"
                   aria-label="Menu do usuário"
                 >
                   {initials}

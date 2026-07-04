@@ -84,9 +84,9 @@ export function SplashScreen() {
 
         <div className="flex flex-col items-center gap-6">
           <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
-            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
-            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0.3s" }} />
+            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse-dot" style={{ animationDelay: "0.1s" }} />
+            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse-dot" style={{ animationDelay: "0.2s" }} />
+            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse-dot" style={{ animationDelay: "0.3s" }} />
           </div>
           <p className="font-label-md text-label-md text-primary tracking-widest uppercase opacity-80">
             Preparando a sua magia...

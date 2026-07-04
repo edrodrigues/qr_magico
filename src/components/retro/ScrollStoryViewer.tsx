@@ -49,26 +49,25 @@ function ScrollStoryViewerInner({ slides, renderSlide }: {
     const container = containerRef.current;
     if (!container) return;
 
+    let slideHeight = container.clientHeight;
+    const updateHeight = () => { slideHeight = container.clientHeight; };
+    const resizeObserver = new ResizeObserver(updateHeight);
+    resizeObserver.observe(container);
+
     const handleScroll = () => {
-      const slideHeight = container.clientHeight;
       const index = Math.round(container.scrollTop / slideHeight);
       setActiveIndex((prev) => {
         const clamped = Math.min(index, slides.length - 1);
-        if (clamped !== prev && !isScrollingRef.current) {
-          if (clamped > prev) {
-            const audio = audioRef.current;
-            if (audio && !initAudioAnalyser) {
-              // Init audio context on user interaction
-            }
-          }
-        }
         return clamped;
       });
     };
 
     container.addEventListener("scroll", handleScroll, { passive: true });
-    return () => container.removeEventListener("scroll", handleScroll);
-  }, [slides.length, audioRef, initAudioAnalyser]);
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+      resizeObserver.disconnect();
+    };
+  }, [slides.length]);
 
   // Auto-advance timer
   useEffect(() => {

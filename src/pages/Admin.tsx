@@ -146,7 +146,7 @@ export function Admin() {
           <div className="flex items-center gap-3 mb-1">
             <Link
               to="/dashboard"
-              className="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest transition-all"
+              className="w-11 h-11 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest transition-all"
             >
               <span className="material-symbols-outlined text-[22px]">arrow_back</span>
             </Link>
@@ -190,10 +190,11 @@ export function Admin() {
                 </h2>
                 <div className="flex gap-3 items-end">
                   <div className="flex-1">
-                    <label className="block font-label-sm text-label-sm text-on-surface-variant mb-1">
+                    <label htmlFor="admin-codigo" className="block font-label-sm text-label-sm text-on-surface-variant mb-1">
                       Código
                     </label>
                     <input
+                      id="admin-codigo"
                       type="text"
                       value={newCodigo}
                       onChange={(e) => setNewCodigo(e.target.value.toUpperCase())}
@@ -202,10 +203,11 @@ export function Admin() {
                     />
                   </div>
                   <div className="w-24">
-                    <label className="block font-label-sm text-label-sm text-on-surface-variant mb-1">
+                    <label htmlFor="admin-usos-max" className="block font-label-sm text-label-sm text-on-surface-variant mb-1">
                       Usos máx.
                     </label>
                     <input
+                      id="admin-usos-max"
                       type="number"
                       min="1"
                       value={newUsoMaximo}

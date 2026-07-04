@@ -39,7 +39,7 @@ export function WizardRelacaoSentimento() {
             </p>
           </div>
           <div className="relative mb-6">
-            <div className="absolute -top-4 -right-4 bg-gold-glimmer p-2 rounded-full shadow-sm animate-bounce">
+            <div className="absolute -top-4 -right-4 bg-gold-glimmer p-2 rounded-full shadow-sm animate-floating">
               <span
                 className="material-symbols-outlined text-secondary"
                 style={{ fontVariationSettings: "'FILL' 1" }}
@@ -48,6 +48,7 @@ export function WizardRelacaoSentimento() {
               </span>
             </div>
             <textarea
+              aria-label="Descreva a relação de vocês"
               className="w-full h-64 p-6 bg-warm-gray border-none rounded-2xl font-body-md text-body-md text-on-surface placeholder:text-outline/60 focus:ring-2 focus:ring-secondary-fixed transition-all resize-none"
               value={story}
               onChange={(e) => setStory(e.target.value)}

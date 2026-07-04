@@ -130,7 +130,7 @@ export function Creditos() {
           <div className="flex items-center gap-3 mb-1">
             <Link
               to="/dashboard"
-              className="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest transition-all"
+              className="w-11 h-11 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest transition-all"
             >
               <span className="material-symbols-outlined text-[22px]">arrow_back</span>
             </Link>
@@ -164,6 +164,7 @@ export function Creditos() {
                 <div className="flex gap-3">
                   <input
                     type="text"
+                    aria-label="Código do cupom"
                     value={codigo}
                     onChange={(e) => setCodigo(e.target.value.toUpperCase())}
                     placeholder="Digite o código do cupom"
@@ -467,7 +468,7 @@ export function Creditos() {
               </h2>
               <button
                 onClick={() => !buying && setShowModal(false)}
-                className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest transition-all"
+                className="w-11 h-11 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest transition-all"
               >
                 <span className="material-symbols-outlined text-[18px]">close</span>
               </button>

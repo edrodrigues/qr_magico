@@ -14,7 +14,7 @@
 | `fg` / `on-background` / `on-surface` | `#1D1D1C` | Texto principal |
 | `muted` / `on-surface-variant` | `#565655` | Texto secundário |
 | `border` / `outline` / `outline-variant` | `#CFCFCD` | Bordas |
-| `accent` / `primary` | `#C96442` | Coral — cor de ação principal |
+| `accent` / `primary` | `#B8553A` | Coral — cor de ação principal (escurecido para WCAG AA) |
 | `accent-light` / `primary-container` | `#F7EAE6` | Tom claro do coral |
 
 ### 1.2 Superfícies
@@ -30,7 +30,7 @@
 | `surface-container-high` | `#F0EFED` |
 | `surface-container-highest` | `#EBEAE8` |
 | `surface-variant` | `#F0EFED` |
-| `surface-tint` | `#C96442` |
+| `surface-tint` | `#B8553A` |
 
 ### 1.3 Primary / Accent
 
@@ -89,7 +89,7 @@
 | `warm-gray` | `#F2EDE9` |
 | `soft-cream` | `#F8F7F5` |
 | `coral-light` | `#E8A08A` |
-| `coral-deep` | `#B8553A` |
+| `coral-deep` | `#A04025` |
 | `gold-glimmer` | `#F7EAE6` |
 
 ### 1.9 Temas por Ocasião (Remotion)

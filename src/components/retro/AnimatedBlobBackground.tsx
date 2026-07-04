@@ -31,9 +31,9 @@ export function AnimatedBlobBackground({ palette = DEFAULT_PALETTE, reducedMotio
         <motion.path
           d={BLOB_PATHS[0]}
           fill="url(#blobGrad)"
-          animate={reducedMotion ? {} : { d: BLOB_PATHS, rotate: 360 }}
+          animate={reducedMotion ? {} : { scale: [1, 1.08, 1], rotate: 360 }}
           transition={{
-            d: { duration: 8, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" },
+            scale: { duration: 8, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" },
             rotate: { duration: 30, ease: "linear", repeat: Infinity },
           }}
           style={{ transformOrigin: "center" }}
@@ -41,9 +41,9 @@ export function AnimatedBlobBackground({ palette = DEFAULT_PALETTE, reducedMotio
         <motion.path
           d={BLOB_PATHS[1]}
           fill="url(#blobGrad)"
-          animate={reducedMotion ? {} : { d: BLOB_PATHS.slice().reverse(), rotate: -360 }}
+          animate={reducedMotion ? {} : { scale: [1, 0.92, 1], rotate: -360 }}
           transition={{
-            d: { duration: 10, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" },
+            scale: { duration: 10, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" },
             rotate: { duration: 40, ease: "linear", repeat: Infinity },
           }}
           style={{ transformOrigin: "center" }}

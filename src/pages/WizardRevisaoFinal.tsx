@@ -275,6 +275,7 @@ export function WizardRevisaoFinal() {
                     <div className="flex gap-2">
                       <input
                         type="text"
+                        aria-label="Código do cupom"
                         value={codigoCupom}
                         onChange={(e) => setCodigoCupom(e.target.value)}
                         placeholder="Insira o código"
@@ -313,14 +314,14 @@ export function WizardRevisaoFinal() {
                         />
                         <div
                           className={cn(
-                            "w-5 h-5 border-2 border-outline rounded flex items-center justify-center transition-all",
+                            "w-7 h-7 border-2 border-outline rounded flex items-center justify-center transition-all",
                             termsChecked
                               ? "bg-primary border-primary"
                               : "border-outline"
                           )}
                         >
                           {termsChecked && (
-                            <span className="material-symbols-outlined text-white text-[16px]">
+                            <span className="material-symbols-outlined text-white text-[18px]">
                               check
                             </span>
                           )}

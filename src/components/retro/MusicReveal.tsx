@@ -23,15 +23,16 @@ export function MusicReveal({ isActive }: MusicRevealProps) {
   useEffect(() => {
     const analyser = analyserRef.current;
     const canvas = canvasRef.current;
-    if (!analyser || !canvas) return;
+    if (!analyser || !canvas || !isActive) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
 
+    let animFrame = 0;
     const draw = () => {
-      animFrameRef.current = requestAnimationFrame(draw);
+      animFrame = requestAnimationFrame(draw);
       analyser.getByteFrequencyData(dataArray);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const barWidth = (canvas.width / bufferLength) * 2.5;
@@ -45,8 +46,8 @@ export function MusicReveal({ isActive }: MusicRevealProps) {
     };
     draw();
 
-    return () => cancelAnimationFrame(animFrameRef.current);
-  }, [analyserRef]);
+    return () => cancelAnimationFrame(animFrame);
+  }, [analyserRef, isActive]);
 
   if (!audioUrl) {
     return (
@@ -61,15 +62,17 @@ export function MusicReveal({ isActive }: MusicRevealProps) {
 
   return (
     <div className="w-full h-full bg-gradient-to-b from-surface-container to-surface flex flex-col items-center justify-center px-6">
-      <motion.div
-        className="relative w-48 h-48 md:w-56 md:h-56 rounded-2xl overflow-hidden shadow-2xl mb-6"
-        animate={isActive ? { boxShadow: "0 0 60px rgba(169,53,57,0.4), 0 0 120px rgba(169,53,57,0.2)" } : {}}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="w-full h-full bg-gradient-to-br from-primary/30 to-gold-glimmer/30 flex items-center justify-center">
+      <div className="relative w-48 h-48 md:w-56 md:h-56 rounded-2xl overflow-hidden shadow-2xl mb-6">
+        <motion.div
+          className="absolute inset-0 rounded-2xl"
+          animate={{ opacity: isActive ? 1 : 0 }}
+          transition={{ duration: 0.3 }}
+          style={{ boxShadow: "0 0 60px rgba(169,53,57,0.4), 0 0 120px rgba(169,53,57,0.2)" }}
+        />
+        <div className="relative w-full h-full bg-gradient-to-br from-primary/30 to-gold-glimmer/30 flex items-center justify-center">
           <span className="material-symbols-outlined text-6xl text-primary/40">music_note</span>
         </div>
-      </motion.div>
+      </div>
 
       <canvas
         ref={canvasRef}

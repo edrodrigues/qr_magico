@@ -6,7 +6,7 @@
   --color-fg: #1D1D1C;
   --color-muted: #565655;
   --color-border: #CFCFCD;
-  --color-accent: #C96442;
+  --color-accent: #B8553A;
   --color-accent-light: #F7EAE6;
 
   /* Background / Surface */
@@ -20,7 +20,7 @@
   --color-surface-container-high: #F0EFED;
   --color-surface-container-highest: #EBEAE8;
   --color-surface-variant: #F0EFED;
-  --color-surface-tint: #C96442;
+  --color-surface-tint: #B8553A;
 
   /* Text / Foreground */
   --color-on-background: #1D1D1C;
@@ -28,7 +28,7 @@
   --color-on-surface-variant: #565655;
 
   /* Primary / Accent */
-  --color-primary: #C96442;
+  --color-primary: #B8553A;
   --color-primary-container: #F7EAE6;
   --color-on-primary: #FFFFFF;
   --color-on-primary-container: #4A2517;
@@ -76,7 +76,7 @@
   --color-warm-gray: #F2EDE9;
   --color-soft-cream: #F8F7F5;
   --color-coral-light: #E8A08A;
-  --color-coral-deep: #B8553A;
+  --color-coral-deep: #A04025;
   --color-gold-glimmer: #F7EAE6;
 
   --font-display-lg: "Newsreader", Georgia, serif;
@@ -161,10 +161,8 @@
 }
 
 @utility glass-card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background-color: var(--color-surface-container);
+  border: 1px solid rgb(207 207 205 / 0.3);
 }
 
 @utility glass-panel {

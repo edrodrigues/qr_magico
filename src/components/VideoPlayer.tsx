@@ -173,13 +173,15 @@ export function VideoPlayer({ videoUrl, posterUrl, onShowStory }: VideoPlayerPro
           onClick={(e) => e.stopPropagation()}
         >
           <div
-            className="w-full h-1 bg-white/30 rounded-full mb-3 cursor-pointer"
+            className="w-full mb-3 cursor-pointer py-4 -my-4"
             onClick={handleProgressClick}
           >
-            <div
-              className="h-full bg-white rounded-full"
-              style={{ width: `${progress * 100}%` }}
-            />
+            <div className="w-full h-1 bg-white/30 rounded-full">
+              <div
+                className="h-full bg-white rounded-full"
+                style={{ width: `${progress * 100}%` }}
+              />
+            </div>
           </div>
 
           <div className="flex items-center justify-between">

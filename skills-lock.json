@@ -79,6 +79,12 @@
       "skillPath": "skills/idea-refine/SKILL.md",
       "computedHash": "6dfa3262173f29aa49a0a1088c0fd838ab2df7ee21e31602f3898b9a33051130"
     },
+    "impeccable": {
+      "source": "pbakaus/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/impeccable/SKILL.md",
+      "computedHash": "ac7d37b9e6dc9bdbb9b1ebd54368a3fab81920487eda3b6c109cf48b958a78dc"
+    },
     "incremental-implementation": {
       "source": "addyosmani/agent-skills",
       "sourceType": "github",
