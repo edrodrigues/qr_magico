@@ -17,11 +17,13 @@ import {
   runStaleGenerationRecovery,
   shouldRunRecovery,
 } from "../lib/generation";
-import { logGeneration, logGenerationPoll, type RenderPollDebug } from "../lib/generationDebug";
+import { fetchPresenteVideoStatus } from "../lib/videoApi";
+import { logGeneration, logGenerationPoll } from "../lib/generationDebug";
 import {
   buildVideoProcessingUi,
   formatRenderErrorForUser,
   formatRenderErrorTechnical,
+  STUCK_RENDER_THRESHOLD_SEC,
   type VideoRenderUiState,
 } from "../lib/renderStatusMessages";
 import { getOccasionTheme } from "../remotion/theme";
@@ -61,7 +63,7 @@ const OCCASION_SUGGESTIONS = [
 function SkeletonCard() {
   return (
     <div className="glass-card p-6 rounded-xl flex flex-col md:flex-row gap-6">
-      <div className="skeleton w-full md:w-32 h-32 flex-shrink-0" />
+      <div className="skeleton w-full md:w-32 h-32 shrink-0" />
       <div className="flex-1 space-y-3">
         <div className="skeleton h-5 w-48" />
         <div className="skeleton h-3 w-32" />
@@ -85,7 +87,7 @@ function StatCard({
   return (
     <div className="glass-card rounded-xl p-4 flex items-center gap-4 flex-1 min-w-[120px]">
       <div
-        className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+        className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
         style={{ backgroundColor: `${color}18` }}
       >
         <span className="material-symbols-outlined text-[22px]" style={{ color }}>
@@ -188,7 +190,7 @@ const GiftCard = memo(function GiftCard({
     >
       {gift.status === "ready" && (
         <div className="flex flex-col sm:flex-row gap-5">
-          <div className="relative w-full sm:w-28 h-28 flex-shrink-0 rounded-xl overflow-hidden bg-white shadow-md">
+          <div className="relative w-full sm:w-28 h-28 shrink-0 rounded-xl overflow-hidden bg-white shadow-md">
             {qrLoading ? (
               <div className="w-full h-full flex items-center justify-center bg-warm-gray">
                 <span className="material-symbols-outlined text-[36px] text-outline-variant animate-pulse">
@@ -238,15 +240,15 @@ const GiftCard = memo(function GiftCard({
             </div>
 
             <div className="flex items-center gap-3 my-4 sm:my-5">
-              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-primary/20 to-primary-fixed-dim/30" />
-              <span className="font-label-sm text-label-sm text-on-surface-variant tracking-[0.15em] uppercase flex-shrink-0">
+              <div className="h-px flex-1 bg-linear-to-r from-transparent via-primary/20 to-primary-fixed-dim/30" />
+              <span className="font-label-sm text-label-sm text-on-surface-variant tracking-[0.15em] uppercase shrink-0">
                 <span className="material-symbols-outlined text-[14px] align-middle -mt-0.5 inline-block">share</span>
                 {" "}Compartilhe
               </span>
-              <div className="h-px flex-1 bg-gradient-to-r from-primary-fixed-dim/30 via-primary/20 to-transparent" />
+              <div className="h-px flex-1 bg-linear-to-r from-primary-fixed-dim/30 via-primary/20 to-transparent" />
             </div>
 
-            <div className="bg-gradient-to-r from-primary/[0.06] to-primary-fixed/[0.08] rounded-xl p-1">
+            <div className="bg-linear-to-r from-primary/6 to-primary-fixed/8 rounded-xl p-1">
               <div className="bg-surface-bright rounded-lg px-4 py-3 flex items-center gap-3">
                 <div className="flex-1 min-w-0">
                   <p className="font-label-sm text-label-sm text-on-surface-variant mb-0.5">
@@ -257,10 +259,10 @@ const GiftCard = memo(function GiftCard({
                 <button
                   onClick={() => onCopy(gift.id, gift.link!)}
                   className={cn(
-                    "flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-200",
+                    "shrink-0 w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-200",
                     copiedId === gift.id
                       ? "bg-green-50 text-green-700"
-                      : "bg-primary/[0.08] text-primary hover:bg-primary/[0.14] active:scale-95"
+                      : "bg-primary/8 text-primary hover:bg-primary/[0.14] active:scale-95"
                   )}
                   title="Copiar Link"
                 >
@@ -275,7 +277,7 @@ const GiftCard = memo(function GiftCard({
               <button
                 onClick={() => onDownload?.(gift)}
                 disabled={downloadingId === gift.id}
-                className="group flex flex-col items-center justify-center gap-2 bg-gradient-to-b from-primary to-coral-deep text-on-primary px-4 py-3.5 rounded-xl font-label-md text-label-md hover:shadow-lg hover:brightness-110 active:scale-[0.97] transition-all disabled:opacity-50"
+                className="group flex flex-col items-center justify-center gap-2 bg-linear-to-b from-primary to-coral-deep text-on-primary px-4 py-3.5 rounded-xl font-label-md text-label-md hover:shadow-lg hover:brightness-110 active:scale-[0.97] transition-all disabled:opacity-50 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[22px]">
                   {downloadingId === gift.id ? "hourglass_top" : "download"}
@@ -285,7 +287,7 @@ const GiftCard = memo(function GiftCard({
               <button
                 onClick={() => onDownloadPdf?.(gift)}
                 disabled={downloadingPdfId === gift.id}
-                className="group flex flex-col items-center justify-center gap-2 bg-surface-variant text-on-surface-variant px-4 py-3.5 rounded-xl font-label-md text-label-md hover:bg-surface-container-highest hover:shadow-md active:scale-[0.97] transition-all disabled:opacity-50"
+                className="group flex flex-col items-center justify-center gap-2 bg-surface-variant text-on-surface-variant px-4 py-3.5 rounded-xl font-label-md text-label-md hover:bg-surface-container-highest hover:shadow-md active:scale-[0.97] transition-all disabled:opacity-50 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[22px]">
                   {downloadingPdfId === gift.id ? "hourglass_top" : "picture_as_pdf"}
@@ -299,7 +301,7 @@ const GiftCard = memo(function GiftCard({
 
       {gift.status === "generating" && (
         <div className="flex flex-col sm:flex-row gap-5">
-          <div className="w-full sm:w-28 h-28 flex-shrink-0 rounded-xl overflow-hidden bg-warm-gray flex items-center justify-center relative">
+          <div className="w-full sm:w-28 h-28 shrink-0 rounded-xl overflow-hidden bg-warm-gray flex items-center justify-center relative">
             <span className="material-symbols-outlined text-[44px] text-outline-variant">
               auto_awesome
             </span>
@@ -355,7 +357,7 @@ const GiftCard = memo(function GiftCard({
 
       {gift.status === "failed" && (
         <div className="flex flex-col sm:flex-row gap-5">
-          <div className="w-full sm:w-28 h-28 flex-shrink-0 rounded-xl overflow-hidden bg-warm-gray flex items-center justify-center">
+          <div className="w-full sm:w-28 h-28 shrink-0 rounded-xl overflow-hidden bg-warm-gray flex items-center justify-center">
             <span className="material-symbols-outlined text-[40px] text-outline-variant">
               error_outline
             </span>
@@ -405,7 +407,7 @@ const GiftCard = memo(function GiftCard({
 
       {gift.status === "pending_payment" && (
         <div className="flex flex-col sm:flex-row gap-5">
-          <div className="w-full sm:w-28 h-28 flex-shrink-0 rounded-xl overflow-hidden bg-surface-container-highest flex items-center justify-center">
+          <div className="w-full sm:w-28 h-28 shrink-0 rounded-xl overflow-hidden bg-surface-container-highest flex items-center justify-center">
             <span className="material-symbols-outlined text-[40px] text-outline">
               shopping_bag
             </span>
@@ -453,7 +455,7 @@ const GiftCard = memo(function GiftCard({
 
       {gift.status === "draft" && (
         <div className="flex flex-col sm:flex-row gap-5">
-          <div className="w-full sm:w-28 h-28 flex-shrink-0 rounded-xl overflow-hidden bg-warm-gray/50 flex items-center justify-center border-2 border-dashed border-outline-variant/50">
+          <div className="w-full sm:w-28 h-28 shrink-0 rounded-xl overflow-hidden bg-warm-gray/50 flex items-center justify-center border-2 border-dashed border-outline-variant/50">
             <span className="material-symbols-outlined text-[40px] text-outline-variant">
               edit_note
             </span>
@@ -567,7 +569,7 @@ function EmptyState({ onSelectOccasion }: { onSelectOccasion: (o: string) => voi
 function ErrorBanner({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
     <div className="bg-error-container rounded-xl p-6 flex items-start gap-4 animate-slide-up">
-      <span className="material-symbols-outlined text-error text-[24px] flex-shrink-0">
+      <span className="material-symbols-outlined text-error text-[24px] shrink-0">
         cloud_off
       </span>
       <div className="flex-1">
@@ -578,7 +580,7 @@ function ErrorBanner({ message, onRetry }: { message: string; onRetry: () => voi
       </div>
       <button
         onClick={onRetry}
-        className="px-4 py-2 rounded-lg bg-error text-on-error font-label-md text-label-md hover:brightness-110 transition-all flex-shrink-0"
+        className="px-4 py-2 rounded-lg bg-error text-on-error font-label-md text-label-md hover:brightness-110 transition-all shrink-0"
       >
         Tentar novamente
       </button>
@@ -614,21 +616,25 @@ export function Dashboard() {
     }
     setDownloadingId(gift.id);
     try {
-      const edgeUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
-      const res = await fetch(`${edgeUrl}/get-download-url`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ presente_id: gift.id }),
-      });
-      const data = await res.json();
+      const data = await fetchPresenteVideoStatus(session, gift.id);
       if (data.status === "pending") {
-        addToast("O vídeo ainda está sendo gerado. Tente novamente em alguns instantes.", "info");
+        const stuck =
+          (data.debug?.elapsed_seconds ?? 0) >= STUCK_RENDER_THRESHOLD_SEC &&
+          data.debug?.s3_found === false;
+        addToast(
+          stuck
+            ? "O vídeo não está disponível. Clique em Tentar novamente para gerar um novo."
+            : "O vídeo ainda está sendo gerado. Tente novamente em alguns instantes.",
+          stuck ? "error" : "info",
+        );
         return;
       }
-      if (!res.ok || !data.download_url) {
+      if (data.status === "failed") {
+        addToast(formatRenderErrorForUser(data.error_message), "error");
+        if (gift.status === "ready") refetch();
+        return;
+      }
+      if (!data.download_url) {
         addToast("Erro ao baixar vídeo. Tente novamente.", "error");
         return;
       }
@@ -745,20 +751,12 @@ export function Dashboard() {
 
   const checkVideoStatus = useCallback(async (gift: Gift) => {
     if (!session || checkingIdsRef.current.has(gift.id)) return;
+    if (gift.status !== "generating") return;
     checkingIdsRef.current.add(gift.id);
     try {
-      const edgeUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
-      const res = await fetch(`${edgeUrl}/get-download-url`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ presente_id: gift.id }),
-      });
-      const data = await res.json();
-      const status = data.status || (res.ok ? "unknown" : "error");
-      const debug = data.debug as RenderPollDebug | undefined;
+      const data = await fetchPresenteVideoStatus(session, gift.id);
+      const status = data.status;
+      const debug = data.debug;
       const progress = debug?.overall_progress ?? null;
 
       const prevStatus = lastPollStatusRef.current.get(gift.id);
@@ -772,14 +770,16 @@ export function Dashboard() {
         logGenerationPoll(gift.id, status, debug);
       }
 
-      const ui = buildVideoProcessingUi({
-        debug,
-        defaultMessage: gift.currentStepMessage,
-        isStuck: gift.isStuck,
-      });
-      setVideoRenderUi((prev) =>
-        videoRenderUiEqual(prev[gift.id], ui) ? prev : { ...prev, [gift.id]: ui },
-      );
+      if (status === "pending") {
+        const ui = buildVideoProcessingUi({
+          debug,
+          defaultMessage: gift.currentStepMessage,
+          isStuck: gift.isStuck,
+        });
+        setVideoRenderUi((prev) =>
+          videoRenderUiEqual(prev[gift.id], ui) ? prev : { ...prev, [gift.id]: ui },
+        );
+      }
 
       if (status === "failed") {
         setVideoRenderUi((prev) => {
@@ -788,8 +788,9 @@ export function Dashboard() {
           delete next[gift.id];
           return next;
         });
-        const userMsg = formatRenderErrorForUser(data.error_message);
-        addToast(userMsg, "error");
+        if (statusChanged) {
+          addToast(formatRenderErrorForUser(data.error_message), "error");
+        }
       }
 
       if (status === "ready" || status === "pending" || status === "failed") {
@@ -839,8 +840,8 @@ export function Dashboard() {
       return;
     }
 
-    if (gift.videoUrl && gift.status !== "ready") {
-      const { promoted, error } = await promoteOrphanVideo(gift.id);
+    if (gift.status === "generating" && gift.videoUrl) {
+      const { promoted, error } = await promoteOrphanVideo(gift.id, session);
       if (promoted && !error) {
         addToast("Presente atualizado!", "success");
         refetch();
@@ -987,7 +988,7 @@ export function Dashboard() {
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
               className={cn(
-                "px-5 py-2 rounded-full font-label-md text-label-md whitespace-nowrap transition-all flex-shrink-0",
+                "px-5 py-2 rounded-full font-label-md text-label-md whitespace-nowrap transition-all shrink-0",
                 activeTab === tab.id
                   ? "bg-primary text-on-primary shadow-md"
                   : "bg-surface-variant text-on-surface-variant hover:bg-surface-container-higher"
@@ -1057,7 +1058,7 @@ export function Dashboard() {
                     "Ela escaneia e a mágica acontece!",
                   ].map((step, i) => (
                     <div key={i} className="flex gap-3">
-                      <span className="w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center text-[12px] font-bold flex-shrink-0">
+                      <span className="w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center text-[12px] font-bold shrink-0">
                         {i + 1}
                       </span>
                       <p className="text-sm text-on-primary-fixed-variant">{step}</p>

@@ -1,12 +1,14 @@
 import type { RenderPollDebug } from "./generationDebug";
 
 const LONG_PROCESSING_THRESHOLD_SEC = 5 * 60;
+export const STUCK_RENDER_THRESHOLD_SEC = 25 * 60;
 
 const VERDICT_DEV_NOTES: Record<string, string> = {
   grace_period: "verdict: grace_period — aguardando 30s",
   rendering: "verdict: rendering — Lambda Remotion em andamento",
   waiting_s3: "verdict: waiting_s3 — aguardando out.mp4 no S3",
   failed_remotion: "verdict: failed_remotion — falha no servidor Remotion",
+  unrecoverable: "verdict: unrecoverable — MP4 ausente no S3",
 };
 
 export interface VideoRenderUiState {
@@ -50,6 +52,9 @@ export function formatRenderErrorForUser(raw?: string | null): string {
   }
   if (lower.includes("invalid array length")) {
     return "Falha na renderização do vídeo. Tente gerar novamente.";
+  }
+  if (lower.includes("arquivo de vídeo não encontrado")) {
+    return "O arquivo de vídeo não foi encontrado. Clique em Tentar novamente para gerar um novo.";
   }
   if (lower.includes("falha na renderização") || lower.includes("renderização do vídeo")) {
     const short = raw.split(/Render ID:|https?:\/\//)[0].trim();
@@ -109,11 +114,17 @@ export function buildVideoProcessingUi(input: {
     };
   }
 
-  if (verdict === "failed_remotion") {
+  if (verdict === "failed_remotion" || verdict === "unrecoverable") {
     return {
       message: defaultMessage,
-      errorMessage: formatRenderErrorForUser(debug?.remotion_error),
-      hint: "Detectamos um problema na renderização. O sistema finalizará em instantes ou você pode tentar novamente.",
+      errorMessage: formatRenderErrorForUser(
+        verdict === "unrecoverable"
+          ? "Arquivo de vídeo não encontrado. Gere novamente."
+          : debug?.remotion_error,
+      ),
+      hint: verdict === "unrecoverable"
+        ? "O vídeo não está disponível. Clique em Tentar novamente para gerar um novo."
+        : "Detectamos um problema na renderização. O sistema finalizará em instantes ou você pode tentar novamente.",
       technicalNote: buildDevNote(debug, debug?.remotion_error?.split(/\n/)[0]),
     };
   }

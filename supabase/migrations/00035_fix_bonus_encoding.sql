@@ -1,3 +1,4 @@
+-- Renumerada de 00026 (conflito com 00026_create_user_actions já aplicada no remoto).
 -- Descrição ASCII-safe (evita corrupção de encoding ao aplicar migrations no Windows)
 CREATE OR REPLACE FUNCTION public.descricao_bonus_cupom(p_codigo TEXT)
 RETURNS TEXT

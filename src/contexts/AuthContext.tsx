@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       setLoading(false);
 
-      if (event === "SIGNED_IN" && session?.user) {
+      if (event === "SIGNED_IN" && session?.user?.email) {
         addToResendAudience(session.user.email, session.user.user_metadata?.full_name);
       }
     });
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) return { error: error.message, needsEmailConfirmation: false };
     const needsEmailConfirmation = !!data?.user?.confirmation_sent_at;
 
-    if (data?.user) {
+    if (data?.user?.email) {
       addToResendAudience(data.user.email, data.user.user_metadata?.full_name);
     }
 

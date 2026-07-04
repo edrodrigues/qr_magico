@@ -4,6 +4,7 @@ import { getCorsHeaders } from "../_shared/cors.ts";
 import { buildPresenteLink } from "../_shared/generation-pipeline.ts";
 import { muxRenderWithMusic } from "../_shared/mux-video-audio.ts";
 import { summarizeMuxError } from "../_shared/mux-lambda.ts";
+import { buildProxyVideoUrl } from "../_shared/video-url.ts";
 
 async function hexSign(key: string, data: string): Promise<string> {
   const k = await crypto.subtle.importKey(
@@ -71,7 +72,6 @@ serve(async (req) => {
     const body = await req.json();
     const presenteId = body.customData?.presente_id || body.presente_id;
     const renderStatus = body.type || body.status;
-    const videoUrl = body.outputUrl || body.output?.url || body.video_url || null;
     const outputFile = body.outputFile || body.outKey || null;
     const renderId = String(body.renderId || "");
     const muxAudio = Boolean(body.customData?.mux_audio);
@@ -106,6 +106,8 @@ serve(async (req) => {
         }
       }
 
+      let muxedAt: string | null = null;
+
       if (muxAudio && musicaUrl && renderId && bucket) {
         const mux = await muxRenderWithMusic({ renderId, musicaUrl, bucket });
         if (!mux.ok) {
@@ -124,16 +126,18 @@ serve(async (req) => {
             headers: { "Content-Type": "application/json", ...corsHeaders },
           });
         }
+        muxedAt = new Date().toISOString();
         console.log(`render-complete: ${presenteId} mux OK`);
       }
 
-      const proxyUrl = `${supabaseUrl}/functions/v1/proxy-video?presente_id=${presenteId}`;
+      const proxyUrl = buildProxyVideoUrl(supabaseUrl, presenteId);
       const link = presente?.slug ? buildPresenteLink(presente.slug) : null;
       await supabase
         .from("presentes")
         .update({
-          video_url: videoUrl || proxyUrl,
+          video_url: proxyUrl,
           status: "ready",
+          ...(muxedAt ? { video_muxed_at: muxedAt } : {}),
           ...(link ? { link } : {}),
           updated_at: new Date().toISOString(),
         })

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+<<<<<<< HEAD
 import { getCorsHeaders } from "../_shared/cors.ts";
 import {
   buildLegacyOutputKey,
@@ -7,86 +8,25 @@ import {
   findExistingRenderKey,
 } from "../_shared/remotion-s3.ts";
 import { fetchReadyMusicUrl, muxRenderWithMusic } from "../_shared/mux-video-audio.ts";
+=======
+import { fetchReadyMusicUrl, ensureVideoMuxed } from "../_shared/mux-video-audio.ts";
+>>>>>>> 1eafcc67f350566a068a81e209045f59f4a4bfa7
 import { summarizeMuxError } from "../_shared/mux-lambda.ts";
+import {
+  resolvePresenteVideoKey,
+  type AwsRenderConfig,
+} from "../_shared/resolve-presente-video.ts";
+import {
+  generatePresignedGetUrl,
+  getAwsS3Config,
+} from "../_shared/s3-presign.ts";
+import { needsProxyNormalization, persistProxyVideoUrl } from "../_shared/video-url.ts";
 
-const crypto = globalThis.crypto;
-
-function sha256(data: string): Promise<string> {
-  return crypto.subtle.digest("SHA-256", new TextEncoder().encode(data)).then(
-    (h) => Array.from(new Uint8Array(h)).map((b) => b.toString(16).padStart(2, "0")).join(""),
-  );
-}
-
-function hmac(key: Uint8Array, data: string): Promise<Uint8Array> {
-  return crypto.subtle.importKey("raw", key, { name: "HMAC", hash: "SHA-256" }, false, ["sign"])
-    .then((k) => crypto.subtle.sign("HMAC", k, new TextEncoder().encode(data)))
-    .then((s) => new Uint8Array(s));
-}
-
-async function hmacHex(key: Uint8Array, data: string): Promise<string> {
-  const sig = await hmac(key, data);
-  return Array.from(sig).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-async function getSignatureKey(
-  key: string,
-  dateStamp: string,
-  region: string,
-  service: string,
-): Promise<Uint8Array> {
-  const kDate = await hmac(new TextEncoder().encode("AWS4" + key), dateStamp);
-  const kRegion = await hmac(kDate, region);
-  const kService = await hmac(kRegion, service);
-  return await hmac(kService, "aws4_request");
-}
-
-function encodeRfc3986(str: string): string {
-  return encodeURIComponent(str).replace(/[!'()*]/g, (c) => "%" + c.charCodeAt(0).toString(16).toUpperCase());
-}
-
-async function generatePresignedGetUrl(
-  bucket: string,
-  key: string,
-  region: string,
-  accessKeyId: string,
-  secretAccessKey: string,
-  expiresInSeconds: number,
-): Promise<string> {
-  const now = new Date();
-  const amzDate = now.toISOString().replace(/[:-]/g, "").replace(/\.\d{3}/, "");
-  const dateStamp = amzDate.slice(0, 8);
-  const algorithm = "AWS4-HMAC-SHA256";
-  const service = "s3";
-  const host = `${bucket}.s3.${region}.amazonaws.com`;
-
-  const credential = `${accessKeyId}/${dateStamp}/${region}/${service}/aws4_request`;
-
-  const params: Record<string, string> = {
-    "X-Amz-Algorithm": algorithm,
-    "X-Amz-Credential": credential,
-    "X-Amz-Date": amzDate,
-    "X-Amz-Expires": String(expiresInSeconds),
-    "X-Amz-SignedHeaders": "host",
+function getAwsConfig(): AwsRenderConfig {
+  return {
+    ...getAwsS3Config(),
+    functionName: Deno.env.get("REMOTION_FUNCTION_NAME") || "",
   };
-
-  const canonicalQueryString = Object.keys(params)
-    .sort()
-    .map((k) => `${encodeRfc3986(k)}=${encodeRfc3986(params[k])}`)
-    .join("&");
-
-  const canonicalUri = "/" + key.split("/").map(encodeRfc3986).join("/");
-
-  const canonicalRequest =
-    `GET\n${canonicalUri}\n${canonicalQueryString}\nhost:${host}\n\nhost\nUNSIGNED-PAYLOAD`;
-
-  const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
-  const stringToSign =
-    `${algorithm}\n${amzDate}\n${credentialScope}\n${await sha256(canonicalRequest)}`;
-
-  const signingKey = await getSignatureKey(secretAccessKey, dateStamp, region, service);
-  const signature = await hmacHex(signingKey, stringToSign);
-
-  return `https://${host}${canonicalUri}?${canonicalQueryString}&X-Amz-Signature=${signature}`;
 }
 
 serve(async (req) => {
@@ -119,7 +59,7 @@ serve(async (req) => {
   try {
     const query = supabase
       .from("presentes")
-      .select("id, video_url, status, render_request_id");
+      .select("id, video_url, status, render_request_id, video_muxed_at, generation_started_at");
 
     if (presenteId) {
       query.eq("id", presenteId);
@@ -162,22 +102,17 @@ serve(async (req) => {
       });
     }
 
-    const region = Deno.env.get("AWS_REGION") || "us-east-1";
-    const bucket = Deno.env.get("REMOTION_BUCKET_NAME") || "";
-    const accessKeyId = Deno.env.get("AWS_ACCESS_KEY_ID") || "";
-    const secretAccessKey = Deno.env.get("AWS_SECRET_ACCESS_KEY") || "";
-
-    if (!bucket || !accessKeyId || !secretAccessKey) {
+    const aws = getAwsConfig();
+    if (!aws.bucket || !aws.accessKeyId || !aws.secretAccessKey) {
       return new Response(JSON.stringify({ error: "S3 not configured" }), {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
-    const candidateKeys = presente.render_request_id
-      ? buildRenderOutputKeys(presente.render_request_id, presente.id)
-      : [buildLegacyOutputKey(presente.id)];
+    const resolved = await resolvePresenteVideoKey(presente, aws);
 
+<<<<<<< HEAD
     const checkS3Exists = async (s3Key: string): Promise<boolean> => {
       const checkUrl = await generatePresignedGetUrl(
         bucket, s3Key, region, accessKeyId, secretAccessKey, 60,
@@ -211,9 +146,20 @@ serve(async (req) => {
     }
 
     if (!key) {
+=======
+    if (resolved.kind !== "key") {
+>>>>>>> 1eafcc67f350566a068a81e209045f59f4a4bfa7
       return new Response(JSON.stringify({ error: "Video not available" }), {
         status: 404,
         headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const key = resolved.key;
+
+    if (needsProxyNormalization(presente.video_url)) {
+      await persistProxyVideoUrl(supabase, presente.id, supabaseUrl, {
+        status: "ready",
       });
     }
 
@@ -221,24 +167,31 @@ serve(async (req) => {
       ? await fetchReadyMusicUrl(supabase, presente.id)
       : null;
 
-    if (musicaUrl && presente.render_request_id) {
-      const mux = await muxRenderWithMusic({
-        renderId: presente.render_request_id,
-        musicaUrl,
-        bucket,
-        videoKey: key,
+    const mux = await ensureVideoMuxed(supabase, presente.id, {
+      renderId: presente.render_request_id,
+      musicaUrl,
+      bucket: aws.bucket,
+      videoKey: key,
+      videoMuxedAt: presente.video_muxed_at,
+    });
+
+    if (!mux.ok) {
+      return new Response(JSON.stringify({ error: summarizeMuxError(mux.error) }), {
+        status: 503,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       });
+<<<<<<< HEAD
       if (!mux.ok) {
         return new Response(JSON.stringify({ error: summarizeMuxError(mux.error) }), {
           status: 503,
           headers: { "Content-Type": "application/json", ...corsHeaders },
         });
       }
+=======
+>>>>>>> 1eafcc67f350566a068a81e209045f59f4a4bfa7
     }
 
-    const presignedUrl = await generatePresignedGetUrl(
-      bucket, key, region, accessKeyId, secretAccessKey, 3600,
-    );
+    const presignedUrl = await generatePresignedGetUrl(aws, key, 3600);
 
     const isJson = url.searchParams.has("format") && url.searchParams.get("format") === "json";
     if (isJson) {
