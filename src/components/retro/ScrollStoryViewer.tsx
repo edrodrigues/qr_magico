@@ -56,7 +56,7 @@ function ScrollStoryViewerInner({ slides, renderSlide }: {
 
     const handleScroll = () => {
       const index = Math.round(container.scrollTop / slideHeight);
-      setActiveIndex((prev) => {
+      setActiveIndex(() => {
         const clamped = Math.min(index, slides.length - 1);
         return clamped;
       });

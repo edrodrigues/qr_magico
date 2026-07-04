@@ -9,7 +9,6 @@ interface MusicRevealProps {
 export function MusicReveal({ isActive }: MusicRevealProps) {
   const { musica, analyserRef, initAudioAnalyser } = useStoryViewer();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const animFrameRef = useRef<number>(0);
 
   const audioUrl = musica?.url_audio;
 
