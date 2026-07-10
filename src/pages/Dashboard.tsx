@@ -157,7 +157,7 @@ const GiftCard = memo(function GiftCard({
       const url = await QRCode.toDataURL(gift.link!, {
         width: 400,
         margin: 2,
-        color: { dark: "#000000", light: "#FFFFFF" },
+        color: { dark: "#000000", light: "#FAF5FA" },
       });
       if (cancelled) return;
       setQrDataUrl(url);
@@ -682,7 +682,7 @@ export function Dashboard() {
       const qrDataUrl = await QRCode.toDataURL(p.link || "", {
         width: 400,
         margin: 2,
-        color: { dark: "#000000", light: "#FFFFFF" },
+        color: { dark: "#000000", light: "#FAF5FA" },
       });
 
       const doc = new jsPDF({ format: "a5", unit: "mm" });
@@ -947,15 +947,15 @@ export function Dashboard() {
         </header>
 
         <div className="flex flex-wrap gap-3 mb-8 animate-reveal" style={{ animationDelay: "0.1s" }}>
-          <StatCard label="Prontos" value={stats.ready} icon="check_circle" color="#2e7d32" />
-          <StatCard label="Rascunhos" value={stats.draft} icon="edit_note" color="#735c00" />
+          <StatCard label="Prontos" value={stats.ready} icon="check_circle" color="#D2AAF0" />
+          <StatCard label="Rascunhos" value={stats.draft} icon="edit_note" color="#FFE169" />
           <StatCard
             label="Pagamento"
             value={stats.payment}
             icon="hourglass_empty"
-            color="#B8553A"
+            color="#3C1955"
           />
-          <StatCard label="Total" value={stats.total} icon="redeem" color="#615e5b" />
+          <StatCard label="Total" value={stats.total} icon="redeem" color="#D2AAF0" />
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 mb-6 animate-reveal" style={{ animationDelay: "0.15s" }}>

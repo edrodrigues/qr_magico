@@ -6,91 +6,14 @@
 
 ## 1. Cores
 
-### 1.1 Paleta Principal
+### 1.1 Paleta
 
-| Token | Valor | Uso |
+| Cor | HEX | Uso |
 |---|---|---|
-| `bg` / `background` | `#F8F7F5` | Fundo principal |
-| `fg` / `on-background` / `on-surface` | `#1D1D1C` | Texto principal |
-| `muted` / `on-surface-variant` | `#565655` | Texto secundário |
-| `border` / `outline` / `outline-variant` | `#CFCFCD` | Bordas |
-| `accent` / `primary` | `#B8553A` | Coral — cor de ação principal (escurecido para WCAG AA) |
-| `accent-light` / `primary-container` | `#F7EAE6` | Tom claro do coral |
-
-### 1.2 Superfícies
-
-| Token | Valor |
-|---|---|
-| `surface` | `#FFFFFF` |
-| `surface-bright` | `#FFFFFF` |
-| `surface-dim` | `#E8E7E5` |
-| `surface-container` | `#F5F4F2` |
-| `surface-container-low` | `#FAF9F7` |
-| `surface-container-lowest` | `#FFFFFF` |
-| `surface-container-high` | `#F0EFED` |
-| `surface-container-highest` | `#EBEAE8` |
-| `surface-variant` | `#F0EFED` |
-| `surface-tint` | `#B8553A` |
-
-### 1.3 Primary / Accent
-
-| Token | Valor |
-|---|---|
-| `on-primary` | `#FFFFFF` |
-| `on-primary-container` | `#4A2517` |
-| `primary-fixed` | `#F7EAE6` |
-| `primary-fixed-dim` | `#E8D5CC` |
-| `on-primary-fixed` | `#4A2517` |
-| `on-primary-fixed-variant` | `#7C4229` |
-| `inverse-primary` | `#E8A08A` |
-
-### 1.4 Secondary
-
-| Token | Valor |
-|---|---|
-| `secondary` | `#6C6B69` |
-| `secondary-container` | `#F7EAE6` |
-| `on-secondary` | `#FFFFFF` |
-| `on-secondary-container` | `#4A4A49` |
-| `secondary-fixed` | `#F7EAE6` |
-| `secondary-fixed-dim` | `#E8D5CC` |
-| `on-secondary-fixed` | `#2C2C2B` |
-| `on-secondary-fixed-variant` | `#4A4A49` |
-
-### 1.5 Terciário
-
-| Token | Valor |
-|---|---|
-| `tertiary` | `#5A5A59` |
-| `tertiary-container` | `#B0B0AE` |
-| `on-tertiary` | `#FFFFFF` |
-| `on-tertiary-container` | `#2C2C2B` |
-
-### 1.6 Error
-
-| Token | Valor |
-|---|---|
-| `error` | `#C94444` |
-| `error-container` | `#FDE8E8` |
-| `on-error` | `#FFFFFF` |
-| `on-error-container` | `#8C2222` |
-
-### 1.7 Inverse
-
-| Token | Valor |
-|---|---|
-| `inverse-surface` | `#2C2C2B` |
-| `inverse-on-surface` | `#F0EFED` |
-
-### 1.8 Nomes Legados
-
-| Token | Valor |
-|---|---|
-| `warm-gray` | `#F2EDE9` |
-| `soft-cream` | `#F8F7F5` |
-| `coral-light` | `#E8A08A` |
-| `coral-deep` | `#A04025` |
-| `gold-glimmer` | `#F7EAE6` |
+| **Yellow Jasmine** | `#FFE169` | Primary / Accent — cor de ação principal |
+| **White Lilac** | `#FAF5FA` | Background / Superfícies |
+| **Plum Violet** | `#D2AAF0` | Secondary / Muted / Bordas / Containers |
+| **Grape Violet** | `#3C1955` | Texto principal (foreground / on-surface) |
 
 ### 1.9 Temas por Ocasião (Remotion)
 
@@ -110,11 +33,11 @@
 
 | Token | Família | Uso |
 |---|---|---|
-| `display-lg`, `headline-md`, `title-lg` | `"Newsreader", Georgia, serif` | Títulos decorativos |
-| `body-lg`, `body-md`, `label-md`, `label-sm` | `"Plus Jakarta Sans", sans-serif` | Corpo, labels, botões |
+| `display-lg`, `headline-md`, `title-lg` | `"Times New Roman", Times, serif` | Títulos decorativos |
+| `body-lg`, `body-md`, `label-md`, `label-sm` | `"Source Sans Pro", "Source Sans 3", sans-serif` | Corpo, labels, botões |
 | `mono` | `"JetBrains Mono", monospace` | Monoespaçada |
 
-Importado do Google Fonts: Newsreader (300, 400, 600, 700), Plus Jakarta Sans (400, 500, 600, 700), JetBrains Mono (400, 500).
+Importado do Google Fonts: Source Sans Pro (400, 500, 600, 700), JetBrains Mono (400, 500).
 
 ### 2.2 Escala Tipográfica
 

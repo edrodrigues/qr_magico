@@ -35,35 +35,35 @@ const TEMPLATES: Record<EmailTipo, string> = {
   <title>Bem-vindo ao Momento M&aacute;gico</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;1,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body style="margin:0;padding:0;background-color:#F8F7F5;font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif">
-  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#F8F7F5">
+<body style="margin:0;padding:0;background-color:#FAF5FA;font-family:'Source Sans Pro','Source Sans 3',Arial,Helvetica,sans-serif">
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#FAF5FA">
     <tr>
       <td align="center" style="padding:40px 0">
-        <table cellpadding="0" cellspacing="0" border="0" width="600" style="background-color:#FFFFFF;border-radius:0;overflow:hidden;border:1px solid #EBEAE8">
+        <table cellpadding="0" cellspacing="0" border="0" width="600" style="background-color:#FAF5FA;border-radius:0;overflow:hidden;border:1px solid #D2AAF0">
           <tr>
-            <td align="center" style="background-color:#C96442;padding:40px 20px">
-              <h1 style="color:#FFFFFF;font-size:28px;margin:0;line-height:1.3;font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400">Bem-vindo ao Momento M&aacute;gico!</h1>
+            <td align="center" style="background-color:#FFE169;padding:40px 20px">
+              <h1 style="color:#3C1955;font-size:28px;margin:0;line-height:1.3;font-family:'Times New Roman',Georgia,serif;font-weight:400">Bem-vindo ao Momento M&aacute;gico!</h1>
             </td>
           </tr>
           <tr>
             <td style="padding:40px 30px">
-              <p style="color:#1D1D1C;font-size:16px;line-height:1.6;margin:0 0 20px">Ol&aacute; <strong>{{nome}}</strong>,</p>
-              <p style="color:#565655;font-size:16px;line-height:1.6;margin:0 0 20px">Ficamos muito felizes em ter voc&ecirc; conosco! O Momento M&aacute;gico &eacute; o lugar perfeito para criar presentes personalizados e emocionantes para quem voc&ecirc; ama.</p>
-              <p style="color:#565655;font-size:16px;line-height:1.6;margin:0 0 30px">Que tal criar seu primeiro presente agora? &Eacute; r&aacute;pido, f&aacute;cil e m&aacute;gico!</p>
+              <p style="color:#3C1955;font-size:16px;line-height:1.6;margin:0 0 20px">Ol&aacute; <strong>{{nome}}</strong>,</p>
+              <p style="color:#D2AAF0;font-size:16px;line-height:1.6;margin:0 0 20px">Ficamos muito felizes em ter voc&ecirc; conosco! O Momento M&aacute;gico &eacute; o lugar perfeito para criar presentes personalizados e emocionantes para quem voc&ecirc; ama.</p>
+              <p style="color:#D2AAF0;font-size:16px;line-height:1.6;margin:0 0 30px">Que tal criar seu primeiro presente agora? &Eacute; r&aacute;pido, f&aacute;cil e m&aacute;gico!</p>
               <table cellpadding="0" cellspacing="0" border="0" align="center">
                 <tr>
-                  <td align="center" bgcolor="#C96442" style="border-radius:0">
-                    <a href="https://www.momentomagico.xyz/wizard/ocasiao-nome" target="_blank" style="display:inline-block;padding:14px 32px;color:#FFFFFF;font-size:16px;font-weight:600;text-decoration:none;line-height:1;font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif">Criar meu primeiro presente</a>
+                  <td align="center" bgcolor="#FFE169" style="border-radius:0">
+                    <a href="https://www.momentomagico.xyz/wizard/ocasiao-nome" target="_blank" style="display:inline-block;padding:14px 32px;color:#3C1955;font-size:16px;font-weight:600;text-decoration:none;line-height:1;font-family:'Source Sans Pro','Source Sans 3',Arial,Helvetica,sans-serif">Criar meu primeiro presente</a>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
           <tr>
-            <td style="background-color:#F5F4F2;padding:20px 30px;text-align:center">
-              <p style="color:#565655;font-size:12px;line-height:1.4;margin:0">Voc&ecirc; est&aacute; recebendo este email por ter se cadastrado no Momento M&aacute;gico.</p>
+            <td style="background-color:#FAF5FA;padding:20px 30px;text-align:center">
+              <p style="color:#D2AAF0;font-size:12px;line-height:1.4;margin:0">Voc&ecirc; est&aacute; recebendo este email por ter se cadastrado no Momento M&aacute;gico.</p>
             </td>
           </tr>
         </table>
@@ -81,35 +81,35 @@ const TEMPLATES: Record<EmailTipo, string> = {
   <title>Seu rascunho est&aacute; esperando!</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;1,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body style="margin:0;padding:0;background-color:#F8F7F5;font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif">
-  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#F8F7F5">
+<body style="margin:0;padding:0;background-color:#FAF5FA;font-family:'Source Sans Pro','Source Sans 3',Arial,Helvetica,sans-serif">
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#FAF5FA">
     <tr>
       <td align="center" style="padding:40px 0">
-        <table cellpadding="0" cellspacing="0" border="0" width="600" style="background-color:#FFFFFF;border-radius:0;overflow:hidden;border:1px solid #EBEAE8">
+        <table cellpadding="0" cellspacing="0" border="0" width="600" style="background-color:#FAF5FA;border-radius:0;overflow:hidden;border:1px solid #D2AAF0">
           <tr>
-            <td align="center" style="background-color:#C96442;padding:40px 20px">
-              <h1 style="color:#FFFFFF;font-size:28px;margin:0;line-height:1.3;font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400">Seu rascunho est&aacute; esperando!</h1>
+            <td align="center" style="background-color:#FFE169;padding:40px 20px">
+              <h1 style="color:#3C1955;font-size:28px;margin:0;line-height:1.3;font-family:'Times New Roman',Georgia,serif;font-weight:400">Seu rascunho est&aacute; esperando!</h1>
             </td>
           </tr>
           <tr>
             <td style="padding:40px 30px">
-              <p style="color:#1D1D1C;font-size:16px;line-height:1.6;margin:0 0 20px">Ol&aacute; <strong>{{nome}}</strong>,</p>
-              <p style="color:#565655;font-size:16px;line-height:1.6;margin:0 0 20px">Voc&ecirc; come&ccedil;ou a criar um presente para <strong>{{homenageado}}</strong> mas ainda n&atilde;o finalizou. Seu rascunho est&aacute; guardado e pronto para ser continuado!</p>
-              <p style="color:#565655;font-size:16px;line-height:1.6;margin:0 0 30px">N&atilde;o deixe essa surpresa pela metade &mdash; continue de onde parou e encante quem voc&ecirc; ama.</p>
+              <p style="color:#3C1955;font-size:16px;line-height:1.6;margin:0 0 20px">Ol&aacute; <strong>{{nome}}</strong>,</p>
+              <p style="color:#D2AAF0;font-size:16px;line-height:1.6;margin:0 0 20px">Voc&ecirc; come&ccedil;ou a criar um presente para <strong>{{homenageado}}</strong> mas ainda n&atilde;o finalizou. Seu rascunho est&aacute; guardado e pronto para ser continuado!</p>
+              <p style="color:#D2AAF0;font-size:16px;line-height:1.6;margin:0 0 30px">N&atilde;o deixe essa surpresa pela metade &mdash; continue de onde parou e encante quem voc&ecirc; ama.</p>
               <table cellpadding="0" cellspacing="0" border="0" align="center">
                 <tr>
-                  <td align="center" bgcolor="#C96442" style="border-radius:0">
-                    <a href="https://www.momentomagico.xyz/" target="_blank" style="display:inline-block;padding:14px 32px;color:#FFFFFF;font-size:16px;font-weight:600;text-decoration:none;line-height:1;font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif">Continuar meu presente</a>
+                  <td align="center" bgcolor="#FFE169" style="border-radius:0">
+                    <a href="https://www.momentomagico.xyz/" target="_blank" style="display:inline-block;padding:14px 32px;color:#3C1955;font-size:16px;font-weight:600;text-decoration:none;line-height:1;font-family:'Source Sans Pro','Source Sans 3',Arial,Helvetica,sans-serif">Continuar meu presente</a>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
           <tr>
-            <td style="background-color:#F5F4F2;padding:20px 30px;text-align:center">
-              <p style="color:#565655;font-size:12px;line-height:1.4;margin:0">Voc&ecirc; est&aacute; recebendo este email por ter um rascunho no Momento M&aacute;gico.</p>
+            <td style="background-color:#FAF5FA;padding:20px 30px;text-align:center">
+              <p style="color:#D2AAF0;font-size:12px;line-height:1.4;margin:0">Voc&ecirc; est&aacute; recebendo este email por ter um rascunho no Momento M&aacute;gico.</p>
             </td>
           </tr>
         </table>
@@ -127,35 +127,35 @@ const TEMPLATES: Record<EmailTipo, string> = {
   <title>&Uacute;ltimo lembrete: seu presente est&aacute; quase pronto!</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;1,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body style="margin:0;padding:0;background-color:#F8F7F5;font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif">
-  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#F8F7F5">
+<body style="margin:0;padding:0;background-color:#FAF5FA;font-family:'Source Sans Pro','Source Sans 3',Arial,Helvetica,sans-serif">
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#FAF5FA">
     <tr>
       <td align="center" style="padding:40px 0">
-        <table cellpadding="0" cellspacing="0" border="0" width="600" style="background-color:#FFFFFF;border-radius:0;overflow:hidden;border:1px solid #EBEAE8">
+        <table cellpadding="0" cellspacing="0" border="0" width="600" style="background-color:#FAF5FA;border-radius:0;overflow:hidden;border:1px solid #D2AAF0">
           <tr>
-            <td align="center" style="background-color:#C96442;padding:40px 20px">
-              <h1 style="color:#FFFFFF;font-size:28px;margin:0;line-height:1.3;font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400">&Uacute;ltimo lembrete: seu presente est&aacute; quase pronto!</h1>
+            <td align="center" style="background-color:#FFE169;padding:40px 20px">
+              <h1 style="color:#3C1955;font-size:28px;margin:0;line-height:1.3;font-family:'Times New Roman',Georgia,serif;font-weight:400">&Uacute;ltimo lembrete: seu presente est&aacute; quase pronto!</h1>
             </td>
           </tr>
           <tr>
             <td style="padding:40px 30px">
-              <p style="color:#1D1D1C;font-size:16px;line-height:1.6;margin:0 0 20px">Ol&aacute; <strong>{{nome}}</strong>,</p>
-              <p style="color:#565655;font-size:16px;line-height:1.6;margin:0 0 20px">Este &eacute; o &uacute;ltimo lembrete sobre o presente para <strong>{{homenageado}}</strong>. N&atilde;o deixe essa oportunidade passar!</p>
-              <p style="color:#565655;font-size:16px;line-height:1.6;margin:0 0 30px">Finalize agora e surpreenda algu&eacute;m especial.</p>
+              <p style="color:#3C1955;font-size:16px;line-height:1.6;margin:0 0 20px">Ol&aacute; <strong>{{nome}}</strong>,</p>
+              <p style="color:#D2AAF0;font-size:16px;line-height:1.6;margin:0 0 20px">Este &eacute; o &uacute;ltimo lembrete sobre o presente para <strong>{{homenageado}}</strong>. N&atilde;o deixe essa oportunidade passar!</p>
+              <p style="color:#D2AAF0;font-size:16px;line-height:1.6;margin:0 0 30px">Finalize agora e surpreenda algu&eacute;m especial.</p>
               <table cellpadding="0" cellspacing="0" border="0" align="center">
                 <tr>
-                  <td align="center" bgcolor="#C96442" style="border-radius:0">
-                    <a href="https://www.momentomagico.xyz/" target="_blank" style="display:inline-block;padding:14px 32px;color:#FFFFFF;font-size:16px;font-weight:600;text-decoration:none;line-height:1;font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif">Continuar meu presente</a>
+                  <td align="center" bgcolor="#FFE169" style="border-radius:0">
+                    <a href="https://www.momentomagico.xyz/" target="_blank" style="display:inline-block;padding:14px 32px;color:#3C1955;font-size:16px;font-weight:600;text-decoration:none;line-height:1;font-family:'Source Sans Pro','Source Sans 3',Arial,Helvetica,sans-serif">Continuar meu presente</a>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
           <tr>
-            <td style="background-color:#F5F4F2;padding:20px 30px;text-align:center">
-              <p style="color:#565655;font-size:12px;line-height:1.4;margin:0">Voc&ecirc; est&aacute; recebendo este email por ter um rascunho no Momento M&aacute;gico.</p>
+            <td style="background-color:#FAF5FA;padding:20px 30px;text-align:center">
+              <p style="color:#D2AAF0;font-size:12px;line-height:1.4;margin:0">Voc&ecirc; est&aacute; recebendo este email por ter um rascunho no Momento M&aacute;gico.</p>
             </td>
           </tr>
         </table>
@@ -173,35 +173,35 @@ const TEMPLATES: Record<EmailTipo, string> = {
   <title>Pagamento pendente</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;1,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body style="margin:0;padding:0;background-color:#F8F7F5;font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif">
-  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#F8F7F5">
+<body style="margin:0;padding:0;background-color:#FAF5FA;font-family:'Source Sans Pro','Source Sans 3',Arial,Helvetica,sans-serif">
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#FAF5FA">
     <tr>
       <td align="center" style="padding:40px 0">
-        <table cellpadding="0" cellspacing="0" border="0" width="600" style="background-color:#FFFFFF;border-radius:0;overflow:hidden;border:1px solid #EBEAE8">
+        <table cellpadding="0" cellspacing="0" border="0" width="600" style="background-color:#FAF5FA;border-radius:0;overflow:hidden;border:1px solid #D2AAF0">
           <tr>
-            <td align="center" style="background-color:#C96442;padding:40px 20px">
-              <h1 style="color:#FFFFFF;font-size:28px;margin:0;line-height:1.3;font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400">Pagamento pendente</h1>
+            <td align="center" style="background-color:#FFE169;padding:40px 20px">
+              <h1 style="color:#3C1955;font-size:28px;margin:0;line-height:1.3;font-family:'Times New Roman',Georgia,serif;font-weight:400">Pagamento pendente</h1>
             </td>
           </tr>
           <tr>
             <td style="padding:40px 30px">
-              <p style="color:#1D1D1C;font-size:16px;line-height:1.6;margin:0 0 20px">Ol&aacute; <strong>{{nome}}</strong>,</p>
-              <p style="color:#565655;font-size:16px;line-height:1.6;margin:0 0 20px">O presente para <strong>{{homenageado}}</strong> est&aacute; quase pronto! S&oacute; falta confirmar o pagamento para que a m&aacute;gica aconte&ccedil;a.</p>
-              <p style="color:#565655;font-size:16px;line-height:1.6;margin:0 0 30px">Finalize o pagamento e em poucos minutos seu presente especial ser&aacute; gerado.</p>
+              <p style="color:#3C1955;font-size:16px;line-height:1.6;margin:0 0 20px">Ol&aacute; <strong>{{nome}}</strong>,</p>
+              <p style="color:#D2AAF0;font-size:16px;line-height:1.6;margin:0 0 20px">O presente para <strong>{{homenageado}}</strong> est&aacute; quase pronto! S&oacute; falta confirmar o pagamento para que a m&aacute;gica aconte&ccedil;a.</p>
+              <p style="color:#D2AAF0;font-size:16px;line-height:1.6;margin:0 0 30px">Finalize o pagamento e em poucos minutos seu presente especial ser&aacute; gerado.</p>
               <table cellpadding="0" cellspacing="0" border="0" align="center">
                 <tr>
-                  <td align="center" bgcolor="#C96442" style="border-radius:0">
-                    <a href="{{link}}" target="_blank" style="display:inline-block;padding:14px 32px;color:#FFFFFF;font-size:16px;font-weight:600;text-decoration:none;line-height:1;font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif">Finalizar pagamento</a>
+                  <td align="center" bgcolor="#FFE169" style="border-radius:0">
+                    <a href="{{link}}" target="_blank" style="display:inline-block;padding:14px 32px;color:#3C1955;font-size:16px;font-weight:600;text-decoration:none;line-height:1;font-family:'Source Sans Pro','Source Sans 3',Arial,Helvetica,sans-serif">Finalizar pagamento</a>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
           <tr>
-            <td style="background-color:#F5F4F2;padding:20px 30px;text-align:center">
-              <p style="color:#565655;font-size:12px;line-height:1.4;margin:0">Voc&ecirc; est&aacute; recebendo este email por ter um pagamento pendente no Momento M&aacute;gico.</p>
+            <td style="background-color:#FAF5FA;padding:20px 30px;text-align:center">
+              <p style="color:#D2AAF0;font-size:12px;line-height:1.4;margin:0">Voc&ecirc; est&aacute; recebendo este email por ter um pagamento pendente no Momento M&aacute;gico.</p>
             </td>
           </tr>
         </table>
@@ -219,35 +219,35 @@ const TEMPLATES: Record<EmailTipo, string> = {
   <title>&Uacute;ltimo aviso: pagamento pendente!</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;1,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body style="margin:0;padding:0;background-color:#F8F7F5;font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif">
-  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#F8F7F5">
+<body style="margin:0;padding:0;background-color:#FAF5FA;font-family:'Source Sans Pro','Source Sans 3',Arial,Helvetica,sans-serif">
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#FAF5FA">
     <tr>
       <td align="center" style="padding:40px 0">
-        <table cellpadding="0" cellspacing="0" border="0" width="600" style="background-color:#FFFFFF;border-radius:0;overflow:hidden;border:1px solid #EBEAE8">
+        <table cellpadding="0" cellspacing="0" border="0" width="600" style="background-color:#FAF5FA;border-radius:0;overflow:hidden;border:1px solid #D2AAF0">
           <tr>
-            <td align="center" style="background-color:#C96442;padding:40px 20px">
-              <h1 style="color:#FFFFFF;font-size:28px;margin:0;line-height:1.3;font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400">&Uacute;ltimo aviso: pagamento pendente!</h1>
+            <td align="center" style="background-color:#FFE169;padding:40px 20px">
+              <h1 style="color:#3C1955;font-size:28px;margin:0;line-height:1.3;font-family:'Times New Roman',Georgia,serif;font-weight:400">&Uacute;ltimo aviso: pagamento pendente!</h1>
             </td>
           </tr>
           <tr>
             <td style="padding:40px 30px">
-              <p style="color:#1D1D1C;font-size:16px;line-height:1.6;margin:0 0 20px">Ol&aacute; <strong>{{nome}}</strong>,</p>
-              <p style="color:#565655;font-size:16px;line-height:1.6;margin:0 0 20px">Este &eacute; o &uacute;ltimo aviso sobre o pagamento do presente para <strong>{{homenageado}}</strong>. Ap&oacute;s a confirma&ccedil;&atilde;o, seu presente ser&aacute; gerado e disponibilizado.</p>
-              <p style="color:#565655;font-size:16px;line-height:1.6;margin:0 0 30px">N&atilde;o perca essa oportunidade!</p>
+              <p style="color:#3C1955;font-size:16px;line-height:1.6;margin:0 0 20px">Ol&aacute; <strong>{{nome}}</strong>,</p>
+              <p style="color:#D2AAF0;font-size:16px;line-height:1.6;margin:0 0 20px">Este &eacute; o &uacute;ltimo aviso sobre o pagamento do presente para <strong>{{homenageado}}</strong>. Ap&oacute;s a confirma&ccedil;&atilde;o, seu presente ser&aacute; gerado e disponibilizado.</p>
+              <p style="color:#D2AAF0;font-size:16px;line-height:1.6;margin:0 0 30px">N&atilde;o perca essa oportunidade!</p>
               <table cellpadding="0" cellspacing="0" border="0" align="center">
                 <tr>
-                  <td align="center" bgcolor="#C96442" style="border-radius:0">
-                    <a href="{{link}}" target="_blank" style="display:inline-block;padding:14px 32px;color:#FFFFFF;font-size:16px;font-weight:600;text-decoration:none;line-height:1;font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif">Finalizar pagamento</a>
+                  <td align="center" bgcolor="#FFE169" style="border-radius:0">
+                    <a href="{{link}}" target="_blank" style="display:inline-block;padding:14px 32px;color:#3C1955;font-size:16px;font-weight:600;text-decoration:none;line-height:1;font-family:'Source Sans Pro','Source Sans 3',Arial,Helvetica,sans-serif">Finalizar pagamento</a>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
           <tr>
-            <td style="background-color:#F5F4F2;padding:20px 30px;text-align:center">
-              <p style="color:#565655;font-size:12px;line-height:1.4;margin:0">Voc&ecirc; est&aacute; recebendo este email por ter um pagamento pendente no Momento M&aacute;gico.</p>
+            <td style="background-color:#FAF5FA;padding:20px 30px;text-align:center">
+              <p style="color:#D2AAF0;font-size:12px;line-height:1.4;margin:0">Voc&ecirc; est&aacute; recebendo este email por ter um pagamento pendente no Momento M&aacute;gico.</p>
             </td>
           </tr>
         </table>
@@ -265,35 +265,35 @@ const TEMPLATES: Record<EmailTipo, string> = {
   <title>Seu Momento M&aacute;gico ficou pronto!</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;1,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body style="margin:0;padding:0;background-color:#F8F7F5;font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif">
-  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#F8F7F5">
+<body style="margin:0;padding:0;background-color:#FAF5FA;font-family:'Source Sans Pro','Source Sans 3',Arial,Helvetica,sans-serif">
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#FAF5FA">
     <tr>
       <td align="center" style="padding:40px 0">
-        <table cellpadding="0" cellspacing="0" border="0" width="600" style="background-color:#FFFFFF;border-radius:0;overflow:hidden;border:1px solid #EBEAE8">
+        <table cellpadding="0" cellspacing="0" border="0" width="600" style="background-color:#FAF5FA;border-radius:0;overflow:hidden;border:1px solid #D2AAF0">
           <tr>
-            <td align="center" style="background-color:#C96442;padding:40px 20px">
-              <h1 style="color:#FFFFFF;font-size:28px;margin:0;line-height:1.3;font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400">Seu Momento M&aacute;gico ficou pronto!</h1>
+            <td align="center" style="background-color:#FFE169;padding:40px 20px">
+              <h1 style="color:#3C1955;font-size:28px;margin:0;line-height:1.3;font-family:'Times New Roman',Georgia,serif;font-weight:400">Seu Momento M&aacute;gico ficou pronto!</h1>
             </td>
           </tr>
           <tr>
             <td style="padding:40px 30px">
-              <p style="color:#1D1D1C;font-size:16px;line-height:1.6;margin:0 0 20px">Ol&aacute; <strong>{{nome}}</strong>,</p>
-              <p style="color:#565655;font-size:16px;line-height:1.6;margin:0 0 20px">O presente para <strong>{{homenageado}}</strong> est&aacute; pronto e incr&iacute;vel! J&aacute; imaginamos o sorriso no rosto de quem vai receber essa surpresa.</p>
-              <p style="color:#565655;font-size:16px;line-height:1.6;margin:0 0 30px">Voc&ecirc; pode baixar o PDF e o QR code diretamente do seu dashboard. Acesse agora para compartilhar esse momento especial.</p>
+              <p style="color:#3C1955;font-size:16px;line-height:1.6;margin:0 0 20px">Ol&aacute; <strong>{{nome}}</strong>,</p>
+              <p style="color:#D2AAF0;font-size:16px;line-height:1.6;margin:0 0 20px">O presente para <strong>{{homenageado}}</strong> est&aacute; pronto e incr&iacute;vel! J&aacute; imaginamos o sorriso no rosto de quem vai receber essa surpresa.</p>
+              <p style="color:#D2AAF0;font-size:16px;line-height:1.6;margin:0 0 30px">Voc&ecirc; pode baixar o PDF e o QR code diretamente do seu dashboard. Acesse agora para compartilhar esse momento especial.</p>
               <table cellpadding="0" cellspacing="0" border="0" align="center">
                 <tr>
-                  <td align="center" bgcolor="#C96442" style="border-radius:0">
-                    <a href="https://www.momentomagico.xyz/dashboard" target="_blank" style="display:inline-block;padding:14px 32px;color:#FFFFFF;font-size:16px;font-weight:600;text-decoration:none;line-height:1;font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif">Ir para o Dashboard</a>
+                  <td align="center" bgcolor="#FFE169" style="border-radius:0">
+                    <a href="https://www.momentomagico.xyz/dashboard" target="_blank" style="display:inline-block;padding:14px 32px;color:#3C1955;font-size:16px;font-weight:600;text-decoration:none;line-height:1;font-family:'Source Sans Pro','Source Sans 3',Arial,Helvetica,sans-serif">Ir para o Dashboard</a>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
           <tr>
-            <td style="background-color:#F5F4F2;padding:20px 30px;text-align:center">
-              <p style="color:#565655;font-size:12px;line-height:1.4;margin:0">Voc&ecirc; est&aacute; recebendo este email porque seu presente ficou pronto no Momento M&aacute;gico.</p>
+            <td style="background-color:#FAF5FA;padding:20px 30px;text-align:center">
+              <p style="color:#D2AAF0;font-size:12px;line-height:1.4;margin:0">Voc&ecirc; est&aacute; recebendo este email porque seu presente ficou pronto no Momento M&aacute;gico.</p>
             </td>
           </tr>
         </table>
@@ -311,35 +311,35 @@ const TEMPLATES: Record<EmailTipo, string> = {
   <title>Que tal criar algo especial?</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;1,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body style="margin:0;padding:0;background-color:#F8F7F5;font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif">
-  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#F8F7F5">
+<body style="margin:0;padding:0;background-color:#FAF5FA;font-family:'Source Sans Pro','Source Sans 3',Arial,Helvetica,sans-serif">
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#FAF5FA">
     <tr>
       <td align="center" style="padding:40px 0">
-        <table cellpadding="0" cellspacing="0" border="0" width="600" style="background-color:#FFFFFF;border-radius:0;overflow:hidden;border:1px solid #EBEAE8">
+        <table cellpadding="0" cellspacing="0" border="0" width="600" style="background-color:#FAF5FA;border-radius:0;overflow:hidden;border:1px solid #D2AAF0">
           <tr>
-            <td align="center" style="background-color:#C96442;padding:40px 20px">
-              <h1 style="color:#FFFFFF;font-size:28px;margin:0;line-height:1.3;font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400">Que tal criar algo especial?</h1>
+            <td align="center" style="background-color:#FFE169;padding:40px 20px">
+              <h1 style="color:#3C1955;font-size:28px;margin:0;line-height:1.3;font-family:'Times New Roman',Georgia,serif;font-weight:400">Que tal criar algo especial?</h1>
             </td>
           </tr>
           <tr>
             <td style="padding:40px 30px">
-              <p style="color:#1D1D1C;font-size:16px;line-height:1.6;margin:0 0 20px">Ol&aacute; <strong>{{nome}}</strong>,</p>
-              <p style="color:#565655;font-size:16px;line-height:1.6;margin:0 0 20px">Sabia que voc&ecirc; pode criar presentes personalizados e emocionantes para qualquer ocasi&atilde;o? Anivers&aacute;rio, declara&ccedil;&atilde;o de amor, amizade, gratid&atilde;o &mdash; o Momento M&aacute;gico transforma seus sentimentos em um v&iacute;deo &uacute;nico com m&uacute;sica original!</p>
-              <p style="color:#565655;font-size:16px;line-height:1.6;margin:0 0 30px">Que tal criar agora e surpreender algu&eacute;m especial?</p>
+              <p style="color:#3C1955;font-size:16px;line-height:1.6;margin:0 0 20px">Ol&aacute; <strong>{{nome}}</strong>,</p>
+              <p style="color:#D2AAF0;font-size:16px;line-height:1.6;margin:0 0 20px">Sabia que voc&ecirc; pode criar presentes personalizados e emocionantes para qualquer ocasi&atilde;o? Anivers&aacute;rio, declara&ccedil;&atilde;o de amor, amizade, gratid&atilde;o &mdash; o Momento M&aacute;gico transforma seus sentimentos em um v&iacute;deo &uacute;nico com m&uacute;sica original!</p>
+              <p style="color:#D2AAF0;font-size:16px;line-height:1.6;margin:0 0 30px">Que tal criar agora e surpreender algu&eacute;m especial?</p>
               <table cellpadding="0" cellspacing="0" border="0" align="center">
                 <tr>
-                  <td align="center" bgcolor="#C96442" style="border-radius:0">
-                    <a href="{{link}}" target="_blank" style="display:inline-block;padding:14px 32px;color:#FFFFFF;font-size:16px;font-weight:600;text-decoration:none;line-height:1;font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif">Criar meu primeiro presente</a>
+                  <td align="center" bgcolor="#FFE169" style="border-radius:0">
+                    <a href="{{link}}" target="_blank" style="display:inline-block;padding:14px 32px;color:#3C1955;font-size:16px;font-weight:600;text-decoration:none;line-height:1;font-family:'Source Sans Pro','Source Sans 3',Arial,Helvetica,sans-serif">Criar meu primeiro presente</a>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
           <tr>
-            <td style="background-color:#F5F4F2;padding:20px 30px;text-align:center">
-              <p style="color:#565655;font-size:12px;line-height:1.4;margin:0">Voc&ecirc; est&aacute; recebendo este email por ser cadastrado no Momento M&aacute;gico.</p>
+            <td style="background-color:#FAF5FA;padding:20px 30px;text-align:center">
+              <p style="color:#D2AAF0;font-size:12px;line-height:1.4;margin:0">Voc&ecirc; est&aacute; recebendo este email por ser cadastrado no Momento M&aacute;gico.</p>
             </td>
           </tr>
         </table>
@@ -409,22 +409,22 @@ async function generatePdfAttachment(homenageado: string, link: string): Promise
   const doc = new jspdf.jsPDF({ orientation: "portrait", unit: "mm", format: "a4" })
 
   doc.setFontSize(24)
-  doc.setTextColor(108, 99, 255)
+  doc.setTextColor(60, 25, 85)
   doc.text("Momento Magico", 105, 40, { align: "center" })
 
   doc.setFontSize(16)
-  doc.setTextColor(51, 51, 51)
+  doc.setTextColor(60, 25, 85)
   doc.text(`Presente para: ${homenageado}`, 105, 60, { align: "center" })
 
   doc.setFontSize(12)
-  doc.setTextColor(102, 102, 102)
+  doc.setTextColor(210, 170, 240)
   doc.text("Este presente foi criado com carinho especialmente para voce!", 105, 75, { align: "center", maxWidth: 160 })
 
   const qrDataUrl = await qrcode.toDataURL(link, { width: 300, margin: 2 })
   doc.addImage(qrDataUrl, "PNG", 105 - 30, 95, 60, 60)
 
   doc.setFontSize(10)
-  doc.setTextColor(153, 153, 153)
+  doc.setTextColor(210, 170, 240)
   doc.text("Acesse o link para ver o video completo", 105, 165, { align: "center" })
   doc.text(link, 105, 175, { align: "center", maxWidth: 170 })
 

@@ -14,7 +14,7 @@ async function triggerConfetti(reducedMotion: boolean) {
       spread: 60,
       ticks: 60,
       startVelocity: 20,
-      colors: ["#B8553A", "#F7EAE6", "#6C6B69", "#CFCFCD"],
+      colors: ["#FFE169", "#D2AAF0", "#3C1955", "#FAF5FA"],
       origin: { y: 0.6 },
     };
     confetti({ ...defaults, particleCount: 40, angle: 60 });

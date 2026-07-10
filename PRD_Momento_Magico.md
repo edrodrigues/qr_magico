@@ -235,15 +235,78 @@ O wizard salva **rascunhos** (`status = draft`) no Supabase conforme o usuário 
 
 ## 12. Monetização
 
-- Pagamento **único por presente** (sem assinatura)
-- Faixa de preço sugerida: **R$ 19,90 a R$ 39,90**
+### 12.1 Modelo de Preço
+
+- **Pagamento único por presente** (sem assinatura)
+- **Preço sugerido: R$ 19,90** (pacote base)
 - Cupons de crédito gratuito para teste/parcerias
-- Custo estimado por presente:
-  - ElevenLabs: ~$0.80/min ≈ R$ 4-5
-  - Remotion Lambda (AWS): ~$0.10-0.30 por renderização
-  - Supabase: armazenamento + banda ≈ R$ 0,50-1,00
-  - Gateway: ~4-5% ≈ R$ 0,80-2,00
-- **Margem estimada: 55-75%**
+
+### 12.2 Custo Estimado por Presente
+
+| Componente | Custo Unitário | Base de Cálculo | Observações |
+|---|---|---|---|
+| **ElevenLabs Music API** | $0.09 | ~30s (0,5min) de música gerada | Taxa: $0.18/min de áudio |
+| **AWS Lambda (Remotion)** | $0.01 | Renderização 47s de vídeo 1080p | ~1.5GB RAM, 60s timeout |
+| **S3 Storage (vídeo + áudio)** | $0.01 | ~80MB/presente (vídeo 40MB + áudio 2MB + fotos 20MB) | Taxa: $0.023/GB/mês; amortizado em 30 dias |
+| **Supabase (banda egress)** | $0.01 | Transferência de dados (vídeo, fotos, áudio) | Taxa: $0.09/GB; ~1GB por presente |
+| **Supabase Storage** | $0.01 | Armazenamento de fotos e áudio | Taxa: $0.05/GB/mês; amortizado em 30 dias |
+| **Payment Gateway (InfinityPay)** | $0.40 | 2% de taxa sobre R$ 19,90 | Pix: 1.99% (~R$ 0,40); Cartão: 6,99% (~R$ 1,40) |
+| **Infra + DevOps (alocado)** | $0.15 | Manutenção, logs, backups, CI/CD | Alocado proporcionalmente |
+| **Margem de contingência (10%)** | $0.08 | Reserva para imprevistos e escalabilidade | Buffer para picos e ajustes |
+| **CUSTO TOTAL** | **~$0.76** | **~R$ 3,80** | Conversão: 1 USD = R$ 5,00 |
+
+### 12.3 Análise de Margem
+
+| Métrica | Valor | Cálculo |
+|---|---|---|
+| **Preço de Venda (PV)** | **R$ 19,90** | Definido |
+| **Custo Direto (CD)** | **R$ 3,80** | Conforme tabela acima |
+| **Margem Bruta** | **R$ 16,10** | PV - CD |
+| **Margem Bruta (%)** | **80,9%** | (16,10 / 19,90) × 100 |
+| **Custo de Operação (alocado)*** | **R$ 2,00** | Salários, servidor admin, marketing |
+| **Lucro Operacional** | **R$ 14,10** | Margem Bruta - Custo Operacional |
+| **Margem Operacional (%)** | **70,9%** | (14,10 / 19,90) × 100 |
+
+*Custo de operação é alocado por presente. Com 1.000 presentes/mês = R$ 2.000 custo fixo ÷ 1.000 = R$ 2/presente.
+
+### 12.4 Projeção de Receita e Lucratividade
+
+#### Cenário Base (1.000 presentes/mês)
+
+| Métrica | Valor |
+|---|---|
+| Presentes/mês | 1.000 |
+| Receita bruta | R$ 19.900 |
+| Custo direto | R$ 3.800 |
+| Custo operacional | R$ 2.000 |
+| **Lucro líquido** | **R$ 14.100** |
+| **Margem líquida (%)** | **70,9%** |
+
+#### Cenário Otimista (5.000 presentes/mês)
+
+| Métrica | Valor |
+|---|---|
+| Presentes/mês | 5.000 |
+| Receita bruta | R$ 99.500 |
+| Custo direto | R$ 19.000 |
+| Custo operacional* | R$ 8.000 |
+| **Lucro líquido** | **R$ 72.500** |
+| **Margem líquida (%)** | **72,9%** |
+
+*Custo operacional cresce lentamente (economia de escala); função de apoio ao cliente, devops, marketing.
+
+### 12.5 Sensibilidade de Preço
+
+Se ajustarmos o preço para diferentes estratégias:
+
+| Preço | Custo | Margem Bruta | Margem (%) |
+|---|---|---|---|
+| R$ 14,90 | R$ 3,80 | R$ 11,10 | 74,5% |
+| **R$ 19,90** | **R$ 3,80** | **R$ 16,10** | **80,9%** |
+| R$ 24,90 | R$ 3,80 | R$ 21,10 | 84,7% |
+| R$ 29,90 | R$ 3,80 | R$ 26,10 | 87,3% |
+
+**Recomendação:** O preço de **R$ 19,90** oferece excelente equilíbrio entre acessibilidade (mercado de presentes personalizados) e margem bruta de **80,9%**. Com custo total de apenas R$ 3,80 por presente (ElevenLabs $0.09 + AWS $0.01 + infraestrutura e taxa de pagamento $0.66), há espaço para crescimento e ajustes conforme demanda.
 
 ---
 

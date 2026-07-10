@@ -1,33 +1,33 @@
-# Product
+# Produto
 
-## Register
+## Registro
 
-product
+produto
 
-## Users
+## Usuários
 
-Brazilians aged 18–50 who want to create a unique, emotionally meaningful digital gift for someone they love — a partner, family member, or close friend. They are comfortable with technology but not necessarily designers or video editors. They're looking for a turnkey solution that feels personal and special without requiring time or technical skill.
+Brasileiros de 18 a 50 anos que querem criar um presente digital único e emocionalmente significativo para alguém que amam — um parceiro, familiar ou amigo próximo. Eles são confortáveis com tecnologia, mas não necessariamente designers ou editores de vídeo. Eles procuram uma solução completa que pareça pessoal e especial sem exigir tempo ou habilidade técnica.
 
-## Product Purpose
+## Propósito do Produto
 
-Momento Magico lets anyone create a beautiful animated video retrospective with AI-generated original music, delivered through a personalized link and QR code. It solves the problem of gift anxiety — the feeling that generic presents don't convey how much someone matters. Success looks like users feeling proud to share their gift and recipients feeling genuinely moved.
+Momento Mágico permite que qualquer pessoa crie uma bela retrospectiva de vídeo animado com música original gerada por IA, entregue através de um link personalizado e código QR. Resolve o problema da ansiedade de presentear — a sensação de que presentes genéricos não transmitem o quanto alguém importa. O sucesso significa usuários se sentindo orgulhosos de compartilhar seu presente e destinatários se sentindo genuinamente tocados.
 
-## Brand Personality
+## Personalidade da Marca
 
-Caloroso (warm), Mágico (magical), Sofisticado (sophisticated). The voice is affectionate but never saccharine, confident but never corporate. The emotional register is "heartfelt celebration" — like a toast at a meaningful occasion.
+Caloroso (aquecedor), Mágico (mágico), Sofisticado (sofisticado). A voz é afeiçoada mas nunca açucarada, confiante mas nunca corporativa. O registro emocional é "celebração sincera" — como um brinde em uma ocasião significativa.
 
-## Anti-references
+## Antireferências
 
-Avoid anything that reads as childish, cartoonish, or juvenile — even though the brand is "magical" and emotional. No hand-drawn illustrations, no bouncy animations, no overly rounded or toy-like elements. The magic should feel elegant, not whimsical. Also avoid generic SaaS/corporate aesthetics — this is not a productivity tool.
+Evite qualquer coisa que pareça infantil, cartunesca ou juvenil — mesmo que a marca seja "mágica" e emocional. Sem ilustrações feitas à mão, sem animações saltitantes, sem elementos excessivamente arredondados ou de aparência brinquedista. A magia deve parecer elegante, não caprichosa. Também evite estética genérica de SaaS/corporativa — isto não é uma ferramenta de produtividade.
 
-## Design Principles
+## Princípios de Design
 
-- **Magia com Sofisticação** — The experience should feel enchanting and emotional, but never childish or cartoonish. Every delightful moment must feel earned through thoughtful design, not gimmicks.
-- **O Presente é a Pessoa** — The interface should fade into the background, letting the user's photos, story, and memories take center stage. Design serves the content, not the other way around.
-- **Confiança sem Atrito** — The wizard flow should feel guided and reassuring at every step. Show progress, set expectations, reduce anxiety about the creative process. Every action should feel safe and intended.
-- **Tão Único Quanto o Destinatário** — Personalization is the product. The interface should reinforce that each gift is one-of-a-kind, from the occasion themes to the AI-generated music.
-- **Clareza é Carinho** — Portuguese-first, warm but not saccharine copy. Error states are apologetic and helpful. Loading states communicate what's happening and how long it takes. Users should never feel lost or surprised.
+- **Magia com Sofisticação** — A experiência deve parecer encantadora e emocional, mas nunca infantil ou cartunesca. Cada momento delicioso deve parecer conquistado através de design bem pensado, não gimmicks.
+- **O Presente é a Pessoa** — A interface deve desaparecer de vista, permitindo que as fotos, história e memórias do usuário ocupem o centro do palco. O design serve o conteúdo, não o contrário.
+- **Confiança sem Atrito** — O fluxo do assistente deve parecer guiado e tranquilizador a cada passo. Mostre progresso, estabeleça expectativas, reduza a ansiedade sobre o processo criativo. Cada ação deve parecer segura e intencional.
+- **Tão Único Quanto o Destinatário** — Personalização é o produto. A interface deve reforçar que cada presente é único, desde os temas da ocasião até a música gerada por IA.
+- **Clareza é Carinho** — Português-first, cópia calorosa mas não açucarada. Estados de erro são apologéticos e úteis. Estados de carregamento comunicam o que está acontecendo e quanto tempo leva. Usuários nunca devem se sentir perdidos ou surpreendidos.
 
-## Accessibility & Inclusion
+## Acessibilidade e Inclusão
 
-WCAG 2.1 AA compliance: minimum 4.5:1 contrast ratio for body text, keyboard-navigable wizard flow, reduced motion support via `prefers-reduced-motion`, clear focus indicators, and descriptive labels on all form controls. Brazilian Portuguese throughout — no untranslated English interface text.
+Conformidade WCAG 2.1 AA: proporção mínima de contraste 4.5:1 para texto do corpo, fluxo do assistente navegável por teclado, suporte a movimento reduzido via `prefers-reduced-motion`, indicadores de foco claros e rótulos descritivos em todos os controles de formulário. Português brasileiro em todo o projeto — sem texto de interface em inglês não traduzido.
