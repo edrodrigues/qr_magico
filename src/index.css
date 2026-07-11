@@ -73,11 +73,11 @@
   --color-coral-deep: #3C1955;
   --color-gold-glimmer: #FFE169;
 
-  --font-display-lg: "Times New Roman", Times, serif;
-  --font-display-lg-mobile: "Times New Roman", Times, serif;
-  --font-headline-md: "Times New Roman", Times, serif;
-  --font-headline-md-mobile: "Times New Roman", Times, serif;
-  --font-title-lg: "Times New Roman", Times, serif;
+  --font-display-lg: "Plus Jakarta Sans", "Times New Roman", Times, serif;
+  --font-display-lg-mobile: "Plus Jakarta Sans", "Times New Roman", Times, serif;
+  --font-headline-md: "Plus Jakarta Sans", "Times New Roman", Times, serif;
+  --font-headline-md-mobile: "Plus Jakarta Sans", "Times New Roman", Times, serif;
+  --font-title-lg: "Plus Jakarta Sans", "Times New Roman", Times, serif;
   --font-body-lg: "Source Sans Pro", "Source Sans 3", sans-serif;
   --font-body-md: "Source Sans Pro", "Source Sans 3", sans-serif;
   --font-label-md: "Source Sans Pro", "Source Sans 3", sans-serif;
@@ -86,17 +86,17 @@
 
   --text-display-lg: 48px;
   --text-display-lg--line-height: 56px;
-  --text-display-lg--font-weight: 400;
+  --text-display-lg--font-weight: 700;
   --text-display-lg--letter-spacing: -0.02em;
   --text-display-lg-mobile: 36px;
   --text-display-lg-mobile--line-height: 44px;
-  --text-display-lg-mobile--font-weight: 400;
+  --text-display-lg-mobile--font-weight: 700;
   --text-headline-md: 32px;
   --text-headline-md--line-height: 40px;
-  --text-headline-md--font-weight: 400;
+  --text-headline-md--font-weight: 600;
   --text-headline-md-mobile: 24px;
   --text-headline-md-mobile--line-height: 32px;
-  --text-headline-md-mobile--font-weight: 400;
+  --text-headline-md-mobile--font-weight: 600;
   --text-title-lg: 20px;
   --text-title-lg--line-height: 28px;
   --text-title-lg--font-weight: 500;
@@ -352,6 +352,7 @@
   }
   .animate-floating,
   .animate-gradient,
+  .animate-reveal,
   .waveform-bar,
   .animate-slide-up,
   .skeleton {

@@ -140,7 +140,7 @@ export function HomePage() {
                 Presentes que tocam o coração
               </h1>
               <p className="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-lg mx-auto md:mx-0">
-                Transformamos suas memórias em uma experiência sensorial única. Crie retrospectivas animadas com trilhas sonoras geradas por IA e entregue através de um QR Code elegante.
+                Crie retrospectivas animadas com trilhas sonoras geradas por IA. Entregue através de um QR Code elegante.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                 <Link
@@ -152,7 +152,7 @@ export function HomePage() {
                   Criar presente
                 </Link>
                 <a
-                  href="https://www.momentomagico.xyz/p/samuel-mqnlwjgacp1f"
+                  href="https://www.momentomagico.xyz/p/aparecida-mr6dxuz73vm9"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="border-2 border-primary text-primary px-8 py-4 rounded-full font-label-md text-label-md hover:bg-primary/5 transition-all flex items-center justify-center gap-2"
@@ -284,12 +284,12 @@ export function HomePage() {
             <div className="md:col-span-1 bg-surface-container-high p-8 rounded-[2.5rem] flex flex-col justify-center text-center hover:bg-surface-container-highest transition-colors duration-300">
               <span className="material-symbols-outlined text-primary text-4xl mb-3">speed</span>
               <h3 className="font-label-md">Pronto em 5 min</h3>
-              <p className="text-xs text-on-surface-variant mt-2">Criação rápida com resultados profissionais.</p>
+              <p className="text-sm text-on-surface-variant mt-2">Criação rápida com resultados profissionais.</p>
             </div>
             <div className="md:col-span-1 bg-warm-gray p-8 rounded-[2.5rem] flex flex-col justify-center text-center hover:bg-warm-gray/80 transition-colors duration-300">
               <span className="material-symbols-outlined text-primary text-4xl mb-3">lock</span>
               <h3 className="font-label-md">100% Privado</h3>
-              <p className="text-xs text-on-surface-variant mt-2">Seus dados e fotos estão seguros conosco.</p>
+              <p className="text-sm text-on-surface-variant mt-2">Seus dados e fotos estão seguros conosco.</p>
             </div>
           </div>
         </section>
@@ -302,7 +302,7 @@ export function HomePage() {
                 LANÇAMENTO
               </div>
               <h2 className="font-headline-md text-headline-md text-on-surface mb-2">Preço Especial</h2>
-              <p className="font-body-md text-on-surface-variant mb-8">Pagamento único, acesso vitalício</p>
+              <p className="font-body-md text-on-surface-variant mb-8">Oferta de lançamento — por tempo limitado</p>
 
               <div className="flex items-baseline justify-center gap-3 mb-8">
                 <span className="price-original font-title-lg text-on-surface-variant line-through opacity-60 text-2xl">R$ 49,90</span>
@@ -338,13 +338,17 @@ export function HomePage() {
                 <span>Compra 100% segura</span>
                 <span className="material-symbols-outlined text-sm">verified</span>
               </div>
+              <div className="mt-3 flex items-center justify-center gap-2 text-xs text-on-surface-variant">
+                <span className="material-symbols-outlined text-sm">shield</span>
+                <span>Garantia de 7 dias ou seu dinheiro de volta</span>
+              </div>
             </div>
           </div>
         </section>
 
         <section ref={trustReveal.ref} id="galeria" className={`scroll-mt-24 py-20 border-t border-outline-variant/20 content-visibility-auto ${trustReveal.visible ? "animate-reveal" : ""}`}>
           <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
-            <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-60">
+            <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-80">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-secondary">verified_user</span>
                 <span className="font-label-md uppercase tracking-wider">Pagamento Seguro</span>
@@ -373,7 +377,13 @@ export function HomePage() {
                     <h2 className="font-headline-md text-on-surface-variant italic mb-8">&ldquo;{t.quote}&rdquo;</h2>
                     <div className="flex items-center justify-center gap-4">
                       <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary bg-warm-gray flex items-center justify-center">
-                        <span className="material-symbols-outlined text-on-surface-variant text-lg">person</span>
+                        {t.img ? (
+                          <img src={t.img} alt={t.name} className="w-full h-full object-cover" loading="lazy" />
+                        ) : (
+                          <span className="font-label-md text-primary font-bold">
+                            {t.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                          </span>
+                        )}
                       </div>
                       <div className="text-left">
                         <p className="font-label-md text-on-surface">{t.name}</p>
