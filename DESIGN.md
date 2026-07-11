@@ -10,10 +10,11 @@
 
 | Cor | HEX | Uso |
 |---|---|---|
-| **Yellow Jasmine** | `#FFE169` | Primary / Accent — cor de ação principal |
-| **White Lilac** | `#FAF5FA` | Background / Superfícies |
-| **Plum Violet** | `#D2AAF0` | Secondary / Muted / Bordas / Containers |
-| **Grape Violet** | `#3C1955` | Texto principal (foreground / on-surface) |
+| **Artistic Editorial Background** | `#F8F7F5` | Background / superfícies |
+| **Artistic Editorial Surface** | `#FFFFFF` | Cards / surfaces elevadas |
+| **Artistic Editorial Accent** | `#B8553A` | Primary / Accent — cor de ação principal |
+| **Artistic Editorial Text** | `#1D1D1C` | Texto principal (foreground / on-surface) |
+| **Artistic Editorial Muted** | `#565655` | Muted / bordas / textos secundários |
 
 ### 1.9 Temas por Ocasião (Remotion)
 
