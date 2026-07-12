@@ -1,8 +1,19 @@
+import { Helmet } from "react-helmet-async";
 import { Header, Footer } from "../components/Header";
 
 export function Privacidade() {
   return (
     <div className="bg-background text-on-background font-body-md min-h-screen flex flex-col">
+      <Helmet>
+        <title>Política de Privacidade — Momento Mágico</title>
+        <meta name="description" content="Saiba como o Momento Mágico coleta, usa e protege suas informações pessoais. Política de privacidade completa." />
+        <link rel="canonical" href="https://www.momentomagico.xyz/privacidade" />
+        <meta property="og:title" content="Política de Privacidade — Momento Mágico" />
+        <meta property="og:description" content="Saiba como o Momento Mágico coleta, usa e protege suas informações pessoais." />
+        <meta property="og:url" content="https://www.momentomagico.xyz/privacidade" />
+        <meta property="og:type" content="website" />
+        <meta property="og:locale" content="pt_BR" />
+      </Helmet>
       <Header />
       <main className="flex-1 px-margin-mobile md:px-margin-desktop py-32 max-w-container-max mx-auto">
         <h1 className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-8">Politica de Privacidade</h1>

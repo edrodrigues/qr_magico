@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /wizard/
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /auth
+Disallow: /payment-success
+Disallow: /creditos-success
+
+Sitemap: https://www.momentomagico.xyz/sitemap.xml

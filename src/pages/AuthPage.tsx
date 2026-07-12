@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Header, Footer } from "../components/Header";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -63,6 +64,12 @@ export function AuthPage() {
 
   return (
     <div className="bg-background text-on-background font-body-md min-h-screen flex flex-col">
+      <Helmet>
+        <title>Entrar — Momento Mágico</title>
+        <meta name="description" content="Acesse sua conta no Momento Mágico ou crie uma nova conta para começar a criar retrospectivas personalizadas." />
+        <link rel="canonical" href="https://www.momentomagico.xyz/auth" />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <Header />
 
       <main className="flex-1 flex items-center justify-center px-margin-mobile md:px-margin-desktop pt-32 pb-16">

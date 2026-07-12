@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Header, Footer } from "../components/Header";
 import { useAuth } from "../contexts/AuthContext";
+import { SEO, websiteSchema, organizationSchema, productSchema } from "../components/SEO";
 
 function useReveal<T extends HTMLElement>(threshold = 0.15) {
   const ref = useRef<T>(null);
@@ -128,6 +130,23 @@ export function HomePage() {
 
   return (
     <div className="bg-background text-on-background font-body-md overflow-x-hidden">
+      <Helmet>
+        <title>Momento Mágico — Presentes que tocam o coração</title>
+        <meta name="description" content="Crie retrospectivas animadas personalizadas com trilhas sonoras geradas por IA. Entregue via QR Code elegante. O presente perfeito para quem você ama." />
+        <meta name="keywords" content="presente personalizado, presente com musica, retrospectiva personalizada, presente digital, lembranca personalizada, presente de aniversario, presente criativo, presente para mamae, presente para namorado, presente especial" />
+        <link rel="canonical" href="https://www.momentomagico.xyz/" />
+        <meta property="og:title" content="Momento Mágico — Presentes que tocam o coração" />
+        <meta property="og:description" content="Crie retrospectivas animadas personalizadas com trilhas sonoras geradas por IA. Entregue via QR Code elegante." />
+        <meta property="og:url" content="https://www.momentomagico.xyz/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Momento Mágico" />
+        <meta property="og:locale" content="pt_BR" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Momento Mágico — Presentes que tocam o coração" />
+        <meta name="twitter:description" content="Crie retrospectivas animadas personalizadas com trilhas sonoras geradas por IA." />
+      </Helmet>
+      <SEO jsonLd={[websiteSchema(), organizationSchema(), productSchema()]} />
+
       <Header showNav showCreateBtn />
 
       <main className="pt-24">

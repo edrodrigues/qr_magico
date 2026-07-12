@@ -9,6 +9,7 @@ import { SlideMusicReveal } from "../components/retro/SlideMusicReveal";
 import { SlideVideoCTA } from "../components/retro/SlideVideoCTA";
 import { SlideShare } from "../components/retro/SlideShare";
 import { LoadingState } from "../components/retro/LoadingState";
+import { SEO, videoObjectSchema } from "../components/SEO";
 import type { SlideConfig } from "../types/retro";
 
 export function RetrospectivaPage() {
@@ -170,12 +171,29 @@ export function RetrospectivaPage() {
     <>
       <Helmet>
         <title>Momento Mágico — Para {presente.nome_homenageado}</title>
+        <meta name="description" content={`Uma retrospectiva especial de ${presente.ocasiao}${presente.nome_remetente ? ` — por ${presente.nome_remetente}` : ""}. Criada com Momento Mágico.`} />
+        <link rel="canonical" href={`https://www.momentomagico.xyz/p/${slug}`} />
         <meta property="og:title" content={`Momento Mágico — Para ${presente.nome_homenageado}`} />
         <meta property="og:description" content={`Uma retrospectiva especial de ${presente.ocasiao}${presente.nome_remetente ? ` — por ${presente.nome_remetente}` : ""}`} />
         {thumbnail && <meta property="og:image" content={thumbnail} />}
+        <meta property="og:url" content={`https://www.momentomagico.xyz/p/${slug}`} />
         <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Momento Mágico" />
+        <meta property="og:locale" content="pt_BR" />
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`Momento Mágico — Para ${presente.nome_homenageado}`} />
+        <meta name="twitter:description" content={`Uma retrospectiva especial de ${presente.ocasiao}${presente.nome_remetente ? ` — por ${presente.nome_remetente}` : ""}`} />
+        {thumbnail && <meta name="twitter:image" content={thumbnail} />}
       </Helmet>
+      {presente.video_url && (
+        <SEO jsonLd={[videoObjectSchema({
+          name: `Retrospectiva de ${presente.nome_homenageado}`,
+          description: `Uma retrospectiva especial de ${presente.ocasiao}${presente.nome_remetente ? ` — por ${presente.nome_remetente}` : ""}`,
+          thumbnailUrl: thumbnail || `${window.location.origin}/favicon.png`,
+          uploadDate: presente.data_inicio || new Date().toISOString(),
+          contentUrl: presente.video_url,
+        })]} />
+      )}
 
       <div className="w-screen h-screen bg-black/90 flex items-center justify-center overflow-hidden">
         {/* Desktop blurred background */}

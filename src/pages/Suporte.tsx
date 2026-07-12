@@ -1,8 +1,19 @@
+import { Helmet } from "react-helmet-async";
 import { Header, Footer } from "../components/Header";
 
 export function Suporte() {
   return (
     <div className="bg-background text-on-background font-body-md min-h-screen flex flex-col">
+      <Helmet>
+        <title>Suporte — Momento Mágico</title>
+        <meta name="description" content="Central de ajuda do Momento Mágico. Perguntas frequentes, como criar retrospectivas e entrar em contato." />
+        <link rel="canonical" href="https://www.momentomagico.xyz/suporte" />
+        <meta property="og:title" content="Suporte — Momento Mágico" />
+        <meta property="og:description" content="Central de ajuda do Momento Mágico. Perguntas frequentes e contato." />
+        <meta property="og:url" content="https://www.momentomagico.xyz/suporte" />
+        <meta property="og:type" content="website" />
+        <meta property="og:locale" content="pt_BR" />
+      </Helmet>
       <Header />
       <main className="flex-1 px-margin-mobile md:px-margin-desktop py-32 max-w-container-max mx-auto">
         <h1 className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-8">Central de Suporte</h1>

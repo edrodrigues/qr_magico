@@ -1,8 +1,19 @@
+import { Helmet } from "react-helmet-async";
 import { Header, Footer } from "../components/Header";
 
 export function TermosDeUso() {
   return (
     <div className="bg-background text-on-background font-body-md min-h-screen flex flex-col">
+      <Helmet>
+        <title>Termos de Uso — Momento Mágico</title>
+        <meta name="description" content="Leia os termos de uso da plataforma Momento Mágico. Condições para criação e compartilhamento de retrospectivas personalizadas." />
+        <link rel="canonical" href="https://www.momentomagico.xyz/termos-de-uso" />
+        <meta property="og:title" content="Termos de Uso — Momento Mágico" />
+        <meta property="og:description" content="Leia os termos de uso da plataforma Momento Mágico." />
+        <meta property="og:url" content="https://www.momentomagico.xyz/termos-de-uso" />
+        <meta property="og:type" content="website" />
+        <meta property="og:locale" content="pt_BR" />
+      </Helmet>
       <Header />
       <main className="flex-1 px-margin-mobile md:px-margin-desktop py-32 max-w-container-max mx-auto">
         <h1 className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-8">Termos de Uso</h1>
