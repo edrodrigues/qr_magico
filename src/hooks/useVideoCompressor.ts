@@ -74,7 +74,7 @@ export function useVideoCompressor() {
         await Promise.race([execPromise, timeout]);
 
         const data = await ffmpeg.readFile(outputName);
-        const compressed = new Blob([data], { type: "video/mp4" });
+        const compressed = new Blob([data as BlobPart], { type: "video/mp4" });
 
         if (onProgress) onProgress(100);
 

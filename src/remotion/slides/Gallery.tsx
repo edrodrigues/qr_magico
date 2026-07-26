@@ -7,7 +7,6 @@ interface GalleryProps {
   theme: OccasionTheme;
 }
 
-const FPS = 30;
 const MIN_ITEM_DURATION = 120;
 const MAX_ITEM_DURATION = 300;
 const CROSSFADE = 15;
@@ -113,14 +112,6 @@ function VideoItem({
       endAt={durationInFrames}
     />
   );
-}
-
-function getItemDuration(item: MediaItem, totalItems: number, totalFrames: number): number {
-  if (item.type === "video") {
-    const videoFrames = totalFrames;
-    return Math.min(MAX_ITEM_DURATION, Math.max(MIN_ITEM_DURATION, Math.floor(totalFrames / totalItems)));
-  }
-  return Math.min(MAX_ITEM_DURATION, Math.max(MIN_ITEM_DURATION, Math.floor(totalFrames / totalItems)));
 }
 
 export function Gallery({ media, theme }: GalleryProps) {
