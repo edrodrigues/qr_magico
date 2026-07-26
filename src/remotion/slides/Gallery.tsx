@@ -1,15 +1,17 @@
-import { AbsoluteFill, useCurrentFrame, interpolate, Img } from "remotion";
+import { AbsoluteFill, useCurrentFrame, interpolate, Img, Video } from "remotion";
 import type { OccasionTheme } from "../theme";
+import type { MediaItem } from "../RetrospectivaComposition";
 
 interface GalleryProps {
-  fotos: string[];
+  media: MediaItem[];
   theme: OccasionTheme;
 }
 
-const TOTAL_FRAMES = 720;
-const MIN_PHOTO_DURATION = 120;
-const MAX_PHOTO_DURATION = 300;
+const FPS = 30;
+const MIN_ITEM_DURATION = 120;
+const MAX_ITEM_DURATION = 300;
 const CROSSFADE = 15;
+const TOTAL_FRAMES = 720;
 
 interface KenBurnsConfig {
   zoomIn: boolean;
@@ -25,8 +27,8 @@ const KEN_BURNS_PATTERNS: KenBurnsConfig[] = [
   { zoomIn: true, panX: 0, panY: 0 },
 ];
 
-function getKenBurns(photoIndex: number): KenBurnsConfig {
-  return KEN_BURNS_PATTERNS[photoIndex % KEN_BURNS_PATTERNS.length];
+function getKenBurns(index: number): KenBurnsConfig {
+  return KEN_BURNS_PATTERNS[index % KEN_BURNS_PATTERNS.length];
 }
 
 function VignetteOverlay() {
@@ -42,11 +44,90 @@ function VignetteOverlay() {
   );
 }
 
-export function Gallery({ fotos, theme }: GalleryProps) {
-  const frame = useCurrentFrame();
-  const safeFotos = Array.isArray(fotos) ? fotos : [];
+function ColorWashOverlay({ primary, darkEnd }: { primary: string; darkEnd: string }) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        background: `linear-gradient(135deg, ${primary}08, transparent 50%, ${darkEnd}10)`,
+        pointerEvents: "none",
+      }}
+    />
+  );
+}
 
-  if (safeFotos.length === 0) {
+function PhotoItem({
+  src,
+  durationInFrames,
+  kenBurns,
+}: {
+  src: string;
+  durationInFrames: number;
+  kenBurns: KenBurnsConfig;
+}) {
+  const frame = useCurrentFrame();
+  const scaleStart = kenBurns.zoomIn ? 1 : 0.96;
+  const scaleEnd = kenBurns.zoomIn ? 1.05 : 1;
+  const kenScale = interpolate(frame, [0, durationInFrames], [scaleStart, scaleEnd]);
+  const kenX = interpolate(frame, [0, durationInFrames], [0, kenBurns.panX]);
+  const kenY = interpolate(frame, [0, durationInFrames], [0, kenBurns.panY]);
+
+  return (
+    <Img
+      src={src}
+      onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+        (e.target as HTMLImageElement).style.display = "none";
+      }}
+      style={{
+        position: "absolute",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+        transform: `scale(${kenScale}) translate(${kenX}px, ${kenY}px)`,
+      }}
+    />
+  );
+}
+
+function VideoItem({
+  src,
+  durationInFrames,
+}: {
+  src: string;
+  durationInFrames: number;
+}) {
+  return (
+    <Video
+      src={src}
+      style={{
+        position: "absolute",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+      }}
+      muted
+      startFrom={0}
+      endAt={durationInFrames}
+    />
+  );
+}
+
+function getItemDuration(item: MediaItem, totalItems: number, totalFrames: number): number {
+  if (item.type === "video") {
+    const videoFrames = totalFrames;
+    return Math.min(MAX_ITEM_DURATION, Math.max(MIN_ITEM_DURATION, Math.floor(totalFrames / totalItems)));
+  }
+  return Math.min(MAX_ITEM_DURATION, Math.max(MIN_ITEM_DURATION, Math.floor(totalFrames / totalItems)));
+}
+
+export function Gallery({ media, theme }: GalleryProps) {
+  const frame = useCurrentFrame();
+  const safeMedia = Array.isArray(media) ? media : [];
+
+  if (safeMedia.length === 0) {
     return (
       <AbsoluteFill
         style={{
@@ -69,7 +150,8 @@ export function Gallery({ fotos, theme }: GalleryProps) {
     );
   }
 
-  if (safeFotos.length === 1) {
+  if (safeMedia.length === 1) {
+    const item = safeMedia[0];
     const kenZoom = interpolate(frame, [0, TOTAL_FRAMES], [1, 1.05]);
     const kenX = interpolate(frame, [0, TOTAL_FRAMES], [0, -3]);
     const kenY = interpolate(frame, [0, TOTAL_FRAMES], [0, -2]);
@@ -82,52 +164,56 @@ export function Gallery({ fotos, theme }: GalleryProps) {
             background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.darkBgEnd} 100%)`,
           }}
         />
-        <Img
-          src={safeFotos[0]}
-          onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-            (e.target as HTMLImageElement).style.display = "none";
-          }}
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            transform: `scale(${kenZoom}) translate(${kenX}px, ${kenY}px)`,
-          }}
-        />
+        {item.type === "video" ? (
+          <Video
+            src={item.url}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+            }}
+            muted
+            startFrom={0}
+            endAt={TOTAL_FRAMES}
+          />
+        ) : (
+          <Img
+            src={item.url}
+            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              transform: `scale(${kenZoom}) translate(${kenX}px, ${kenY}px)`,
+            }}
+          />
+        )}
         <ColorWashOverlay primary={theme.primary} darkEnd={theme.darkBgEnd} />
         <VignetteOverlay />
       </AbsoluteFill>
     );
   }
 
-  const numPhotos = safeFotos.length;
-  const photoDuration = Math.min(
-    MAX_PHOTO_DURATION,
-    Math.max(MIN_PHOTO_DURATION, Math.floor(TOTAL_FRAMES / numPhotos)),
+  const numItems = safeMedia.length;
+  const itemDuration = Math.min(
+    MAX_ITEM_DURATION,
+    Math.max(MIN_ITEM_DURATION, Math.floor(TOTAL_FRAMES / numItems))
   );
-  const totalUsed = photoDuration * numPhotos;
+  const totalUsed = itemDuration * numItems;
   const effectiveFrame = Math.min(frame, totalUsed - 1);
-  const photoIndex = Math.floor(effectiveFrame / photoDuration);
-  const localFrame = effectiveFrame % photoDuration;
-  const isFirstPhoto = photoIndex === 0;
-  const prevIndex = isFirstPhoto ? photoIndex : photoIndex - 1;
-  const nextIndex = photoIndex;
-  const crossfadeProgress = isFirstPhoto
-    ? 1
-    : Math.min(localFrame / CROSSFADE, 1);
+  const itemIndex = Math.floor(effectiveFrame / itemDuration);
+  const localFrame = effectiveFrame % itemDuration;
+  const isFirst = itemIndex === 0;
+  const crossfadeProgress = isFirst ? 1 : Math.min(localFrame / CROSSFADE, 1);
 
-  const pattern = getKenBurns(photoIndex);
-  const scaleStart = pattern.zoomIn ? 1 : 0.96;
-  const scaleEnd = pattern.zoomIn ? 1.05 : 1;
-  const kenScale = interpolate(
-    localFrame,
-    [0, photoDuration],
-    [scaleStart, scaleEnd],
-  );
-  const kenX = interpolate(localFrame, [0, photoDuration], [0, pattern.panX]);
-  const kenY = interpolate(localFrame, [0, photoDuration], [0, pattern.panY]);
+  const currentItem = safeMedia[itemIndex];
+  const prevItem = isFirst ? currentItem : safeMedia[itemIndex - 1];
 
   return (
     <AbsoluteFill style={{ backgroundColor: "black" }}>
@@ -139,64 +225,54 @@ export function Gallery({ fotos, theme }: GalleryProps) {
         }}
       />
 
-      {!isFirstPhoto && (
-        <div style={{ position: "absolute", inset: 0 }}>
-          <Img
-            src={safeFotos[prevIndex]}
-            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              opacity: 1 - crossfadeProgress,
-            }}
-          />
+      {!isFirst && (
+        <div style={{ position: "absolute", inset: 0, opacity: 1 - crossfadeProgress }}>
+          {prevItem.type === "video" ? (
+            <Video
+              src={prevItem.url}
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+              muted
+              startFrom={0}
+              endAt={itemDuration}
+            />
+          ) : (
+            <Img
+              src={prevItem.url}
+              onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+            />
+          )}
         </div>
       )}
 
-      <div style={{ position: "absolute", inset: 0 }}>
-        <Img
-          src={safeFotos[nextIndex]}
-          onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-            (e.target as HTMLImageElement).style.display = "none";
-          }}
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            transform: `scale(${kenScale}) translate(${kenX}px, ${kenY}px)`,
-            opacity: isFirstPhoto ? 1 : crossfadeProgress,
-          }}
-        />
+      <div style={{ position: "absolute", inset: 0, opacity: isFirst ? 1 : crossfadeProgress }}>
+        {currentItem.type === "video" ? (
+          <VideoItem src={currentItem.url} durationInFrames={itemDuration} />
+        ) : (
+          <PhotoItem
+            src={currentItem.url}
+            durationInFrames={itemDuration}
+            kenBurns={getKenBurns(itemIndex)}
+          />
+        )}
       </div>
 
       <ColorWashOverlay primary={theme.primary} darkEnd={theme.darkBgEnd} />
       <VignetteOverlay />
     </AbsoluteFill>
-  );
-}
-
-function ColorWashOverlay({
-  primary,
-  darkEnd,
-}: {
-  primary: string;
-  darkEnd: string;
-}) {
-  return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        background: `linear-gradient(135deg, ${primary}08, transparent 50%, ${darkEnd}10)`,
-        pointerEvents: "none",
-      }}
-    />
   );
 }

@@ -11,13 +11,18 @@ import { getPalette } from "../lib/genrePalettes";
 import type { OccasionTheme } from "./theme";
 import { CONTENT_DURATION, resolveCompositionDuration } from "./duration";
 
+export interface MediaItem {
+  url: string;
+  type: 'image' | 'video';
+}
+
 export interface RetroInputProps {
   nome_homenageado: string;
   nome_remetente: string;
   ocasiao: string;
   descricao_relacao: string;
   estilo_musical: string;
-  fotos: string[];
+  fotos: MediaItem[];
   thumbnail_url: string;
   musicaUrl: string | null;
   audioDurationInSeconds?: number;
@@ -62,9 +67,17 @@ export function RetrospectivaComposition({
   audioDurationInSeconds = 0,
   skipAudioInRender = false,
 }: RetroInputProps) {
-  const safeFotos = Array.isArray(fotos) ? fotos : [];
+  const safeFotos: MediaItem[] = Array.isArray(fotos)
+    ? fotos.map((f) =>
+        typeof f === "string" ? { url: f, type: "image" as const } : f
+      )
+    : [];
   const safeThumbnailUrl = typeof thumbnail_url === "string" ? thumbnail_url : "";
-  const allPhotos = safeFotos.length > 0 ? safeFotos : safeThumbnailUrl ? [safeThumbnailUrl] : [];
+  const allMedia: MediaItem[] = safeFotos.length > 0
+    ? safeFotos
+    : safeThumbnailUrl
+      ? [{ url: safeThumbnailUrl, type: "image" as const }]
+      : [];
 
   const safeNome = String(nome_homenageado ?? "");
   const safeRemetente = String(nome_remetente ?? "");
@@ -118,7 +131,7 @@ export function RetrospectivaComposition({
       </Sequence>
 
       <Sequence from={600} durationInFrames={720} name="Gallery">
-        <Gallery fotos={allPhotos} theme={theme} />
+        <Gallery media={allMedia} theme={theme} />
       </Sequence>
 
       <Sequence from={1315} durationInFrames={5} name="Fade4">

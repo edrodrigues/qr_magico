@@ -186,7 +186,7 @@ export function WizardRevisaoFinal() {
                     Momentos Selecionados
                   </h2>
                   <span className="font-label-md text-label-md text-on-surface-variant">
-                    {data.photos.length} fotos
+                    {data.photos.filter(p => p.type !== "video").length} fotos, {data.photos.filter(p => p.type === "video").length} vídeos
                   </span>
                 </div>
                 {data.photos.length > 0 ? (
@@ -194,7 +194,7 @@ export function WizardRevisaoFinal() {
                     {data.photos.map((photo, i) => (
                       <div
                         key={i}
-                        className="min-w-[120px] h-[120px] rounded-lg overflow-hidden flex-shrink-0 border-2 border-white shadow-sm transition-transform duration-300 hover:scale-110 hover:rotate-0"
+                        className="min-w-[120px] h-[120px] rounded-lg overflow-hidden flex-shrink-0 border-2 border-white shadow-sm transition-transform duration-300 hover:scale-110 hover:rotate-0 relative"
                         style={{ transform: `rotate(${ROTATIONS[i % ROTATIONS.length]})` }}
                       >
                         <img
@@ -202,6 +202,11 @@ export function WizardRevisaoFinal() {
                           alt=""
                           className="w-full h-full object-cover"
                         />
+                        {photo.type === "video" && (
+                          <span className="absolute bottom-1 right-1 bg-black/70 text-white text-[10px] px-1.5 py-0.5 rounded-full font-medium">
+                            VIDEO
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>

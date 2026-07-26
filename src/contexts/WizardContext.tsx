@@ -7,6 +7,7 @@ interface PhotoFile {
   file?: File;
   preview: string;
   storageUrl?: string;
+  type: 'image' | 'video';
 }
 
 interface WizardData {
@@ -112,7 +113,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
 
       const { data: fotos } = await supabase
         .from("fotos")
-        .select("url, ordem")
+        .select("url, ordem, type")
         .eq("presente_id", urlDraftId)
         .order("ordem", { ascending: true });
 
@@ -121,6 +122,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
           loadedData.photos = fotos.map((f) => ({
             preview: f.url,
             storageUrl: f.url,
+            type: f.type === 'video' ? 'video' as const : 'image' as const,
           }));
         }
         setData((prev) => ({ ...prev, ...loadedData }));

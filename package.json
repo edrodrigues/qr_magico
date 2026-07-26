@@ -20,6 +20,8 @@
   },
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.52.0",
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
     "@fontsource-variable/material-symbols-outlined": "^5.2.45",
     "@remotion/bundler": "4.0.482",
     "@remotion/lambda": "4.0.482",

@@ -25,9 +25,9 @@ const MOCK_PRESENTE: PresenteData = {
 };
 
 const MOCK_FOTOS: FotoData[] = [
-  { id: "f1", presente_id: "mock", url: "https://picsum.photos/seed/1/600/900", ordem: 0 },
-  { id: "f2", presente_id: "mock", url: "https://picsum.photos/seed/2/600/900", ordem: 1 },
-  { id: "f3", presente_id: "mock", url: "https://picsum.photos/seed/3/600/900", ordem: 2 },
+  { id: "f1", presente_id: "mock", url: "https://picsum.photos/seed/1/600/900", ordem: 0, type: "image" },
+  { id: "f2", presente_id: "mock", url: "https://picsum.photos/seed/2/600/900", ordem: 1, type: "image" },
+  { id: "f3", presente_id: "mock", url: "https://picsum.photos/seed/3/600/900", ordem: 2, type: "image" },
 ];
 
 const MOCK_MUSICA: MusicaData = {

@@ -4,6 +4,19 @@ import { Header, Footer } from "../components/Header";
 import { useWizard } from "../contexts/WizardContext";
 import { supabase } from "../lib/supabase";
 import { cn } from "../lib/utils";
+import { useVideoCompressor } from "../hooks/useVideoCompressor";
+import { useVideoDuration } from "../hooks/useVideoDuration";
+
+const MAX_ITEMS = 6;
+const MAX_VIDEO_SECONDS = 20;
+
+function isVideoFile(file: File): boolean {
+  return file.type.startsWith("video/");
+}
+
+function isImageFile(file: File): boolean {
+  return file.type.startsWith("image/");
+}
 
 export function WizardUploadFotos() {
   const navigate = useNavigate();
@@ -12,46 +25,88 @@ export function WizardUploadFotos() {
   const [uploading, setUploading] = useState(false);
   const [savingPhotos, setSavingPhotos] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [statusMsg, setStatusMsg] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { compressVideo, loaded: ffmpegLoaded, load: loadFfmpeg } = useVideoCompressor();
+  const { getDuration } = useVideoDuration();
 
   const uploadToStorage = useCallback(async (files: File[]) => {
     setUploading(true);
     setProgress(0);
+    setStatusMsg("Carregando memorias...");
     const uploaded: typeof photos = [];
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const uniqueId = crypto.randomUUID();
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const path = `uploads/${Date.now()}_${uniqueId}_${safeName}`;
-      const { data: _uploadData, error } = await supabase.storage
-        .from("fotos")
-        .upload(path, file);
+      const isVideo = isVideoFile(file);
 
-      if (error) {
-        console.error("Upload error:", error.message);
-        continue;
+      if (isVideo) {
+        const duration = await getDuration(file);
+        if (duration > MAX_VIDEO_SECONDS) {
+          setStatusMsg(`Video muito longo (${Math.round(duration)}s). Maximo ${MAX_VIDEO_SECONDS}s.`);
+          setProgress(Math.round(((i + 1) / files.length) * 100));
+          continue;
+        }
+        setStatusMsg(`Comprimindo video ${i + 1}/${files.length}...`);
+        setProgress(Math.round(((i + 1) / files.length) * 30));
+        const compressed = await compressVideo(file);
+        setStatusMsg(`Enviando video ${i + 1}/${files.length}...`);
+        setProgress(Math.round(((i + 1) / files.length) * 70));
+
+        const uniqueId = crypto.randomUUID();
+        const safeName = compressed.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = `uploads/${Date.now()}_${uniqueId}_${safeName}`;
+        const { error } = await supabase.storage.from("videos").upload(path, compressed);
+        if (error) {
+          console.error("Upload error:", error.message);
+          setProgress(Math.round(((i + 1) / files.length) * 100));
+          continue;
+        }
+        const { data: urlData } = supabase.storage.from("videos").getPublicUrl(path);
+        uploaded.push({
+          file: compressed,
+          preview: URL.createObjectURL(compressed),
+          storageUrl: urlData?.publicUrl || "",
+          type: "video",
+        });
+      } else {
+        setStatusMsg(`Enviando foto ${i + 1}/${files.length}...`);
+        setProgress(Math.round(((i + 1) / files.length) * 70));
+
+        const uniqueId = crypto.randomUUID();
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = `uploads/${Date.now()}_${uniqueId}_${safeName}`;
+        const { error } = await supabase.storage.from("fotos").upload(path, file);
+        if (error) {
+          console.error("Upload error:", error.message);
+          setProgress(Math.round(((i + 1) / files.length) * 100));
+          continue;
+        }
+        const { data: urlData } = supabase.storage.from("fotos").getPublicUrl(path);
+        uploaded.push({
+          file,
+          preview: URL.createObjectURL(file),
+          storageUrl: urlData?.publicUrl || "",
+          type: "image",
+        });
       }
 
-      const { data: urlData } = supabase.storage.from("fotos").getPublicUrl(path);
-      const publicUrl = urlData?.publicUrl || "";
-
-      uploaded.push({ file, preview: URL.createObjectURL(file), storageUrl: publicUrl });
       setProgress(Math.round(((i + 1) / files.length) * 100));
     }
 
     setPhotos((current) => [...current, ...uploaded]);
     setUploading(false);
     setProgress(0);
-  }, [setPhotos]);
+    setStatusMsg("");
+  }, [setPhotos, compressVideo, getDuration]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       setDragOver(false);
-      const files = Array.from(e.dataTransfer.files).filter((f) =>
-        f.type.startsWith("image/")
+      const files = Array.from(e.dataTransfer.files).filter(
+        (f) => isImageFile(f) || isVideoFile(f)
       );
       if (files.length) uploadToStorage(files);
     },
@@ -60,8 +115,8 @@ export function WizardUploadFotos() {
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = Array.from(e.target.files || []).filter((f) =>
-        f.type.startsWith("image/")
+      const files = Array.from(e.target.files || []).filter(
+        (f) => isImageFile(f) || isVideoFile(f)
       );
       if (files.length) uploadToStorage(files);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -87,7 +142,6 @@ export function WizardUploadFotos() {
       e.preventDefault();
       const sourceIndex = dragIndexRef.current;
       if (sourceIndex === null || sourceIndex === targetIndex) return;
-
       setPhotos((current) => {
         const updated = [...current];
         const [moved] = updated.splice(sourceIndex, 1);
@@ -114,10 +168,16 @@ export function WizardUploadFotos() {
   }, [photos, setPhotos]);
 
   const handleClickUpload = useCallback(() => {
-    if (!uploading && photos.length < 6) {
+    if (!uploading && photos.length < MAX_ITEMS) {
       fileInputRef.current?.click();
     }
   }, [uploading, photos.length]);
+
+  useEffect(() => {
+    if (typeof SharedArrayBuffer !== "undefined" && !ffmpegLoaded) {
+      loadFfmpeg();
+    }
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -139,6 +199,7 @@ export function WizardUploadFotos() {
         presente_id: draftId,
         url: photo.storageUrl!,
         ordem: index,
+        type: photo.type,
       }));
       const { error } = await supabase.from("fotos").insert(inserts);
       if (error) console.error("Erro ao salvar fotos:", error.message);
@@ -148,6 +209,7 @@ export function WizardUploadFotos() {
   }, [photos, draftId, navigate]);
 
   const enabled = photos.length > 0;
+  const slotsLeft = MAX_ITEMS - photos.length;
 
   return (
     <div className="bg-soft-cream min-h-screen flex flex-col font-body-md text-on-surface">
@@ -176,11 +238,11 @@ export function WizardUploadFotos() {
 
         <div className="text-center mb-10">
           <h1 className="font-headline-md md:text-display-lg text-headline-md-mobile md:font-display-lg text-primary mb-2">
-            Suas mem&oacute;rias em fotos
+            Suas mem&oacute;rias
           </h1>
           <p className="font-body-lg text-body-lg text-on-surface-variant">
-            Selecione at&eacute; 6 fotos que marcaram a trajet&oacute;ria de
-            voc&ecirc;s.
+            Selecione at&eacute; 6 fotos ou v&iacute;deos (at&eacute; 20s) que
+            marcaram a trajet&oacute;ria de voc&ecirc;s.
           </p>
         </div>
 
@@ -202,7 +264,7 @@ export function WizardUploadFotos() {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,video/mp4,video/webm,video/quicktime"
               multiple
               className="hidden"
               onChange={handleFileChange}
@@ -215,10 +277,15 @@ export function WizardUploadFotos() {
                 auto_awesome
               </span>
               <h3 className="font-title-lg text-title-lg text-secondary mb-2">
-                Arraste suas fotos aqui
+                Arraste suas fotos ou v&iacute;deos aqui
               </h3>
               <p className="font-body-md text-body-md text-on-surface-variant">
                 ou clique para selecionar do seu dispositivo
+              </p>
+              <p className="text-label-sm text-on-surface-variant mt-2 opacity-70">
+                {slotsLeft > 0
+                  ? `${slotsLeft} slot${slotsLeft > 1 ? "s" : ""} dispon${slotsLeft > 1 ? "iveis" : "ivel"}`
+                  : "Limite atingido"}
               </p>
             </div>
           </div>
@@ -227,7 +294,7 @@ export function WizardUploadFotos() {
             <div className="mb-8">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-label-md text-primary font-semibold">
-                  Carregando mem&oacute;rias...
+                  {statusMsg || "Carregando memorias..."}
                 </span>
                 <span className="text-label-md text-on-surface-variant">
                   {progress}%
@@ -243,9 +310,10 @@ export function WizardUploadFotos() {
           )}
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 mb-8">
-            {Array.from({ length: 6 }).map((_, i) => {
+            {Array.from({ length: MAX_ITEMS }).map((_, i) => {
               const photo = photos[i];
               if (photo) {
+                const isVideo = photo.type === "video";
                 return (
                   <div
                     key={i}
@@ -256,11 +324,26 @@ export function WizardUploadFotos() {
                     onDragEnd={handleDragEnd}
                     className="relative group aspect-square rounded-2xl overflow-hidden shadow-md bg-white border border-outline-variant/30 transition-all hover:scale-[1.02] cursor-grab active:cursor-grabbing"
                   >
-                    <img
-                      src={photo.preview}
-                      alt=""
-                      className="w-full h-full object-cover pointer-events-none"
-                    />
+                    {isVideo ? (
+                      <video
+                        src={photo.preview}
+                        className="w-full h-full object-cover pointer-events-none"
+                        muted
+                        loop
+                        onMouseEnter={(e) => (e.target as HTMLVideoElement).play()}
+                        onMouseLeave={(e) => {
+                          const v = e.target as HTMLVideoElement;
+                          v.pause();
+                          v.currentTime = 0;
+                        }}
+                      />
+                    ) : (
+                      <img
+                        src={photo.preview}
+                        alt=""
+                        className="w-full h-full object-cover pointer-events-none"
+                      />
+                    )}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
                       <div className="flex justify-between items-start">
                         <span className="material-symbols-outlined text-white text-[18px] drop-shadow-md">
@@ -276,7 +359,7 @@ export function WizardUploadFotos() {
                         </button>
                       </div>
                       <div className="bg-white/20 backdrop-blur px-2 py-1 rounded text-white text-[10px] font-bold self-center">
-                        FOTO {i + 1}
+                        {isVideo ? `VIDEO ${i + 1}` : `FOTO ${i + 1}`}
                       </div>
                     </div>
                   </div>
@@ -301,8 +384,8 @@ export function WizardUploadFotos() {
           <div className="flex items-center gap-2 text-on-surface-variant mb-10 bg-warm-gray/50 p-4 rounded-xl">
             <span className="material-symbols-outlined text-[20px]">info</span>
             <p className="text-label-md">
-              Dica: Voc&ecirc; pode arrastar as fotos para mudar a ordem em que
-              elas aparecer&atilde;o.
+              Dica: Arraste para mudar a ordem. Videos de ate 20 segundos sao
+              comprimidos automaticamente.
             </p>
           </div>
 
@@ -323,7 +406,7 @@ export function WizardUploadFotos() {
                   : "bg-surface-container-highest text-on-surface-variant cursor-not-allowed opacity-50"
               )}
             >
-              {savingPhotos ? "Salvando..." : "Próximo"}
+              {savingPhotos ? "Salvando..." : "Proximo"}
             </button>
           </div>
         </div>

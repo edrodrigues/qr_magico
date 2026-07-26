@@ -147,7 +147,7 @@ serve(async (req) => {
 
     const { data: fotos, error: fotosErr } = await supabase
       .from("fotos")
-      .select("url, ordem")
+      .select("url, ordem, type")
       .eq("presente_id", presenteId)
       .order("ordem", { ascending: true });
 
@@ -155,11 +155,16 @@ serve(async (req) => {
       console.error(`Failed to fetch fotos for ${presenteId}:`, fotosErr);
     }
 
-    const fotosUrls = sanitizePhotoUrls((fotos || []).map((f: { url: string }) => f.url));
+    const mediaItems = (fotos || [])
+      .filter((f: { url: string }) => isValidHttpUrl(f.url))
+      .map((f: { url: string; type: string }) => ({
+        url: f.url,
+        type: f.type === "video" ? "video" : "image",
+      }));
     console.log(
-      `Fetched ${fotosUrls.length} photos for ${presenteId}:`,
-      fotosUrls.length > 0
-        ? fotosUrls.map((u: string) => u.substring(u.lastIndexOf("/") + 1))
+      `Fetched ${mediaItems.length} media items for ${presenteId}:`,
+      mediaItems.length > 0
+        ? mediaItems.map((m: { url: string }) => m.url.substring(m.url.lastIndexOf("/") + 1))
         : "none",
     );
 
@@ -236,7 +241,7 @@ serve(async (req) => {
       data_inicio: sanitizeString(presente.data_inicio),
       descricao_relacao: sanitizeString(presente.descricao_relacao),
       estilo_musical: sanitizeString(presente.estilo_musical),
-      fotos: fotosUrls,
+      fotos: mediaItems,
       thumbnail_url: sanitizeString(presente.thumbnail_url),
       musicaUrl: null,
       audioDurationInSeconds: compositionDuration.audioDurationInSeconds,
@@ -316,7 +321,7 @@ serve(async (req) => {
 
     const payloadSize = new TextEncoder().encode(JSON.stringify(payload)).length;
     console.log(
-      `Invoking Lambda for ${presenteId}: payload=${(payloadSize / 1024).toFixed(1)}KB, ${fotosUrls.length} photos, concurrencyPerLambda=1, downloadBehavior=play-in-browser`,
+      `Invoking Lambda for ${presenteId}: payload=${(payloadSize / 1024).toFixed(1)}KB, ${mediaItems.length} media items, concurrencyPerLambda=1, downloadBehavior=play-in-browser`,
     );
 
     const response = await invokeLambdaWithRetry(

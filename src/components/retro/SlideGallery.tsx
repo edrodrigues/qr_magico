@@ -14,9 +14,9 @@ export function SlideGallery({ isActive }: SlideGalleryProps) {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const photos = fotos.length > 0
-    ? [...fotos].sort((a, b) => a.ordem - b.ordem).map((f) => f.url)
+    ? [...fotos].sort((a, b) => a.ordem - b.ordem).map((f) => ({ url: f.url, type: f.type || "image" }))
     : presente.thumbnail_url
-      ? [presente.thumbnail_url]
+      ? [{ url: presente.thumbnail_url, type: "image" }]
       : [];
 
   useEffect(() => {
@@ -68,14 +68,25 @@ export function SlideGallery({ isActive }: SlideGalleryProps) {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.8, ease: "easeInOut" }}
         >
-          <img
-            src={photos[photoIndex]}
-            alt=""
-            className="w-full h-full object-cover"
-            style={{
-              animation: isActive ? "kenBurns 10s ease-in-out infinite alternate" : "none",
-            }}
-          />
+          {photos[photoIndex].type === "video" ? (
+            <video
+              src={photos[photoIndex].url}
+              className="w-full h-full object-cover"
+              muted
+              autoPlay
+              loop
+              playsInline
+            />
+          ) : (
+            <img
+              src={photos[photoIndex].url}
+              alt=""
+              className="w-full h-full object-cover"
+              style={{
+                animation: isActive ? "kenBurns 10s ease-in-out infinite alternate" : "none",
+              }}
+            />
+          )}
         </motion.div>
       </AnimatePresence>
 

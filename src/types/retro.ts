@@ -19,6 +19,7 @@ export interface FotoData {
   presente_id: string;
   url: string;
   ordem: number;
+  type: string;
 }
 
 export interface MusicaData {
