@@ -1,16 +1,7 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
-<<<<<<< HEAD
 import { getCorsHeaders } from "../_shared/cors.ts";
-import {
-  buildLegacyOutputKey,
-  buildRenderOutputKeys,
-  findExistingRenderKey,
-} from "../_shared/remotion-s3.ts";
-import { fetchReadyMusicUrl, muxRenderWithMusic } from "../_shared/mux-video-audio.ts";
-=======
 import { fetchReadyMusicUrl, ensureVideoMuxed } from "../_shared/mux-video-audio.ts";
->>>>>>> 1eafcc67f350566a068a81e209045f59f4a4bfa7
 import { summarizeMuxError } from "../_shared/mux-lambda.ts";
 import {
   resolvePresenteVideoKey,
@@ -59,7 +50,7 @@ serve(async (req) => {
   try {
     const query = supabase
       .from("presentes")
-      .select("id, video_url, status, render_request_id, video_muxed_at, generation_started_at");
+      .select("id, usuario_id, video_url, status, render_request_id, video_muxed_at, generation_started_at");
 
     if (presenteId) {
       query.eq("id", presenteId);
@@ -112,43 +103,7 @@ serve(async (req) => {
 
     const resolved = await resolvePresenteVideoKey(presente, aws);
 
-<<<<<<< HEAD
-    const checkS3Exists = async (s3Key: string): Promise<boolean> => {
-      const checkUrl = await generatePresignedGetUrl(
-        bucket, s3Key, region, accessKeyId, secretAccessKey, 60,
-      );
-      const checkResp = await fetch(checkUrl, {
-        method: "GET",
-        headers: { Range: "bytes=0-0" },
-      });
-      return checkResp.status === 206 || checkResp.status === 200;
-    };
-
-    const key = await findExistingRenderKey(candidateKeys, checkS3Exists);
-
-    if (!presente.video_url) {
-      if (!key) {
-        return new Response(JSON.stringify({ error: "Video not available" }), {
-          status: 404,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        });
-      }
-
-      const proxyUrl = `${supabaseUrl}/functions/v1/proxy-video?presente_id=${presente.id}`;
-      await supabase
-        .from("presentes")
-        .update({
-          video_url: proxyUrl,
-          status: "ready",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", presente.id);
-    }
-
-    if (!key) {
-=======
     if (resolved.kind !== "key") {
->>>>>>> 1eafcc67f350566a068a81e209045f59f4a4bfa7
       return new Response(JSON.stringify({ error: "Video not available" }), {
         status: 404,
         headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -178,17 +133,8 @@ serve(async (req) => {
     if (!mux.ok) {
       return new Response(JSON.stringify({ error: summarizeMuxError(mux.error) }), {
         status: 503,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
-<<<<<<< HEAD
-      if (!mux.ok) {
-        return new Response(JSON.stringify({ error: summarizeMuxError(mux.error) }), {
-          status: 503,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        });
-      }
-=======
->>>>>>> 1eafcc67f350566a068a81e209045f59f4a4bfa7
     }
 
     const presignedUrl = await generatePresignedGetUrl(aws, key, 3600);

@@ -91,24 +91,44 @@ serve(async (req) => {
       });
     }
 
+    const { data: presente } = await supabase
+      .from("presentes")
+      .select("render_request_id, slug")
+      .eq("id", presenteId)
+      .single();
+
+    if (presente?.render_request_id && renderId && presente.render_request_id !== renderId) {
+      console.warn(
+        `render-complete: stale webhook for ${presenteId}. Expected renderId ${presente.render_request_id}, got ${renderId}. Ignoring.`,
+      );
+      return new Response(JSON.stringify({ success: true, ignored: "stale_render" }), {
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
     if (renderStatus === "success" || renderStatus === "completed" || renderStatus === "done") {
-      const { data: presente } = await supabase
-        .from("presentes")
-        .select("render_request_id, slug")
-        .eq("id", presenteId)
-        .single();
-
-      if (presente?.render_request_id && renderId) {
-        if (presente.render_request_id !== renderId) {
-          console.warn(
-            `render-complete: renderId mismatch for ${presenteId}. Expected ${presente.render_request_id}, got ${renderId}`,
-          );
-        }
-      }
-
       let muxedAt: string | null = null;
 
-      if (muxAudio && musicaUrl && renderId && bucket) {
+      if (muxAudio) {
+        if (!musicaUrl || !renderId || !bucket) {
+          const errorMsg = "Configuração de áudio ausente ao finalizar o vídeo. Tente gerar novamente.";
+          await supabase
+            .from("presentes")
+            .update({
+              status: "failed",
+              error_message: errorMsg,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", presenteId);
+          console.error(
+            `render-complete: ${presenteId} mux skipped — musicaUrl=${musicaUrl ? "set" : "missing"} renderId=${renderId || "missing"} bucket=${bucket || "missing"}`,
+          );
+          return new Response(JSON.stringify({ success: false, error: errorMsg }), {
+            status: 500,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          });
+        }
+
         const mux = await muxRenderWithMusic({ renderId, musicaUrl, bucket });
         if (!mux.ok) {
           const userMessage = summarizeMuxError(mux.error);

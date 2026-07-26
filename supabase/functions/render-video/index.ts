@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { ELEVENLABS_MUSIC_LENGTH_SEC, validateAudioUrl } from "../_shared/audio-utils.ts";
 import { resolveCompositionDuration } from "../_shared/composition-duration.ts";
+import { invokeLambda } from "../_shared/remotion-lambda.ts";
 
 const RENDER_TIMEOUT_MS = 840_000;
 const FRAMES_PER_LAMBDA = 300;
@@ -35,37 +36,6 @@ function urlHostname(url: string | null): string {
   }
 }
 
-const crypto = globalThis.crypto;
-
-function sha256(data: string): Promise<string> {
-  return crypto.subtle.digest("SHA-256", new TextEncoder().encode(data)).then(
-    (h) => Array.from(new Uint8Array(h)).map((b) => b.toString(16).padStart(2, "0")).join(""),
-  );
-}
-
-function hmac(key: Uint8Array, data: string): Promise<Uint8Array> {
-  return crypto.subtle.importKey("raw", key, { name: "HMAC", hash: "SHA-256" }, false, ["sign"])
-    .then((k) => crypto.subtle.sign("HMAC", k, new TextEncoder().encode(data)))
-    .then((s) => new Uint8Array(s));
-}
-
-async function hmacHex(key: Uint8Array, data: string): Promise<string> {
-  const sig = await hmac(key, data);
-  return Array.from(sig).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-async function getSignatureKey(
-  key: string,
-  dateStamp: string,
-  region: string,
-  service: string,
-): Promise<Uint8Array> {
-  const kDate = await hmac(new TextEncoder().encode("AWS4" + key), dateStamp);
-  const kRegion = await hmac(kDate, region);
-  const kService = await hmac(kRegion, service);
-  return await hmac(kService, "aws4_request");
-}
-
 async function invokeLambdaWithRetry(
   region: string,
   functionName: string,
@@ -78,7 +48,7 @@ async function invokeLambdaWithRetry(
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const response = await invokeLambda(region, functionName, payload, accessKeyId, secretAccessKey);
-      if (response.ok || attempt === retries) return response;
+      if (response.ok || response.status < 500 || attempt === retries) return response;
       const errText = await response.text();
       lastError = new Error(`Lambda invocation failed: ${response.status} ${errText}`);
       console.warn(`Lambda retry ${attempt}/${retries} for ${functionName}: ${response.status}`);
@@ -98,56 +68,6 @@ function serializeInputProps(data: Record<string, unknown>): string {
       return { __remotion_date: value.toISOString() };
     }
     return value;
-  });
-}
-
-async function invokeLambda(
-  region: string,
-  functionName: string,
-  payload: Record<string, unknown>,
-  accessKeyId: string,
-  secretAccessKey: string,
-): Promise<Response> {
-  const host = `lambda.${region}.amazonaws.com`;
-  const path = `/2015-03-31/functions/${functionName}/invocations`;
-  const body = JSON.stringify(payload);
-  const now = new Date();
-  const amzDate = now.toISOString().replace(/[:-]/g, "").replace(/\.\d{3}/, "");
-  const dateStamp = amzDate.slice(0, 8);
-  const algorithm = "AWS4-HMAC-SHA256";
-  const service = "lambda";
-
-  const bodyHash = await sha256(body);
-
-  const canonicalHeaders =
-    `host:${host}\n` +
-    `x-amz-date:${amzDate}\n` +
-    `x-amz-target:Invoke\n`;
-  const signedHeaders = "host;x-amz-date;x-amz-target";
-
-  const canonicalRequest =
-    `POST\n${path}\n\n${canonicalHeaders}\n${signedHeaders}\n${bodyHash}`;
-
-  const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
-  const stringToSign =
-    `${algorithm}\n${amzDate}\n${credentialScope}\n${await sha256(canonicalRequest)}`;
-
-  const signingKey = await getSignatureKey(secretAccessKey, dateStamp, region, service);
-  const signature = await hmacHex(signingKey, stringToSign);
-
-  const authorizationHeader =
-    `${algorithm} Credential=${accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
-
-  return fetch(`https://${host}${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Amz-Date": amzDate,
-      "X-Amz-Target": "Invoke",
-      "Authorization": authorizationHeader,
-      "X-Amz-Invocation-Type": "RequestResponse",
-    },
-    body,
   });
 }
 
@@ -178,14 +98,20 @@ serve(async (req) => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const isServiceRole = serviceRoleKey && token === serviceRoleKey;
   let user: { id: string } | null = null;
-  
+
   if (!isServiceRole && token) {
     const { data: { user: u }, error: userErr } = await supabase.auth.getUser(token);
     if (!userErr && u) {
       user = u;
     }
   }
-  // Allow all requests for testing (auth handled by Supabase verify_jwt=false)
+
+  if (!isServiceRole && !user) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
+  }
 
   let presenteId: string | undefined;
 
@@ -238,7 +164,7 @@ serve(async (req) => {
     );
 
     const MUSIC_POLL_INTERVAL_MS = parseInt(Deno.env.get("MUSIC_POLL_INTERVAL_MS") || "1000", 10);
-    const MUSIC_POLL_MAX_ATTEMPTS = parseInt(Deno.env.get("MUSIC_POLL_MAX_ATTEMPTS") || "120", 10);
+    const MUSIC_POLL_MAX_ATTEMPTS = parseInt(Deno.env.get("MUSIC_POLL_MAX_ATTEMPTS") || "30", 10);
 
     let musicaUrl: string | null = null;
     let musicaStatus: string | null = null;
@@ -342,7 +268,7 @@ serve(async (req) => {
       gopSize: null,
       jpegQuality: 80,
       maxRetries: 3,
-      privacy: "public",
+      privacy: "private",
       logLevel: "info",
       frameRange: null,
       outName: null,

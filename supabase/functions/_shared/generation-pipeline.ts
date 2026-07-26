@@ -12,6 +12,21 @@ export async function runGenerationPipeline(
   };
   const body = JSON.stringify({ presente_id: presenteId });
 
+  const markMusicFailureIfFinal = async (): Promise<void> => {
+    const { data: music } = await supabase
+      .from("musicas")
+      .select("status, attempts")
+      .eq("presente_id", presenteId)
+      .maybeSingle();
+    if (music?.status === "failed" || (music?.attempts ?? 0) >= 3) {
+      await supabase.from("presentes").update({
+        status: "failed",
+        error_message: "Geração de música falhou",
+        updated_at: new Date().toISOString(),
+      }).eq("id", presenteId);
+    }
+  };
+
   try {
     const musicRes = await fetch(`${supabaseUrl}/functions/v1/generate-music`, {
       method: "POST",
@@ -22,23 +37,16 @@ export async function runGenerationPipeline(
     if (!musicRes.ok) {
       const errText = await musicRes.text();
       console.error(`generate-music returned ${musicRes.status}: ${errText}`);
-      const { data: music } = await supabase
-        .from("musicas")
-        .select("status, attempts")
-        .eq("presente_id", presenteId)
-        .maybeSingle();
-      if (music?.status === "failed" || (music?.attempts ?? 0) >= 3) {
-        await supabase.from("presentes").update({
-          status: "failed",
-          error_message: "Geração de música falhou",
-          updated_at: new Date().toISOString(),
-        }).eq("id", presenteId);
-      }
+      await markMusicFailureIfFinal();
       return;
     }
 
     const musicData = await musicRes.json().catch(() => ({}));
-    if (!musicData.success) return;
+    if (!musicData.success) {
+      console.error(`generate-music unsuccessful for ${presenteId}:`, musicData.error || "unknown");
+      await markMusicFailureIfFinal();
+      return;
+    }
 
     const videoRes = await fetch(`${supabaseUrl}/functions/v1/render-video`, {
       method: "POST",
