@@ -90,12 +90,6 @@ export function Story({ descricao_relacao, theme }: StoryProps) {
                   [0, 1],
                   { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
                 );
-                const wordY = interpolate(
-                  frame,
-                  [wordStart, wordStart + 5],
-                  [8, 0],
-                  { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-                );
                 const cleanWord = word.replace(/[.,!?;:]/, "").toLowerCase();
                 const isKeyword = EMOTIONAL_KEYWORDS.has(cleanWord);
                 const highlightColor =
@@ -106,9 +100,8 @@ export function Story({ descricao_relacao, theme }: StoryProps) {
                   <span
                     key={wi}
                     style={{
-                      opacity: wordOpacity,
-                      transform: `translateY(${wordY}px)`,
-                      display: "inline-block",
+                    opacity: wordOpacity,
+                    display: "inline-block",
                       marginRight: 8,
                       color: highlightColor ?? "#2c2c2c",
                       transition: "none",

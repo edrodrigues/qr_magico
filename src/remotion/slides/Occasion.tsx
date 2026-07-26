@@ -15,11 +15,8 @@ export function Occasion({
   const frame = useCurrentFrame();
 
   const remetenteOpacity = interpolate(frame, [0, 20], [0, 1]);
-  const remetenteY = interpolate(frame, [0, 20], [20, 0]);
   const titleOpacity = interpolate(frame, [15, 45], [0, 1]);
-  const titleY = interpolate(frame, [15, 45], [20, 0]);
   const iconOpacity = interpolate(frame, [0, 25], [0, 1]);
-  const iconY = interpolate(frame, [0, 25], [20, 0]);
   const iconScale = interpolate(frame, [0, 25], [0.5, 1], {
     extrapolateRight: "clamp",
   });
@@ -41,7 +38,7 @@ export function Occasion({
           height: 48,
           marginBottom: 20,
           opacity: iconOpacity,
-          transform: `translateY(${iconY}px) scale(${iconScale})`,
+          transform: `scale(${iconScale})`,
         }}
         viewBox="0 0 24 24"
         fill={theme.primary}
@@ -58,7 +55,6 @@ export function Occasion({
             letterSpacing: 3,
             textTransform: "uppercase",
             opacity: remetenteOpacity,
-            transform: `translateY(${remetenteY}px)`,
             marginBottom: 16,
           }}
         >
@@ -74,7 +70,6 @@ export function Occasion({
           lineHeight: 1.1,
           textAlign: "center",
           opacity: titleOpacity,
-          transform: `translateY(${titleY}px)`,
           marginBottom: 40,
         }}
       >

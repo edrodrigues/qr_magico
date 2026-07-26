@@ -11,11 +11,8 @@ export function Credits({ theme, nome_homenageado, nome_remetente }: CreditsProp
   const frame = useCurrentFrame();
 
   const titleOpacity = interpolate(frame, [0, 20], [0, 1]);
-  const titleY = interpolate(frame, [0, 20], [20, 0]);
   const subtitleOpacity = interpolate(frame, [20, 40], [0, 1]);
-  const subtitleY = interpolate(frame, [20, 40], [15, 0]);
   const ctaOpacity = interpolate(frame, [50, 80], [0, 1]);
-  const ctaY = interpolate(frame, [50, 80], [15, 0]);
   const ctaScale = spring({
     frame: Math.max(frame - 60, 0),
     fps: 30,
@@ -55,7 +52,6 @@ export function Credits({ theme, nome_homenageado, nome_remetente }: CreditsProp
             fontSize: 56,
             fontWeight: 700,
             opacity: titleOpacity,
-            transform: `translateY(${titleY}px)`,
             marginBottom: 12,
             lineHeight: 1.2,
           }}
@@ -70,7 +66,6 @@ export function Credits({ theme, nome_homenageado, nome_remetente }: CreditsProp
             fontSize: 26,
             fontFamily: "var(--font-body)",
             opacity: subtitleOpacity,
-            transform: `translateY(${subtitleY}px)`,
             marginBottom: 8,
           }}
         >
@@ -85,7 +80,6 @@ export function Credits({ theme, nome_homenageado, nome_remetente }: CreditsProp
             fontSize: 20,
             fontFamily: "var(--font-body)",
             opacity: subtitleOpacity,
-            transform: `translateY(${subtitleY}px)`,
             marginBottom: 48,
           }}
         >
@@ -95,7 +89,7 @@ export function Credits({ theme, nome_homenageado, nome_remetente }: CreditsProp
         <div
           style={{
             opacity: ctaOpacity,
-            transform: `translateY(${ctaY}px) scale(${ctaScale})`,
+            transform: `scale(${ctaScale})`,
             marginTop: 48,
           }}
         >

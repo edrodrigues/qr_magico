@@ -22,11 +22,8 @@ export function LogoEnd({ theme }: LogoEndProps) {
     config: { damping: 14, stiffness: 100 },
   });
   const logoOpacity = interpolate(frame, [0, 15], [0, 1]);
-  const logoY = interpolate(frame, [0, 15], [15, 0]);
   const textOpacity = interpolate(frame, [30, 60], [0, 1]);
-  const textY = interpolate(frame, [30, 60], [15, 0]);
   const taglineOpacity = interpolate(frame, [45, 75], [0, 1]);
-  const taglineY = interpolate(frame, [45, 75], [15, 0]);
   const fadeOut = interpolate(frame, [70, 90], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
@@ -72,7 +69,7 @@ export function LogoEnd({ theme }: LogoEndProps) {
       <div
         style={{
           opacity: logoOpacity,
-          transform: `translateY(${logoY}px) scale(${logoScale})`,
+          transform: `scale(${logoScale})`,
           marginBottom: 28,
         }}
       >
@@ -102,7 +99,6 @@ export function LogoEnd({ theme }: LogoEndProps) {
           letterSpacing: 5,
           textTransform: "uppercase",
           opacity: textOpacity,
-          transform: `translateY(${textY}px)`,
           marginBottom: 12,
         }}
       >
@@ -117,7 +113,6 @@ export function LogoEnd({ theme }: LogoEndProps) {
           fontFamily: "var(--font-body)",
           letterSpacing: 2,
           opacity: taglineOpacity,
-          transform: `translateY(${taglineY}px)`,
         }}
       >
         Crie memórias que brilham

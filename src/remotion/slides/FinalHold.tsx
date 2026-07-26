@@ -9,11 +9,8 @@ export function FinalHold({ theme }: FinalHoldProps) {
   const frame = useCurrentFrame();
 
   const logoOpacity = interpolate(frame, [0, 15], [0, 1]);
-  const logoY = interpolate(frame, [0, 15], [15, 0]);
   const titleOpacity = interpolate(frame, [15, 30], [0, 1]);
-  const titleY = interpolate(frame, [15, 30], [15, 0]);
   const taglineOpacity = interpolate(frame, [30, 45], [0, 1]);
-  const taglineY = interpolate(frame, [30, 45], [15, 0]);
 
   return (
     <AbsoluteFill
@@ -38,7 +35,6 @@ export function FinalHold({ theme }: FinalHoldProps) {
           justifyContent: "center",
           margin: "0 auto 28px",
           opacity: logoOpacity,
-          transform: `translateY(${logoY}px)`,
         }}
       >
         <svg width={50} height={50} viewBox="0 0 24 24" fill="white">
@@ -54,7 +50,6 @@ export function FinalHold({ theme }: FinalHoldProps) {
           textTransform: "uppercase",
           marginBottom: 12,
           opacity: titleOpacity,
-          transform: `translateY(${titleY}px)`,
         }}
       >
         Momento Mágico
@@ -67,7 +62,6 @@ export function FinalHold({ theme }: FinalHoldProps) {
           fontFamily: "var(--font-body)",
           letterSpacing: 2,
           opacity: taglineOpacity,
-          transform: `translateY(${taglineY}px)`,
         }}
       >
         Crie memórias que brilham

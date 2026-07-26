@@ -33,7 +33,6 @@ export function Cover({ nome_homenageado, theme }: CoverProps) {
   const frame = useCurrentFrame();
 
   const titleOpacity = interpolate(frame, [0, 20], [0, 1]);
-  const titleY = interpolate(frame, [0, 20], [20, 0]);
   const glowOpacity = interpolate(
     frame,
     [0, 150],
@@ -43,7 +42,6 @@ export function Cover({ nome_homenageado, theme }: CoverProps) {
   const pulseGlow =
     0.12 + 0.05 * Math.sin((frame / 150) * Math.PI * 2);
   const iconOpacity = interpolate(frame, [0, 20], [0, 1]);
-  const iconY = interpolate(frame, [0, 20], [20, 0]);
   const iconScale = interpolate(frame, [0, 30], [0.5, 1], {
     extrapolateRight: "clamp",
   });
@@ -142,7 +140,7 @@ export function Cover({ nome_homenageado, theme }: CoverProps) {
             height: 56,
             margin: "0 auto 24px",
             opacity: iconOpacity,
-            transform: `translateY(${iconY}px) scale(${iconScale})`,
+            transform: `scale(${iconScale})`,
             position: "relative",
             zIndex: 3,
           }}
@@ -158,7 +156,6 @@ export function Cover({ nome_homenageado, theme }: CoverProps) {
             fontSize: 32,
             fontWeight: 500,
             opacity: titleOpacity,
-            transform: `translateY(${titleY}px)`,
             marginBottom: 12,
             position: "relative",
             zIndex: 2,
@@ -185,19 +182,12 @@ export function Cover({ nome_homenageado, theme }: CoverProps) {
               [0, 1],
               { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
             );
-            const charY = interpolate(
-              frame,
-              [charDelay, charDelay + 10],
-              [25, 0],
-              { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-            );
             return (
               <span
                 key={i}
                 style={{
                   display: "inline-block",
                   opacity: charOpacity,
-                  transform: `translateY(${charY}px)`,
                 }}
               >
                 {char === " " ? "\u00A0" : char}
